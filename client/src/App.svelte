@@ -1,12 +1,20 @@
 <script>
-  let rand = -1;
+  import { onMount } from 'svelte';
 
-  function getRand() {
-    fetch("./rand")
-      .then(d => d.text())
-      .then(d => (rand = d));
+  let patients = [];
+
+  onMount(() => {
+    loadPatients();
+  });
+
+  function loadPatients() {
+    fetch('./patient/')
+      .then((d) => d.json())
+      .then((d) => (patients = d.results));
   }
 </script>
 
-<h1>Your number is {rand}!</h1>
-<button on:click={getRand}>Get a random number</button>
+<h1>MIMIC Data</h1>
+{#each patients as patient}
+  <p>Patient ID {patient.icustayid}</p>
+{/each}

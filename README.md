@@ -1,10 +1,14 @@
-# Svelte.js + Flask
+# AI Clinician Explorer
 
-A super simple example of using Flask to serve a Svelte app and use it as a backend server.
+## Setup
 
-Run the following for development:
+```
+pip install -r requirements.txt
+cd client && npm install && cd ..
+```
 
-- `python server.py` to start the Flask server.
-- `cd client; npm install; npm run autobuild` to automatically build and reload the Svelte frontend when it's changed.
+Make sure you have the Firestore key included in the top-level directory.
 
-This example just queries the Flask server for a random number.
+Start the flask server: `python server.py`
+
+In a separate terminal, run the frontend: `cd client && npm run autobuild`
