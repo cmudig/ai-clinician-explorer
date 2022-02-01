@@ -97,10 +97,15 @@ def read(patient_id):
         print(docs[-1].to_dict())
         return jsonify({'results': [d.to_dict() for d in docs]})
     else:
-        doc = mimic_data.document(patient_id).get()
+        doc_ref = mimic_data.document(patient_id)
+        doc = doc_ref.get()
         if doc.exists:
+            # Retrieve timesteps
+            data = doc.to_dict()
+            timesteps = [t.to_dict() for t in doc_ref.collection('timesteps').order_by('bloc').stream()]
+            data['timesteps'] = timesteps
             return jsonify({
-                'result': doc.to_dict()
+                'result': data
             })
         else:
             return "Patient does not exist", 404
