@@ -8,7 +8,7 @@
   });
 
   function loadPatients() {
-    fetch('./patient/')
+    fetch('./api/patient/')
       .then((d) => d.json())
       .then((d) => (patients = d.results));
   }
@@ -16,5 +16,7 @@
 
 <h1>MIMIC Data</h1>
 {#each patients as patient}
-  <p>Patient ID {patient.icustayid}</p>
+  <p>
+    <a href="/patient?id={patient.icustayid}">Patient ID {patient.icustayid}</a>
+  </p>
 {/each}

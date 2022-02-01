@@ -1,10 +1,8 @@
-import App from './App.svelte';
+import PatientBrowser from './PatientBrowser.svelte';
 
-const app = new App({
-	target: document.body,
-	props: {
-		name: 'world'
-	}
+const app = new PatientBrowser({
+  target: document.body,
+  props: {},
 });
 
 export default app;

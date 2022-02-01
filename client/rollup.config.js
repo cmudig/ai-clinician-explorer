@@ -3,48 +3,113 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
+import html from '@rollup/plugin-html';
 
 const production = !process.env.ROLLUP_WATCH;
+const dir = production ? 'dist' : 'public';
 
-export default {
-	input: 'src/main.js',
-	output: {
-		sourcemap: true,
-		format: 'iife',
-		name: 'app',
-		file: 'public/bundle.js'
-	},
-	plugins: [
-		svelte({
-			// enable run-time checks when not in production
-			dev: !production,
-			// we'll extract any component CSS out into
-			// a separate file — better for performance
-			css: css => {
-				css.write('public/bundle.css');
-			}
-		}),
+const buildthese = [
+  {
+    path: '',
+    title: 'Home',
+  },
+  {
+    path: '/patient',
+    title: 'Patient Info',
+  },
+];
 
-		// If you have external dependencies installed from
-		// npm, you'll most likely need these plugins. In
-		// some cases you'll need additional configuration —
-		// consult the documentation for details:
-		// https://github.com/rollup/rollup-plugin-commonjs
-		resolve({
-			browser: true,
-			dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
-		}),
-		commonjs(),
+function makeHTML({ publicPath, title }) {
+  return `<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset='utf-8'>
+			<meta name='viewport' content='width=device-width'>
+			<title>${title}</title>
+			<link rel='icon' type='image/png' href='/favicon.png'>
+			<link rel='stylesheet' href='/global.css'>
+			<link rel='stylesheet' href='.${publicPath}bundle.css'>
+			<script defer src='.${publicPath}bundle.js'></script>
+		</head>
+		<body></body>
+	</html>`;
+}
 
-		// Watch the `public` directory and refresh the
-		// browser on changes when not in production
-		!production && livereload('public'),
+const COMMON = function (mydir, page, index) {
+  let path = page.path;
+  let pageTitle = page.title;
+  let ret = {
+    input: 'src' + path + '/main.js',
+    output: {
+      sourcemap: !production,
+      format: 'iife',
+      name: 'app',
+      file: mydir + path + '/bundle.js',
+    },
+    plugins: [
+      /*html({
+        html: `
+<!doctype html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<meta name='viewport' content='width=device-width'>
 
-		// If we're building for production (npm run build
-		// instead of npm run dev), minify
-		production && terser()
-	],
-	watch: {
-		clearScreen: false
-	}
+	<title>${pageTitle}</title>
+
+	<link rel='icon' type='image/png' href='/favicon.png'>
+	<link rel='stylesheet' href='/global.css'>
+	<link rel='stylesheet' href='${path}/bundle.css'>
+
+	<script type="module" src=".${path}/main.js"></script>
+</head>
+<body></body>
+</html>
+`,
+      }),*/
+      svelte({
+        dev: !production,
+        css: (css) => {
+          css.write(mydir + path + '/bundle.css', !production); // disable sourcemap in prod
+        },
+      }),
+      html({
+        publicPath: path + '/',
+        title: pageTitle,
+        template: makeHTML,
+      }),
+      resolve({ browser: true }),
+      commonjs(),
+      !production &&
+        livereload({
+          watch: `public${path}`,
+          port: 3000 + index,
+        }),
+      production && terser({ compress: true, mangle: true }),
+    ],
+    watch: {
+      clearScreen: true,
+    },
+  };
+  // if (!!page) {
+  //   ret.plugins.splice(
+  //     0,
+  //     0,
+  //     copy({
+  //       targets: [
+  //         { src: 'public/index.html', dest: mydir + page },
+  //         { src: 'public/global.css', dest: mydir + page },
+  //       ],
+  //     })
+  //   );
+  // }
+  return ret;
 };
+
+const exp = (function () {
+  var ret = [];
+  buildthese.forEach((target, i) => ret.push(COMMON(dir, target, i)));
+  return ret;
+})();
+
+export default exp;

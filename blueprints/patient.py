@@ -1,7 +1,7 @@
 from flask import Blueprint, request, abort, jsonify
 from firebase_admin import credentials, firestore, initialize_app
 
-patient_blueprint = Blueprint('patient', __name__, url_prefix='/patient')
+patient_blueprint = Blueprint('patient', __name__, url_prefix='/api/patient')
 
 # Initialize Firestore DB
 cred = credentials.Certificate('firestore_key.json')
