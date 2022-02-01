@@ -15,7 +15,7 @@
   }
 </script>
 
-<h1>Patient {patientID}</h1>
+<h1 class="f1 fw3">Patient {patientID}</h1>
 {#if !!patientInfo}
   {#each Object.keys(patientInfo) as key}
     <p>{key}: {patientInfo[key]}</p>

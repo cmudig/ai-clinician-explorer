@@ -29,6 +29,7 @@ function makeHTML({ publicPath, title }) {
 			<link rel='icon' type='image/png' href='/favicon.png'>
 			<link rel='stylesheet' href='/global.css'>
 			<link rel='stylesheet' href='.${publicPath}bundle.css'>
+			<link rel='stylesheet' href='https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css'/>
 			<script defer src='.${publicPath}bundle.js'></script>
 		</head>
 		<body></body>

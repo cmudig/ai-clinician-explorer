@@ -14,9 +14,11 @@
   }
 </script>
 
-<h1>MIMIC Data</h1>
+<h1 class="f1 fw3">MIMIC Data</h1>
 {#each patients as patient}
   <p>
-    <a href="/patient?id={patient.icustayid}">Patient ID {patient.icustayid}</a>
+    <a class="link blue dim" href="/patient?id={patient.icustayid}"
+      >Patient ID {patient.icustayid}</a
+    >
   </p>
 {/each}
