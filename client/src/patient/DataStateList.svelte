@@ -103,6 +103,9 @@
         value={!!row.computed
           ? row.computed(timePoint)
           : timePoint[row.feature]}
+        historicalValues={patient.timesteps
+          .slice(0, bloc)
+          .map((ts) => (!!row.computed ? row.computed(ts) : ts[row.feature]))}
         maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
       />
     {/each}

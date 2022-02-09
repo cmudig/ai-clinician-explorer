@@ -3,6 +3,12 @@
   import DataStateList from './DataStateList.svelte';
   import Demographics from './Demographics.svelte';
 
+  import { LayerCake, Svg } from 'layercake';
+  import Line from '../charts/Line.svelte';
+  import Area from '../charts/Area.svelte';
+  import AxisX from '../charts/AxisX.svelte';
+  import AxisY from '../charts/AxisY.svelte';
+
   let patient = null;
   export let patientID = '';
 
