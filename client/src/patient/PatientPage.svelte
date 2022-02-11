@@ -82,7 +82,7 @@
   }
 
   .data-column {
-    flex-basis: 50%;
+    flex-basis: 70%;
     overflow-y: scroll;
     border-right: 1px solid #bbbbbb;
   }

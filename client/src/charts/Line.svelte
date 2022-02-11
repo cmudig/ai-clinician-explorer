@@ -25,7 +25,6 @@
         lastUndefined = false;
       }
     });
-    console.log('path', path);
   }
 </script>
 

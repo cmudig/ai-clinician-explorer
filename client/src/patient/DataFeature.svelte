@@ -7,6 +7,7 @@
   export let feature;
   export let value = null;
   export let referenceRange = [-1e9, 1e9];
+  export let trend = 0;
   export let maxDecimals = 3;
   export let historicalValues = [];
   let historicalData = [];
@@ -15,10 +16,13 @@
   $: {
     if (value === null || value === undefined) valueString = '--';
     else if (value instanceof String) valueString = value;
-    else if (Math.abs(Math.round(value) - value) <= 0.001)
-      valueString = value.toString();
+    else valueString = formatNumber(value);
+  }
+
+  function formatNumber(num) {
+    if (Math.abs(Math.round(num) - num) <= 0.001) return num.toString();
     else
-      valueString = value.toLocaleString('en-US', {
+      return num.toLocaleString('en-US', {
         maximumFractionDigits: maxDecimals,
       });
   }
@@ -28,13 +32,25 @@
       historicalData = [];
     } else {
       historicalData = historicalValues.map((v, i) => {
-        if (v == null || v == undefined) console.log(feature, v);
         return {
           t: i,
           value: v,
         };
       });
     }
+  }
+
+  let ticks = [];
+  $: {
+    let nonNull = historicalData
+      .map((v) => v.value)
+      .filter((v) => typeof v == 'number' && v != null && v != undefined);
+    if (nonNull.length > 0) {
+      ticks = [
+        nonNull.reduce((curr, v) => Math.min(curr, v), 1e12),
+        nonNull.reduce((curr, v) => Math.max(curr, v), -1e12),
+      ];
+    } else ticks = [];
   }
 </script>
 
@@ -46,15 +62,27 @@
   {/if}
   <div class="historical-chart pv2">
     {#if historicalData.length > 0}
-      <LayerCake x="t" y="value" data={historicalData}>
+      <LayerCake x="t" y="value" data={historicalData} padding={{ left: 4 }}>
         <Svg>
-          <AxisY gridlines={false} tickMarks={false} />
+          <AxisY
+            gridlines={false}
+            tickMarks={false}
+            {ticks}
+            formatTick={formatNumber}
+            textAnchor="end"
+            dyTick="0.5em"
+          />
           <Line stroke="steelblue" />
         </Svg>
       </LayerCake>
     {/if}
   </div>
-  <p class="feature-value f4 fw5 mv2">{valueString}</p>
+  <p class="feature-value f4 fw5 mv2">
+    {#if trend != 0}
+      <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span>
+    {/if}
+    {valueString}
+  </p>
 </div>
 
 <style>
@@ -65,6 +93,7 @@
   .historical-chart {
     flex-grow: 1;
     height: 60px;
+    margin-left: 30px;
   }
 
   .feature-name {
@@ -73,7 +102,12 @@
   }
 
   .feature-value {
-    width: 80px;
+    width: 120px;
     text-align: right;
+  }
+
+  .trend-marker {
+    font-size: 0.8rem;
+    display: inline-block;
   }
 </style>

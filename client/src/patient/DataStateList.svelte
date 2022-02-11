@@ -4,6 +4,9 @@
 
   export let patient;
   export let bloc; // the index of the time to show
+  export let lastTrendWindow = 1; // number of timesteps to average over for last trend window
+  export let currentTrendWindow = 1; // number of timesteps to average over for current trend window
+  export let trendThreshold = 0.0; // fraction of last average value to consider as the same
 
   let timePoint;
   let lastTimePoint;
@@ -25,6 +28,7 @@
     { feature: Columns.C_GCS },
     { feature: Columns.C_RASS },
     { feature: Columns.C_HR, maxDecimals: 0 },
+    { feature: Columns.C_MEANBP, maxDecimals: 0 },
     {
       computed: (tp) =>
         `${tp[Columns.C_SYSBP].toFixed(0)}/${tp[Columns.C_DIABP].toFixed(0)}`,
@@ -93,6 +97,36 @@
     { feature: Columns.C_OUTPUT_STEP },
     { feature: Columns.C_CUMULATED_BALANCE },
   ];
+
+  /*
+    Computes whether the values for the given feature have increased or
+    decreased in the past trendWindow timesteps relative to the trendWindow
+    timesteps before that.
+  */
+  function computeTrend(feature, blocNumber) {
+    if (!blocNumber || blocNumber < currentTrendWindow) return 0;
+    let lastWindow = patient.timesteps
+      .slice(
+        Math.max(0, blocNumber - currentTrendWindow - lastTrendWindow),
+        blocNumber - currentTrendWindow
+      )
+      .map((v) => v[feature])
+      .filter((v) => v != null && v != undefined);
+    if (lastWindow.length == 0) return 0;
+    let lastValue =
+      lastWindow.reduce((curr, v) => curr + v) / lastWindow.length;
+    let currWindow = patient.timesteps
+      .slice(blocNumber - currentTrendWindow, blocNumber)
+      .map((v) => v[feature])
+      .filter((v) => v != null && v != undefined);
+    if (currWindow.length == 0) return 0;
+    let currValue =
+      currWindow.reduce((curr, v) => curr + v) / currWindow.length;
+    if (currValue - lastValue >= lastValue * trendThreshold + 1e-3) return 1;
+    else if (currValue - lastValue <= -lastValue * trendThreshold - 1e-3)
+      return -1;
+    return 0;
+  }
 </script>
 
 <div class="data-state-container ph2 w-100">
@@ -107,6 +141,7 @@
           .slice(0, bloc)
           .map((ts) => (!!row.computed ? row.computed(ts) : ts[row.feature]))}
         maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
+        trend={!row.computed ? computeTrend(row.feature, bloc) : 0}
       />
     {/each}
     <!-- C_GCS, C_HR, C_SYSBP, C_MEANBP, C_DIABP,
