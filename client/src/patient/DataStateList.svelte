@@ -23,20 +23,21 @@
     { feature: Columns.C_SIRS },
     { feature: Columns.C_SHOCK_INDEX },
     { feature: Columns.C_PAO2_FIO2 },
-    { feature: Columns.C_HEIGHT },
-    { feature: Columns.C_WEIGHT },
+    { feature: Columns.C_WEIGHT, unit: 'kg' },
     { feature: Columns.C_GCS },
     { feature: Columns.C_RASS },
-    { feature: Columns.C_HR, maxDecimals: 0 },
+    { feature: Columns.C_HR, maxDecimals: 0, unit: 'bpm' },
     { feature: Columns.C_MEANBP, maxDecimals: 0 },
     {
       computed: (tp) =>
-        `${tp[Columns.C_SYSBP].toFixed(0)}/${tp[Columns.C_DIABP].toFixed(0)}`,
+        `${tp[Columns.C_SYSBP].value.toFixed(0)}/${tp[
+          Columns.C_DIABP
+        ].value.toFixed(0)}`,
       name: 'Blood Pressure',
     },
     { feature: Columns.C_RR },
     { feature: Columns.C_SPO2 },
-    { feature: Columns.C_TEMP_C, maxDecimals: 1 },
+    { feature: Columns.C_TEMP_C, maxDecimals: 1, unit: '&deg;C' },
     { feature: Columns.C_CVP },
     { feature: Columns.C_PAPSYS },
     { feature: Columns.C_PAPMEAN },
@@ -110,14 +111,14 @@
         Math.max(0, blocNumber - currentTrendWindow - lastTrendWindow),
         blocNumber - currentTrendWindow
       )
-      .map((v) => v[feature])
+      .map((v) => (v[feature] != null ? v[feature].value : null))
       .filter((v) => v != null && v != undefined);
     if (lastWindow.length == 0) return 0;
     let lastValue =
       lastWindow.reduce((curr, v) => curr + v) / lastWindow.length;
     let currWindow = patient.timesteps
       .slice(blocNumber - currentTrendWindow, blocNumber)
-      .map((v) => v[feature])
+      .map((v) => (v[feature] != null ? v[feature].value : null))
       .filter((v) => v != null && v != undefined);
     if (currWindow.length == 0) return 0;
     let currValue =
@@ -136,12 +137,21 @@
         feature={row.name || row.feature}
         value={!!row.computed
           ? row.computed(timePoint)
-          : timePoint[row.feature]}
+          : timePoint[row.feature] != null
+          ? timePoint[row.feature].value
+          : null}
         historicalValues={patient.timesteps
           .slice(0, bloc)
-          .map((ts) => (!!row.computed ? row.computed(ts) : ts[row.feature]))}
+          .map((ts) =>
+            !!row.computed
+              ? row.computed(ts)
+              : ts[row.feature] != null
+              ? ts[row.feature].value
+              : null
+          )}
         maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
         trend={!row.computed ? computeTrend(row.feature, bloc) : 0}
+        unit={row.unit}
       />
     {/each}
     <!-- C_GCS, C_HR, C_SYSBP, C_MEANBP, C_DIABP,

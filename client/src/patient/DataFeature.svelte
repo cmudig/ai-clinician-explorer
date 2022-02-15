@@ -5,8 +5,9 @@
   import AxisY from '../charts/AxisY.svelte';
 
   export let feature;
+  export let unit = '';
   export let value = null;
-  export let referenceRange = [-1e9, 1e9];
+  export let valueColor = 'black';
   export let trend = 0;
   export let maxDecimals = 3;
   export let historicalValues = [];
@@ -81,7 +82,10 @@
     {#if trend != 0}
       <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span>
     {/if}
-    {valueString}
+    <span style="color: {valueColor};">{valueString}</span>
+    {#if !!unit}
+      <span class="dark-gray f5">{@html unit}</span>
+    {/if}
   </p>
 </div>
 

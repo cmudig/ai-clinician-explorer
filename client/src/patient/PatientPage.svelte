@@ -8,6 +8,7 @@
   import Area from '../charts/Area.svelte';
   import AxisX from '../charts/AxisX.svelte';
   import AxisY from '../charts/AxisY.svelte';
+  import Treatments from './Treatments.svelte';
 
   let patient = null;
   export let patientID = '';
@@ -21,6 +22,7 @@
       .then((d) => d.json())
       .then((d) => {
         patient = d.result;
+        console.log('patient:', patient);
         currentBloc = 1;
       });
   }
@@ -57,8 +59,13 @@
           />
         </div>
         <div class="patient-info flex flex-auto">
-          <div class="data-column flex-auto h-100">
-            <DataStateList {patient} bloc={currentBloc} />
+          <div class="data-column flex flex-column flex-auto h-100">
+            <div class="data-state flex-auto">
+              <DataStateList {patient} bloc={currentBloc} />
+            </div>
+            <div class="data-treatments">
+              <Treatments {patient} bloc={currentBloc} />
+            </div>
           </div>
           <div class="prediction-column flex-auto h-100" />
         </div>
@@ -70,7 +77,8 @@
 <style>
   .sidebar {
     width: 300px;
-    border-right: 2px solid #bbbbbb;
+    border-right: 1px solid #777777;
+    overflow-y: scroll;
   }
 
   main {
@@ -83,15 +91,24 @@
 
   .data-column {
     flex-basis: 70%;
-    overflow-y: scroll;
-    border-right: 1px solid #bbbbbb;
+    border-right: 1px solid #777777;
   }
 
+  .data-state {
+    overflow-y: scroll;
+    border-bottom: 1px solid #777777;
+  }
+
+  .data-treatments {
+    height: 240px;
+    flex: 0 0 auto;
+    overflow-y: scroll;
+  }
   .prediction-column {
     flex-basis: 100%;
   }
 
   .timestep-selector {
-    border-bottom: 1px solid #bbbbbb;
+    border-bottom: 1px solid #777777;
   }
 </style>

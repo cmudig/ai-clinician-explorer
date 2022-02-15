@@ -7,7 +7,7 @@ patient_blueprint = Blueprint('patient', __name__, url_prefix='/api/patient')
 cred = credentials.Certificate('firestore_key.json')
 default_app = initialize_app(cred)
 db = firestore.client()
-mimic_data = db.collection('MIMIC_dataset')
+mimic_data = db.collection('MIMICIV_provenance')
 
 def match_sort_criterion_type(sort_criterion, val):
     """Converts the given value to the appropriate type for the given sort criterion."""
@@ -16,7 +16,10 @@ def match_sort_criterion_type(sort_criterion, val):
                           "elixhauser",
                           "gender",
                           "icustayid",
-                          "num_timesteps"):
+                          "num_timesteps",
+                          "max_SOFA",
+                          "max_SIRS",
+                          "max_dose_vaso"):
         return int(val)
     elif sort_criterion in ("died_in_hosp", "died_within_48h_of_out_time", "morta_90", "re_admission"):
         return bool(val)
