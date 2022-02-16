@@ -74,7 +74,7 @@ def read(patient_id):
             return "cursor_sort is required for using sort criteria other than 'icustayid'", 400
         
         try:
-            size = int(args.get("size", 10))
+            size = int(args.get("size", 20))
         except ValueError:
             return "Invalid value for size query parameter", 400
         
