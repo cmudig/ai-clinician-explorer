@@ -3,15 +3,17 @@
   import DataStateList from './DataStateList.svelte';
   import Demographics from './Demographics.svelte';
 
-  import { LayerCake, Svg } from 'layercake';
-  import Line from '../charts/Line.svelte';
-  import Area from '../charts/Area.svelte';
-  import AxisX from '../charts/AxisX.svelte';
-  import AxisY from '../charts/AxisY.svelte';
   import Treatments from './Treatments.svelte';
+  import ActionsHeatmap from '../charts/ActionsHeatmap.svelte';
 
   let patient = null;
   export let patientID = '';
+  export let modelID = 'mimiciv_220203_model_0';
+
+  let modelInfo;
+
+  let modelQ;
+  let physicianProb;
 
   onMount(() => {
     if (!!patientID) loadPatientInfo(patientID);
@@ -28,6 +30,68 @@
   }
 
   let currentBloc = 0;
+
+  $: if (!!patient && currentBloc > 0 && !!modelID) {
+    loadModelPrediction(patient, currentBloc);
+  }
+
+  $: if (!!modelID) {
+    loadModelInfo(modelID);
+  }
+
+  async function loadModelInfo(id) {
+    try {
+      let response = await fetch(`./api/model/${modelID}`);
+      if (response.status != 200) {
+        console.log(
+          `error ${response.status} loading model info:`,
+          await response.text()
+        );
+        return;
+      }
+      response = await response.json();
+      modelInfo = response;
+      console.log('model info:', modelInfo);
+    } catch (e) {
+      console.log('error loading model info:', e);
+    }
+  }
+
+  async function loadModelPrediction(patientInfo, bloc) {
+    let state = {};
+    let ts = patientInfo.timesteps[bloc - 1];
+    Object.keys(ts).forEach((key) => {
+      if (typeof ts[key] == 'number') state[key] = ts[key];
+      else if (ts[key].hasOwnProperty('value')) state[key] = ts[key].value;
+    });
+    Object.keys(patientInfo).forEach((key) => {
+      if (key != 'timesteps') state[key] = patientInfo[key];
+    });
+    let body = { state };
+    console.log('body:', body);
+    try {
+      let response = await fetch(`./api/model/${modelID}/predict`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (response.status != 200) {
+        console.log(
+          `error ${response.status} loading model prediction:`,
+          await response.text()
+        );
+        return;
+      }
+      response = await response.json();
+      console.log('response', response);
+      modelQ = response.model_Q;
+      physicianProb = response.physician_prob;
+    } catch (e) {
+      console.log('error loading model prediction:', e);
+    }
+  }
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv3 pv4-ns ph3-m ph4-l">
@@ -67,7 +131,14 @@
               <Treatments {patient} bloc={currentBloc} />
             </div>
           </div>
-          <div class="prediction-column flex-auto h-100" />
+          <div class="prediction-column flex-auto h-100">
+            {#if !!modelQ}
+              <ActionsHeatmap data={modelQ} />
+            {/if}
+            {#if !!physicianProb}
+              <ActionsHeatmap data={physicianProb} />
+            {/if}
+          </div>
         </div>
       </div>
     {/if}
