@@ -5,10 +5,11 @@
 
   import Treatments from './Treatments.svelte';
   import ActionsHeatmap from '../charts/ActionsHeatmap.svelte';
+  import { interpolateGreens } from 'd3-scale-chromatic';
 
   let patient = null;
   export let patientID = '';
-  export let modelID = 'mimiciv_220203_model_0';
+  export let modelID = 'mimiciv_220217_best';
 
   let modelInfo;
 
@@ -133,10 +134,14 @@
           </div>
           <div class="prediction-column flex-auto h-100">
             {#if !!modelQ}
-              <ActionsHeatmap data={modelQ} />
+              <ActionsHeatmap data={modelQ} valueDomain={[-100, 100]} />
             {/if}
             {#if !!physicianProb}
-              <ActionsHeatmap data={physicianProb} />
+              <ActionsHeatmap
+                data={physicianProb}
+                valueDomain={[0, 1]}
+                colorMap={interpolateGreens}
+              />
             {/if}
           </div>
         </div>
@@ -161,7 +166,7 @@
   }
 
   .data-column {
-    flex-basis: 70%;
+    flex-basis: 60%;
     border-right: 1px solid #777777;
   }
 

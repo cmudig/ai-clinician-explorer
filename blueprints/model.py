@@ -11,11 +11,12 @@ model_blueprint = Blueprint('model', __name__, url_prefix='/api/model')
 MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "models")
 # TODO support DuelingDQNModels here
 MODELS = {
-    os.path.splitext(model_name)[0]: AIClinicianModel.load(os.path.join(MODEL_DIR, model_name))
-    for model_name in os.listdir(MODEL_DIR) if model_name.endswith(".pkl") and not model_name.startswith("normalization")
+    model_name: {
+        'model': AIClinicianModel.load(os.path.join(MODEL_DIR, model_name, 'model.pkl')),
+        'normalization': DataNormalization.load(os.path.join(MODEL_DIR, model_name, "normalization.pkl"))
+    }
+    for model_name in os.listdir(MODEL_DIR) if os.path.isdir(os.path.join(MODEL_DIR, model_name))
 }
-
-DATA_NORMER = DataNormalization.load(os.path.join(MODEL_DIR, "normalization.pkl"))
 
 def get_model_info(model):
     if isinstance(model, AIClinicianModel):
@@ -49,11 +50,11 @@ def model_info(model_id):
     specific model.
     """
     if model_id is None:
-        return {'models': {mid: get_model_info(m) for mid, m in MODELS.items()}}
+        return {'models': {mid: get_model_info(m['model']) for mid, m in MODELS.items()}}
     elif model_id not in MODELS:
         return "Model not found", 404
     else:
-        model = MODELS[model_id]
+        model = MODELS[model_id]['model']
         return {'model': get_model_info(model)}
 
 @model_blueprint.route('/<model_id>/predict', methods=['POST'])
@@ -83,13 +84,14 @@ def predict(model_id):
         return "Expected JSON input data with 'state' key", 400
     
     print(state_info)
-    model = MODELS[model_id]
+    model = MODELS[model_id]['model']
+    normer = MODELS[model_id]['normalization']
     try:
         X = pd.DataFrame([state_info])
     except KeyError:
         return "Missing value(s) in input state data", 400
     
-    normed_X = DATA_NORMER.transform(pd.DataFrame(X, columns=ALL_FEATURE_COLUMNS))
+    normed_X = normer.transform(pd.DataFrame(X, columns=ALL_FEATURE_COLUMNS))
     print(normed_X.values.tolist())
     state = model.compute_states(normed_X.values)
     Q = model.compute_Q(states=state)
