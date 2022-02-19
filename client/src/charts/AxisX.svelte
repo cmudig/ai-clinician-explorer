@@ -30,6 +30,8 @@
   /** @type {Number} [yTick=16] - The distance from the baseline to place each tick value. */
   export let yTick = 16;
 
+  export let label = '';
+
   $: isBandwidth = typeof $xScale.bandwidth === 'function';
 
   $: tickVals = Array.isArray(ticks)
@@ -89,12 +91,21 @@
       x2={$width}
     />
   {/if}
+  {#if !!label}
+    <text
+      x={$width * 0.5}
+      y={$height}
+      dy="36px"
+      text-anchor="middle"
+      class="axis-label">{label}</text
+    >
+  {/if}
 </g>
 
 <style>
   .tick {
     font-size: 0.725em;
-    font-weight: 200;
+    font-weight: 400;
   }
 
   line,
@@ -104,7 +115,7 @@
   }
 
   .tick text {
-    fill: #666;
+    fill: #333;
   }
 
   .tick .tick-mark,
@@ -117,5 +128,11 @@
   }
   .axis.snapTicks .tick.tick-0 text {
     transform: translateX(-3px);
+  }
+
+  .axis-label {
+    font-size: 0.8em;
+    fill: #333;
+    font-weight: 500;
   }
 </style>

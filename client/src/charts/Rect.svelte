@@ -10,6 +10,7 @@
   const { data, xGet, yGet, zGet, xScale, yScale } = getContext('LayerCake');
 
   export let colorMap = interpolateRdBu;
+  export let nullColor = 'black';
 
   /** @type {String} [stroke='#ab00d6'] - The shape's fill color. This is technically optional because it comes with a default value but you'll likely want to replace it with your own color. */
   export let stroke = '#ab00d6';
@@ -48,7 +49,7 @@
     y={$yGet(d) - height + padding / 2}
     width={width - padding}
     height={height - padding}
-    style="fill:{colorMap($zGet(d))}"
+    style="fill:{$zGet(d) == null ? nullColor : colorMap($zGet(d))}"
   />
 {/each}
 

@@ -2,7 +2,9 @@ import os
 from flask import Blueprint, request, abort, jsonify
 from ai_clinician.modeling.models import AIClinicianModel
 from ai_clinician.modeling.columns import ALL_FEATURE_COLUMNS
+from ai_clinician.preprocessing.columns import *
 from ai_clinician.modeling.normalization import DataNormalization
+from ai_clinician.modeling.models.common import transform_actions
 import numpy as np
 import pandas as pd
 
@@ -63,10 +65,14 @@ def predict(model_id):
     Predict the value of possible actions to take at the given state. The POSTed
     JSON should include the following keys:
     
-    * state: a dictionary containing all fields in ALL_FEATURE_COLUMNS, which describes
-        the state of the patient.
+    * states: a list of dictionaries containing all fields in ALL_FEATURE_COLUMNS,
+        which describes the state of the patient at a series of timesteps.
+    * actions: (optional) a list of dictionaries containing the actions taken
+        by the clinicians at each of the states in the `states` key. The
+        dictionaries should have the C_INPUT_STEP and C_MAX_DOSE_VASO keys.
     
-    The result will be JSON containing the following keys:
+    The result will be JSON containing a "results" list, where each item corresponds
+    to one of the input states. Each item will contain the following keys:
     
     * state: A latent representation of the state (for the default AI Clinician,
         this is an integer representing the state number).
@@ -79,26 +85,40 @@ def predict(model_id):
         return "Model not found", 404
     try:
         input_data = request.json
-        state_info = input_data["state"]
+        state_info = input_data["states"]
+        action_info = input_data.get("actions", None)
     except:
-        return "Expected JSON input data with 'state' key", 400
+        return "Expected JSON input data with 'states' key", 400
     
-    print(state_info)
     model = MODELS[model_id]['model']
     normer = MODELS[model_id]['normalization']
     try:
-        X = pd.DataFrame([state_info])
+        X = pd.DataFrame(state_info)
     except KeyError:
         return "Missing value(s) in input state data", 400
     
-    normed_X = normer.transform(pd.DataFrame(X, columns=ALL_FEATURE_COLUMNS))
-    print(normed_X.values.tolist())
-    state = model.compute_states(normed_X.values)
-    Q = model.compute_Q(states=state)
-    physprob = model.compute_physician_probabilities(states=state)
+    normed_X = normer.transform(X[ALL_FEATURE_COLUMNS])
+    state_reps = model.compute_states(normed_X.values)
+    Q = model.compute_Q(states=state_reps)
+    physprob = model.compute_physician_probabilities(states=state_reps, soften=False)
+    Q = np.where(physprob <= 1e-6, np.nan, Q)
     
-    return jsonify({
-        'state': int(state[0]),
-        'model_Q': Q[0].astype(float).tolist(),
-        'physician_prob': physprob[0].astype(float).tolist()
-    })
+    if action_info is not None:
+        if len(action_info) != len(state_info):
+            return "Length of actions needs to match length of states", 400
+        clin_actions = transform_actions(
+            [x.get(C_INPUT_STEP, 0) for x in action_info],
+            [x.get(C_MAX_DOSE_VASO, 0) for x in action_info],
+            model.metadata['actions']['action_bins'])
+        clin_actions = [a if C_INPUT_STEP in x and C_MAX_DOSE_VASO in x else -1
+                        for a, x in zip(clin_actions, action_info)]
+    else:
+        clin_actions = None
+    
+    return jsonify({'results': [{
+        'state': int(state_reps[i]),
+        'model_Q': [x if not np.isnan(x) else None for x in Q[i].astype(float).tolist()],
+        'physician_prob': physprob[i].astype(float).tolist(),
+        'recommendation': int(np.argmax(np.where(np.isnan(Q[i]), -1e9, Q[i]))),
+        'actual_action': int(clin_actions[i]) if clin_actions else None
+    } for i in range(len(state_reps))]})
