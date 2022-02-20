@@ -6,18 +6,28 @@
   import Rect from './Rect.svelte';
   import { interpolateRdBu } from 'd3-scale-chromatic';
   import Colorbar from './Colorbar.svelte';
+  import Tooltip from './Tooltip.svelte';
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   export let data;
   export let vasopressorBins; // x axis labels
   export let fluidBins; // y axis labels
+  export let formatTooltip; // function that takes a data point and returns a string describing it
 
   export let valueDomain; // range of values should be mapped to the ends of the color map
   export let colorMap = interpolateRdBu;
   export let nullColor = 'black';
 
+  export let selectedAction = null;
+
+  let hoveredAction = null;
+
   let visData;
   $: if (!!data && data.length == 25) {
     visData = data.map((d, i) => ({
+      i,
       x: Math.floor(i / 5) - 0.5,
       y: (i % 5) - 0.5,
       z: d,
@@ -46,6 +56,11 @@
         zDomain={valueDomain}
         zRange={[0, 1]}
         data={visData}
+        custom={{
+          selectedGet:
+            selectedAction != null ? (d) => d.i == selectedAction : null,
+          hoveredGet: (d) => d.i == hoveredAction,
+        }}
       >
         <Svg>
           <AxisX
@@ -61,7 +76,17 @@
             label="Vasopressor (ug/kg/min norep)"
             textAnchor="end"
           />
-          <Rect {colorMap} {nullColor} />
+          <Rect
+            {colorMap}
+            {nullColor}
+            on:hover={(e) => (hoveredAction = e.detail ? e.detail.i : null)}
+            on:click={(e) => dispatch('select', e.detail.i)}
+          />
+          <Tooltip
+            formatText={formatTooltip}
+            dx={0.5}
+            horizontalAlign="middle"
+          />
         </Svg>
       </LayerCake>
     </div>
@@ -74,6 +99,10 @@
 <style>
   .actions-heatmap {
     height: 220px;
+  }
+
+  .heatmap-plot {
+    z-index: 10;
   }
 
   .legend-container {

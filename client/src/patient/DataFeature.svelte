@@ -4,10 +4,12 @@
   import AxisX from '../charts/AxisX.svelte';
   import AxisY from '../charts/AxisY.svelte';
 
+  export let dark = false;
+
   export let feature;
   export let unit = '';
   export let value = null;
-  export let valueColor = 'black';
+  export let valueColor = null;
   export let trend = 0;
   export let maxDecimals = 3;
   export let historicalValues = [];
@@ -56,10 +58,13 @@
 </script>
 
 <div
-  class="feature-row ph3 pv2 bg-animate hover-bg-near-white flex justify-between items-center"
+  class="feature-row ph2 pv2 bg-animate flex justify-between items-center"
+  class:dark
+  class:hover-bg-near-white={!dark}
+  class:hover-bg-dark-gray={dark}
 >
   {#if !!feature}
-    <p class="feature-name f6 dark-gray">{feature}</p>
+    <p class="feature-name f6 {dark ? 'white' : 'dark-gray'}">{feature}</p>
   {/if}
   <div class="historical-chart pv2">
     {#if historicalData.length > 0}
@@ -78,13 +83,15 @@
       </LayerCake>
     {/if}
   </div>
-  <p class="feature-value f4 fw5 mv2">
+  <p class="feature-value f4 fw5 mv2" class:white={dark}>
     {#if trend != 0}
       <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span>
     {/if}
-    <span style="color: {valueColor};">{valueString}</span>
+    <span style="color: {valueColor || (dark ? 'white' : 'black')};"
+      >{valueString}</span
+    >
     {#if !!unit}
-      <span class="dark-gray f5">{@html unit}</span>
+      <span class="f5">{@html unit}</span>
     {/if}
   </p>
 </div>
@@ -94,6 +101,10 @@
     border-bottom: 1px solid #cccccc;
   }
 
+  .feature-row.dark {
+    border-bottom: 1px solid #666666;
+  }
+
   .historical-chart {
     flex-grow: 1;
     height: 60px;
@@ -101,12 +112,12 @@
   }
 
   .feature-name {
-    width: 100px;
+    width: 110px;
     word-wrap: break-word;
   }
 
   .feature-value {
-    width: 120px;
+    width: 110px;
     text-align: right;
   }
 

@@ -157,8 +157,7 @@
   let actionBins = null;
   $: if (!!modelInfo) {
     rewardVal = modelInfo.params.reward_val;
-    actionBins = modelInfo.actions.action_bins;
-    console.log(actionBins);
+    actionBins = modelInfo.actions.action_medians;
   }
 
   function fluidDose(action) {
@@ -190,7 +189,7 @@
   }
 </script>
 
-<header class="bg-navy-90 fixed w-100 ph3 pv3 pv4-ns ph3-m ph4-l">
+<header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked">
     <a class="link dim white dib mr3" href="/" title="Home">Home</a>
   </nav>
@@ -203,10 +202,10 @@
     </div>
   {:else}
     <div class="flex align-stretch h-100">
-      <div class="sidebar">
+      <div class="sidebar bg-blue-gray">
         {#if !!patient}
           <div
-            class="timestep-selector flex justify-center items-center w-100 pv3"
+            class="timestep-selector bg-navy-gray flex justify-center items-center w-100 pv3 white"
           >
             <span class="f6 b pb0 mr3"
               >Hour {currentBloc * 4}/{patient.timesteps.length * 4}</span
@@ -249,7 +248,7 @@
                           modelRecommendationIdx
                         ).toLocaleString({ maximumSignificantDigits: 3 })} ug/kg/min</strong
                       >
-                      (norep equivalent){/if} and {#if fluidDose(modelRecommendationIdx) == 0}
+                    {/if} and {#if fluidDose(modelRecommendationIdx) == 0}
                       <strong>no IV fluids</strong>
                     {:else}
                       <strong
@@ -267,20 +266,29 @@
                   fluidBins={actionBins != null ? actionBins[0] : null}
                   vasopressorBins={actionBins != null ? actionBins[1] : null}
                   nullColor="#f7f7f7"
+                  selectedAction={modelRecommendationIdx}
+                  formatTooltip={(d) =>
+                    modelQ[d.i] == null
+                      ? 'Insufficient data to\nestimate treatment value'
+                      : `Predicted treatment\nvalue: ${modelQ[
+                          d.i
+                        ].toLocaleString({
+                          maximumSignificantDigits: 3,
+                        })}`}
                 />
               </div>
             {/if}
             {#if !!physicianProb}
               <div class="flex-auto heatmap pl2">
                 <h5 class="f5 tc b mb2">Clinician Probabilities</h5>
-                {#if !!modelInfo && modelRecommendationIdx != null}
+                {#if !!modelInfo && physicianActionIdx != null}
                   <p class="f6 lh-copy above-plot">
                     The clinician action was {#if actualVasopressorDose == 0}
                       <strong>no vasopressor</strong>{:else}
                       a vasopressor dosage of <strong
                         >{actualVasopressorDose} ug/kg/min</strong
                       >
-                      (norep equivalent){/if} and {#if actualFluidDose == 0}
+                    {/if} and {#if actualFluidDose == 0}
                       <strong>no IV fluids</strong>
                     {:else}
                       <strong>{actualFluidDose} mL/4h</strong>
@@ -294,6 +302,11 @@
                   fluidBins={actionBins != null ? actionBins[0] : null}
                   vasopressorBins={actionBins != null ? actionBins[1] : null}
                   nullColor="#f7f7f7"
+                  selectedAction={physicianActionIdx}
+                  formatTooltip={(d) =>
+                    `Probability: ${physicianProb[d.i].toLocaleString({
+                      maximumSignificantDigits: 3,
+                    })}`}
                 />
               </div>
             {/if}
@@ -306,14 +319,22 @@
 
 <style>
   .sidebar {
-    width: 300px;
+    width: 320px;
     border-right: 1px solid #777777;
     overflow-y: scroll;
     flex: 0 0 auto;
   }
 
+  .bg-blue-gray {
+    background-color: #404a5a;
+  }
+
+  .bg-navy-gray {
+    background-color: #2e3847;
+  }
+
   main {
-    padding-top: 80px;
+    padding-top: 48px;
   }
 
   .bg-navy-90 {
@@ -340,7 +361,7 @@
   }
 
   .timestep-selector {
-    border-bottom: 1px solid #777777;
+    border-bottom: 1px solid #666666;
   }
 
   .heatmap {
