@@ -1,16 +1,17 @@
 <script>
+  import { getContext } from 'svelte';
   import TextFeature from './TextFeature.svelte';
 
-  export let patient;
-  export let bloc; // the index of the time to show
+  let { patient, currentBloc } = getContext('patient');
 
   let timePoint;
-  $: if (!!patient && bloc > 0) timePoint = patient.timesteps[bloc - 1];
+  $: if (!!$patient && $currentBloc > 0)
+    timePoint = $patient.timesteps[$currentBloc - 1];
 
   let microbioEvents = [];
-  $: if (!!patient && bloc > 0) {
-    microbioEvents = patient.timesteps
-      .slice(0, bloc)
+  $: if (!!$patient && $currentBloc > 0) {
+    microbioEvents = $patient.timesteps
+      .slice(0, $currentBloc)
       .map((ts) => {
         if (!!ts.microbio) return ts.microbio;
         return [];
@@ -21,7 +22,7 @@
 </script>
 
 <div class="pv2 ph2">
-  {#if !!patient}
+  {#if !!$patient}
     <TextFeature label="Antibiotics">
       {#if !!timePoint.antibiotics && timePoint.antibiotics.length > 0}
         {#each timePoint.antibiotics as ab}

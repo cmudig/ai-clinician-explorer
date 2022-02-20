@@ -73,7 +73,7 @@
             gridlines={false}
             dyTick={4}
             formatTick={formatTicks(vasopressorBins)}
-            label="Vasopressor (ug/kg/min norep)"
+            label="Vasopressor (ug/kg/min)"
             textAnchor="end"
           />
           <Rect

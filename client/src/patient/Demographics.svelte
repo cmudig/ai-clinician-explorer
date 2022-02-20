@@ -1,35 +1,37 @@
 <script>
+  import { getContext } from 'svelte';
   import { Comorbidities } from '../utils/strings';
   import DataFeature from './DataFeature.svelte';
   import TextFeature from './TextFeature.svelte';
-  export let patient;
+
+  let { patient } = getContext('patient');
 </script>
 
 <div class="pv2 ph3 bg-blue-gray white">
-  {#if !!patient}
-    <h3 class="f3 fw3 pl2">Patient {patient.icustayid}</h3>
+  {#if !!$patient}
+    <h3 class="f3 fw3 pl2">Patient {$patient.icustayid}</h3>
     <DataFeature
       dark
       feature="Profile"
-      value="{patient.age} y/o {patient.gender ? 'female' : 'male'}"
+      value="{$patient.age} y/o {$patient.gender ? 'female' : 'male'}"
     />
-    <DataFeature dark feature="Height" value={patient.Height_cm} unit="cm" />
+    <DataFeature dark feature="Height" value={$patient.Height_cm} unit="cm" />
     <DataFeature
       dark
       feature="Length of Stay"
-      value={patient.num_timesteps * 4}
+      value={$patient.num_timesteps * 4}
       unit="hrs"
     />
     <DataFeature
       dark
       feature="Outcome"
-      value={patient.died_in_hosp ? 'Death' : 'Discharge'}
+      value={$patient.died_in_hosp ? 'Death' : 'Discharge'}
     />
     <TextFeature dark label="Comorbidities">
-      {#each patient.comorbidities as com}
+      {#each $patient.comorbidities as com}
         <p class="mv2">{Comorbidities[com]}</p>
       {/each}
-      <!--{patient.comorbidities.map((c) => Comorbidities[c]).join(', ')}-->
+      <!--{$patient.comorbidities.map((c) => Comorbidities[c]).join(', ')}-->
     </TextFeature>
   {/if}
 </div>

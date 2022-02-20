@@ -1,18 +1,19 @@
 <script>
   import DataFeature from './DataFeature.svelte';
   import Columns from '../utils/columns';
+  import { getContext } from 'svelte';
 
-  export let patient;
-  export let bloc; // the index of the time to show
+  let { patient, currentBloc } = getContext('patient');
   export let lastTrendWindow = 1; // number of timesteps to average over for last trend window
   export let currentTrendWindow = 1; // number of timesteps to average over for current trend window
   export let trendThreshold = 0.0; // fraction of last average value to consider as the same
 
   let timePoint;
   let lastTimePoint;
-  $: if (!!patient && !!bloc) {
-    timePoint = patient.timesteps[bloc - 1];
-    lastTimePoint = bloc > 1 ? patient.timesteps[bloc - 2] : null;
+  $: if (!!$patient && !!$currentBloc) {
+    timePoint = $patient.timesteps[$currentBloc - 1];
+    lastTimePoint =
+      $currentBloc > 1 ? $patient.timesteps[$currentBloc - 2] : null;
   }
 
   /*
@@ -106,7 +107,7 @@
   */
   function computeTrend(feature, blocNumber) {
     if (!blocNumber || blocNumber < currentTrendWindow) return 0;
-    let lastWindow = patient.timesteps
+    let lastWindow = $patient.timesteps
       .slice(
         Math.max(0, blocNumber - currentTrendWindow - lastTrendWindow),
         blocNumber - currentTrendWindow
@@ -116,7 +117,7 @@
     if (lastWindow.length == 0) return 0;
     let lastValue =
       lastWindow.reduce((curr, v) => curr + v) / lastWindow.length;
-    let currWindow = patient.timesteps
+    let currWindow = $patient.timesteps
       .slice(blocNumber - currentTrendWindow, blocNumber)
       .map((v) => (v[feature] != null ? v[feature].value : null))
       .filter((v) => v != null && v != undefined);
@@ -140,8 +141,8 @@
           : timePoint[row.feature] != null
           ? timePoint[row.feature].value
           : null}
-        historicalValues={patient.timesteps
-          .slice(0, bloc)
+        historicalValues={$patient.timesteps
+          .slice(0, $currentBloc)
           .map((ts) =>
             !!row.computed
               ? row.computed(ts)
@@ -150,7 +151,7 @@
               : null
           )}
         maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
-        trend={!row.computed ? computeTrend(row.feature, bloc) : 0}
+        trend={!row.computed ? computeTrend(row.feature, $currentBloc) : 0}
         unit={row.unit}
       />
     {/each}
