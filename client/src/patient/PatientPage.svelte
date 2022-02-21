@@ -10,6 +10,7 @@
   import Predictions from './Predictions.svelte';
   import Antibiotics from './Antibiotics.svelte';
   import Cultures from './Cultures.svelte';
+  import { StateCategory } from '../utils/strings';
 
   const NON_TIMESTEP_COLUMNS = [
     'timesteps',
@@ -36,6 +37,7 @@
   let loadingPatientInfo = false;
 
   let treatmentTab = 1;
+  let statesTab = StateCategory.VITALS;
 
   onMount(() => {
     if (!!patientID) loadPatientInfo(patientID);
@@ -145,6 +147,8 @@
       loadingModelPrediction = false;
     }
   }
+
+  $: console.log(statesTab, treatmentTab);
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
@@ -188,8 +192,23 @@
       {#if !!$patient}
         <div class="patient-info-container flex-auto flex h-100">
           <div class="data-column flex flex-column flex-auto h-100">
+            <div
+              class="context-info-controls pa2 flex items-center bg-near-white"
+            >
+              <SegmentedControl
+                bind:selected={statesTab}
+                options={[
+                  { name: StateCategory.VITALS, value: StateCategory.VITALS },
+                  { name: StateCategory.LABS, value: StateCategory.LABS },
+                  {
+                    name: StateCategory.RESPIRATORY,
+                    value: StateCategory.RESPIRATORY,
+                  },
+                ]}
+              />
+            </div>
             <div class="data-state flex-auto">
-              <DataStateList />
+              <DataStateList category={statesTab} />
             </div>
             <div
               class="context-info-controls pa2 flex items-center bg-near-white"
@@ -197,20 +216,20 @@
               <SegmentedControl
                 bind:selected={treatmentTab}
                 options={[
-                  { name: 'Antibiotics', value: 1 },
-                  { name: 'Cultures', value: 2 },
-                  { name: 'Fluids/Pressors', value: 3 },
+                  { name: 'Fluids/Pressors', value: 1 },
+                  { name: 'Antibiotics', value: 2 },
+                  { name: 'Cultures', value: 3 },
                   { name: 'Notes', value: 4 },
                 ]}
               />
             </div>
             <div class="data-treatments">
               {#if treatmentTab == 1}
-                <Antibiotics />
+                <DataStateList category={StateCategory.FLUIDS_PRESSORS} />
               {:else if treatmentTab == 2}
-                <Cultures />
+                <Antibiotics />
               {:else if treatmentTab == 3}
-                <Treatments />
+                <Cultures />
               {/if}
             </div>
           </div>
@@ -257,6 +276,8 @@
   .data-state {
     overflow-y: scroll;
     border-bottom: 1px solid #777777;
+    flex: 1;
+    min-height: 0;
   }
 
   .context-info-controls {
@@ -266,8 +287,8 @@
   }
 
   .data-treatments {
-    height: 240px;
-    flex: 0 0 auto;
+    flex: 1;
+    min-height: 0;
     overflow-y: scroll;
   }
   .prediction-column {

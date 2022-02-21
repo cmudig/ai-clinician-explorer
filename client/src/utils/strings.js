@@ -32,3 +32,10 @@ export const Comorbidities = {
   [Columns.C_PSYCHOSES]: 'Psychoses',
   [Columns.C_DEPRESSION]: 'Depression',
 };
+
+export const StateCategory = {
+  VITALS: 'Vitals',
+  LABS: 'Labs',
+  RESPIRATORY: 'Cardio/Resp.',
+  FLUIDS_PRESSORS: 'Fluids/Pressors',
+};

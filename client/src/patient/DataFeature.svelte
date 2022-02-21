@@ -23,7 +23,7 @@
   }
 
   function formatNumber(num) {
-    if (Math.abs(Math.round(num) - num) <= 0.001) return num.toString();
+    if (Math.abs(Math.round(num) - num) <= 0.00001) return num.toString();
     else
       return num.toLocaleString('en-US', {
         maximumFractionDigits: maxDecimals,
@@ -87,14 +87,15 @@
     {/if}
   </td>
   <td class="feature-value f4 fw5 pv2 pr3" class:white={dark}>
-    {#if trend != 0}
-      <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span>
-    {/if}
-    <span style="color: {valueColor || (dark ? 'white' : 'black')};"
-      >{valueString}</span
-    >
-    {#if !!unit}
-      <span class="f5">{@html unit}</span>
+    <p class="mv0" style="color: {valueColor || (dark ? 'white' : 'black')};">
+      {#if trend != 0}
+        <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span
+        >
+      {/if}
+      {valueString}
+    </p>
+    {#if !!unit && value != 0.0}
+      <p class="mv0 f6">{@html unit}</p>
     {/if}
   </td>
 </tr>
@@ -114,7 +115,7 @@
   }
 
   .feature-name {
-    width: 110px;
+    width: 150px;
     word-wrap: break-word;
   }
 

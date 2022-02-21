@@ -2,11 +2,13 @@
   import DataFeature from './DataFeature.svelte';
   import Columns from '../utils/columns';
   import { getContext } from 'svelte';
+  import { StateCategory } from '../utils/strings';
 
   let { patient, currentBloc } = getContext('patient');
   export let lastTrendWindow = 1; // number of timesteps to average over for last trend window
   export let currentTrendWindow = 1; // number of timesteps to average over for current trend window
   export let trendThreshold = 0.0; // fraction of last average value to consider as the same
+  export let category; // category of features to display - null displays all
 
   let timePoint;
   let lastTimePoint;
@@ -16,89 +18,119 @@
       $currentBloc > 1 ? $patient.timesteps[$currentBloc - 2] : null;
   }
 
-  /*
+  const featureRowSpec = {
+    [StateCategory.VITALS]: [
+      { feature: Columns.C_WEIGHT, name: 'Weight', unit: 'kg' },
+      { feature: Columns.C_GCS },
+      { feature: Columns.C_RASS },
+      { feature: Columns.C_HR, maxDecimals: 0, unit: 'bpm' },
+      { feature: Columns.C_MEANBP, maxDecimals: 0 },
+      {
+        computed: (tp) =>
+          `${tp[Columns.C_SYSBP].value.toFixed(0)}/${tp[
+            Columns.C_DIABP
+          ].value.toFixed(0)}`,
+        name: 'Blood Pressure',
+      },
+      { feature: Columns.C_SOFA },
+      { feature: Columns.C_SIRS },
+      { feature: Columns.C_SHOCK_INDEX, name: 'Shock Index' },
+      {
+        feature: Columns.C_TEMP_C,
+        name: 'Temperature',
+        maxDecimals: 1,
+        unit: '&deg;C',
+      },
+      { feature: Columns.C_CVP },
+    ],
+    [StateCategory.LABS]: [
+      { feature: Columns.C_POTASSIUM },
+      { feature: Columns.C_SODIUM },
+      { feature: Columns.C_CHLORIDE },
+      { feature: Columns.C_GLUCOSE },
+      { feature: Columns.C_BUN },
+      { feature: Columns.C_CREATININE },
+      { feature: Columns.C_MAGNESIUM },
+      { feature: Columns.C_CALCIUM },
+      { feature: Columns.C_IONISED_CA },
+      { feature: Columns.C_CO2_MEQL },
+      { feature: Columns.C_SGOT },
+      { feature: Columns.C_SGPT },
+      { feature: Columns.C_TOTAL_BILI },
+      { feature: Columns.C_DIRECT_BILI },
+      { feature: Columns.C_TOTAL_PROTEIN },
+      { feature: Columns.C_ALBUMIN },
+      { feature: Columns.C_TROPONIN },
+      { feature: Columns.C_CRP },
+      { feature: Columns.C_HB },
+      { feature: Columns.C_HT },
+      { feature: Columns.C_RBC_COUNT },
+      { feature: Columns.C_WBC_COUNT },
+      { feature: Columns.C_PLATELETS_COUNT },
+      { feature: Columns.C_PTT },
+      { feature: Columns.C_PT },
+      { feature: Columns.C_ACT },
+      { feature: Columns.C_INR },
+      { feature: Columns.C_ARTERIAL_PH },
+      { feature: Columns.C_PAO2 },
+      { feature: Columns.C_PACO2 },
+      { feature: Columns.C_ARTERIAL_BE },
+      { feature: Columns.C_ARTERIAL_LACTATE },
+      { feature: Columns.C_HCO3 },
+    ],
+    [StateCategory.RESPIRATORY]: [
+      { feature: Columns.C_PAO2_FIO2 },
+      { feature: Columns.C_RR },
+      { feature: Columns.C_SPO2 },
+      { feature: Columns.C_PAPSYS },
+      { feature: Columns.C_PAPMEAN },
+      { feature: Columns.C_PAPDIA },
+      { feature: Columns.C_CI },
+      { feature: Columns.C_SVR },
+      { feature: Columns.C_INTERFACE },
+      { feature: Columns.C_FIO2_1 },
+      { feature: Columns.C_O2FLOW },
+      { feature: Columns.C_PEEP },
+      { feature: Columns.C_TIDALVOLUME },
+      { feature: Columns.C_MINUTEVENTIL },
+      { feature: Columns.C_PAWMEAN },
+      { feature: Columns.C_PAWPEAK },
+      { feature: Columns.C_PAWPLATEAU },
+      { feature: Columns.C_ETCO2 },
+      { feature: Columns.C_SVO2 },
+      { feature: Columns.C_MECHVENT },
+      { feature: Columns.C_EXTUBATED },
+    ],
+    [StateCategory.FLUIDS_PRESSORS]: [
+      {
+        feature: Columns.C_MAX_DOSE_VASO,
+        name: 'Vasopressor',
+        unit: 'ug/kg/min',
+      },
+      { feature: Columns.C_INPUT_STEP, name: 'IV Fluids', unit: 'ml/4h' },
+      { feature: Columns.C_OUTPUT_STEP, name: 'Output', unit: 'ml/4h' },
+      {
+        feature: Columns.C_CUMULATED_BALANCE,
+        maxDecimals: 0,
+        name: 'Fluid Balance',
+        unit: 'ml/4h',
+      },
+    ],
+  };
 
-*/
-  const featureRowSpec = [
-    { feature: Columns.C_SOFA },
-    { feature: Columns.C_SIRS },
-    { feature: Columns.C_SHOCK_INDEX },
-    { feature: Columns.C_PAO2_FIO2 },
-    { feature: Columns.C_WEIGHT, unit: 'kg' },
-    { feature: Columns.C_GCS },
-    { feature: Columns.C_RASS },
-    { feature: Columns.C_HR, maxDecimals: 0, unit: 'bpm' },
-    { feature: Columns.C_MEANBP, maxDecimals: 0 },
-    {
-      computed: (tp) =>
-        `${tp[Columns.C_SYSBP].value.toFixed(0)}/${tp[
-          Columns.C_DIABP
-        ].value.toFixed(0)}`,
-      name: 'Blood Pressure',
-    },
-    { feature: Columns.C_RR },
-    { feature: Columns.C_SPO2 },
-    { feature: Columns.C_TEMP_C, maxDecimals: 1, unit: '&deg;C' },
-    { feature: Columns.C_CVP },
-    { feature: Columns.C_PAPSYS },
-    { feature: Columns.C_PAPMEAN },
-    { feature: Columns.C_PAPDIA },
-    { feature: Columns.C_CI },
-    { feature: Columns.C_SVR },
-    { feature: Columns.C_INTERFACE },
-    { feature: Columns.C_FIO2_1 },
-    { feature: Columns.C_O2FLOW },
-    { feature: Columns.C_PEEP },
-    { feature: Columns.C_TIDALVOLUME },
-    { feature: Columns.C_MINUTEVENTIL },
-    { feature: Columns.C_PAWMEAN },
-    { feature: Columns.C_PAWPEAK },
-    { feature: Columns.C_PAWPLATEAU },
-    { feature: Columns.C_POTASSIUM },
-    { feature: Columns.C_SODIUM },
-    { feature: Columns.C_CHLORIDE },
-    { feature: Columns.C_GLUCOSE },
-    { feature: Columns.C_BUN },
-    { feature: Columns.C_CREATININE },
-    { feature: Columns.C_MAGNESIUM },
-    { feature: Columns.C_CALCIUM },
-    { feature: Columns.C_IONISED_CA },
-    { feature: Columns.C_CO2_MEQL },
-    { feature: Columns.C_SGOT },
-    { feature: Columns.C_SGPT },
-    { feature: Columns.C_TOTAL_BILI },
-    { feature: Columns.C_DIRECT_BILI },
-    { feature: Columns.C_TOTAL_PROTEIN },
-    { feature: Columns.C_ALBUMIN },
-    { feature: Columns.C_TROPONIN },
-    { feature: Columns.C_CRP },
-    { feature: Columns.C_HB },
-    { feature: Columns.C_HT },
-    { feature: Columns.C_RBC_COUNT },
-    { feature: Columns.C_WBC_COUNT },
-    { feature: Columns.C_PLATELETS_COUNT },
-    { feature: Columns.C_PTT },
-    { feature: Columns.C_PT },
-    { feature: Columns.C_ACT },
-    { feature: Columns.C_INR },
-    { feature: Columns.C_ARTERIAL_PH },
-    { feature: Columns.C_PAO2 },
-    { feature: Columns.C_PACO2 },
-    { feature: Columns.C_ARTERIAL_BE },
-    { feature: Columns.C_ARTERIAL_LACTATE },
-    { feature: Columns.C_HCO3 },
-    { feature: Columns.C_ETCO2 },
-    { feature: Columns.C_SVO2 },
-    { feature: Columns.C_MECHVENT },
-    { feature: Columns.C_EXTUBATED },
-    { feature: Columns.C_MEDIAN_DOSE_VASO },
-    { feature: Columns.C_MAX_DOSE_VASO },
-    { feature: Columns.C_INPUT_TOTAL },
-    { feature: Columns.C_INPUT_STEP },
-    { feature: Columns.C_OUTPUT_TOTAL },
-    { feature: Columns.C_OUTPUT_STEP },
-    { feature: Columns.C_CUMULATED_BALANCE },
-  ];
+  let featureRows = [];
+  $: if (category != null) {
+    featureRows = featureRowSpec[category];
+  } else {
+    featureRows = [
+      StateCategory.VITALS,
+      StateCategory.LABS,
+      StateCategory.RESPIRATORY,
+      StateCategory.FLUIDS_PRESSORS,
+    ]
+      .map((c) => featureRowSpec[c] || [])
+      .flat();
+  }
 
   /*
     Computes whether the values for the given feature have increased or
@@ -134,7 +166,7 @@
 <div class="data-state-container w-100 ph2">
   <table class="w-100">
     {#if !!timePoint}
-      {#each featureRowSpec as row}
+      {#each featureRows as row}
         <DataFeature
           feature={row.name || row.feature}
           value={!!row.computed

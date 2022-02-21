@@ -4,6 +4,10 @@
     { value: 1, name: 'A' },
     { value: 2, name: 'B' },
   ];
+
+  let randomID = 'segmented-control-' + Math.floor(Math.random() * 1e8);
+
+  $: console.log('selected', selected);
 </script>
 
 <ul class="segmented-control">
@@ -16,11 +20,11 @@
         class="segmented-control__input"
         type="radio"
         value={option.value}
-        name="option"
-        id="option-{i + 1}"
+        name={randomID}
+        id="{randomID}-{i + 1}"
         bind:group={selected}
       />
-      <label class="segmented-control__label" for="option-{i + 1}"
+      <label class="segmented-control__label" for="{randomID}-{i + 1}"
         >{option.name}</label
       >
     </li>
