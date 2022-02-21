@@ -3,19 +3,22 @@
   export let dark = false;
 </script>
 
-<div
-  class="text-feature ph2 pv2 bg-animate flex justify-between items-center"
+<tr
+  class="text-feature ph2 pv2 bg-animate"
   class:dark
   class:hover-bg-near-white={!dark}
   class:hover-bg-dark-gray={dark}
 >
-  {#if !!label}
-    <p class="f6">{label}</p>
-  {/if}
-  <div class="text-feature-content flex-auto ml3 tr f6 b pv2">
+  <td class="f6 pl3">
+    {#if !!label}
+      {label}
+    {/if}
+  </td>
+  <td />
+  <td class="text-feature-content flex-auto ph3 tr f6 b pv2">
     <slot />
-  </div>
-</div>
+  </td>
+</tr>
 
 <style>
   .text-feature {

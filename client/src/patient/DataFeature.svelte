@@ -57,16 +57,19 @@
   }
 </script>
 
-<div
-  class="feature-row ph2 pv2 bg-animate flex justify-between items-center"
+<tr
+  class="feature-row pv2 bg-animate"
   class:dark
   class:hover-bg-near-white={!dark}
   class:hover-bg-dark-gray={dark}
 >
-  {#if !!feature}
-    <p class="feature-name f6 {dark ? 'white' : 'dark-gray'}">{feature}</p>
-  {/if}
-  <div class="historical-chart pv2">
+  <td class="feature-name pl3 f6 {dark ? 'white' : 'dark-gray'}">
+    {#if !!feature}
+      {feature}
+    {/if}
+  </td>
+
+  <td class="historical-chart pv3 pr2">
     {#if historicalData.length > 0}
       <LayerCake x="t" y="value" data={historicalData} padding={{ left: 4 }}>
         <Svg>
@@ -82,8 +85,8 @@
         </Svg>
       </LayerCake>
     {/if}
-  </div>
-  <p class="feature-value f4 fw5 mv2" class:white={dark}>
+  </td>
+  <td class="feature-value f4 fw5 pv2 pr3" class:white={dark}>
     {#if trend != 0}
       <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span>
     {/if}
@@ -93,8 +96,8 @@
     {#if !!unit}
       <span class="f5">{@html unit}</span>
     {/if}
-  </p>
-</div>
+  </td>
+</tr>
 
 <style>
   .feature-row {
@@ -106,9 +109,8 @@
   }
 
   .historical-chart {
-    flex-grow: 1;
-    height: 60px;
-    margin-left: 30px;
+    height: 72px;
+    padding-left: 30px;
   }
 
   .feature-name {

@@ -8,7 +8,15 @@
   import Columns from '../utils/columns';
   import SegmentedControl from '../utils/SegmentedControl.svelte';
   import Predictions from './Predictions.svelte';
+  import Antibiotics from './Antibiotics.svelte';
+  import Cultures from './Cultures.svelte';
 
+  const NON_TIMESTEP_COLUMNS = [
+    'timesteps',
+    'antibiotics',
+    'microbio',
+    'notes',
+  ];
   let patient = writable(null);
   let modelInfo = writable(null);
   let modelPredictions = writable(null);
@@ -26,6 +34,8 @@
 
   let loadingModelPrediction = false;
   let loadingPatientInfo = false;
+
+  let treatmentTab = 1;
 
   onMount(() => {
     if (!!patientID) loadPatientInfo(patientID);
@@ -88,7 +98,7 @@
       });
       // TODO make the model API just take a patient object as-is
       Object.keys(patientInfo).forEach((key) => {
-        if (key != 'timesteps') state[key] = patientInfo[key];
+        if (!NON_TIMESTEP_COLUMNS.includes(key)) state[key] = patientInfo[key];
       });
       return state;
     });
@@ -139,7 +149,9 @@
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked">
-    <a class="link dim white dib mr3" href="/" title="Home">Home</a>
+    <a class="link dim white dib mr3" href="/" title="Patient List"
+      >Patient List</a
+    >
   </nav>
 </header>
 <main class="pa0 h-100">
@@ -183,6 +195,7 @@
               class="context-info-controls pa2 flex items-center bg-near-white"
             >
               <SegmentedControl
+                bind:selected={treatmentTab}
                 options={[
                   { name: 'Antibiotics', value: 1 },
                   { name: 'Cultures', value: 2 },
@@ -192,7 +205,13 @@
               />
             </div>
             <div class="data-treatments">
-              <Treatments />
+              {#if treatmentTab == 1}
+                <Antibiotics />
+              {:else if treatmentTab == 2}
+                <Cultures />
+              {:else if treatmentTab == 3}
+                <Treatments />
+              {/if}
             </div>
           </div>
           <div

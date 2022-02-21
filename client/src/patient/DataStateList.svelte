@@ -131,41 +131,37 @@
   }
 </script>
 
-<div class="data-state-container ph2 w-100">
-  {#if !!timePoint}
-    {#each featureRowSpec as row}
-      <DataFeature
-        feature={row.name || row.feature}
-        value={!!row.computed
-          ? row.computed(timePoint)
-          : timePoint[row.feature] != null
-          ? timePoint[row.feature].value
-          : null}
-        historicalValues={$patient.timesteps
-          .slice(0, $currentBloc)
-          .map((ts) =>
-            !!row.computed
-              ? row.computed(ts)
-              : ts[row.feature] != null
-              ? ts[row.feature].value
-              : null
-          )}
-        maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
-        trend={!row.computed ? computeTrend(row.feature, $currentBloc) : 0}
-        unit={row.unit}
-      />
-    {/each}
-    <!-- C_GCS, C_HR, C_SYSBP, C_MEANBP, C_DIABP,
-    C_RR, C_TEMP_C, C_FIO2_1, C_POTASSIUM, C_SODIUM,
-    C_CHLORIDE, C_GLUCOSE, C_MAGNESIUM, C_CALCIUM, C_HB,
-    C_WBC_COUNT, C_PLATELETS_COUNT, C_PTT, C_PT, C_ARTERIAL_PH,
-    C_PAO2, C_PACO2, C_ARTERIAL_BE, C_HCO3, C_ARTERIAL_LACTATE,
-    C_SOFA, C_SIRS, C_SHOCK_INDEX, C_PAO2_FIO2, C_CUMULATED_BALANCE,
-    C_SPO2, C_BUN, C_CREATININE, C_SGOT, C_SGPT,
-    C_TOTAL_BILI, C_INR, C_INPUT_TOTAL, C_INPUT_STEP, C_OUTPUT_TOTAL,
-    C_OUTPUT_STEP -->
-  {/if}
+<div class="data-state-container w-100 ph2">
+  <table class="w-100">
+    {#if !!timePoint}
+      {#each featureRowSpec as row}
+        <DataFeature
+          feature={row.name || row.feature}
+          value={!!row.computed
+            ? row.computed(timePoint)
+            : timePoint[row.feature] != null
+            ? timePoint[row.feature].value
+            : null}
+          historicalValues={$patient.timesteps
+            .slice(0, $currentBloc)
+            .map((ts) =>
+              !!row.computed
+                ? row.computed(ts)
+                : ts[row.feature] != null
+                ? ts[row.feature].value
+                : null
+            )}
+          maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
+          trend={!row.computed ? computeTrend(row.feature, $currentBloc) : 0}
+          unit={row.unit}
+        />
+      {/each}
+    {/if}
+  </table>
 </div>
 
 <style>
+  .data-state-container table {
+    border-collapse: collapse;
+  }
 </style>
