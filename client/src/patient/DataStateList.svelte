@@ -3,6 +3,7 @@
   import Columns from '../utils/columns';
   import { getContext } from 'svelte';
   import { StateCategory } from '../utils/strings';
+  import { detectExtremeValue } from '../utils/ranges';
 
   let { patient, currentBloc } = getContext('patient');
   export let lastTrendWindow = 1; // number of timesteps to average over for last trend window
@@ -21,10 +22,14 @@
   const featureRowSpec = {
     [StateCategory.VITALS]: [
       { feature: Columns.C_WEIGHT, name: 'Weight', unit: 'kg' },
-      { feature: Columns.C_GCS },
-      { feature: Columns.C_RASS },
       { feature: Columns.C_HR, maxDecimals: 0, unit: 'bpm' },
-      { feature: Columns.C_MEANBP, maxDecimals: 0 },
+      {
+        feature: Columns.C_TEMP_C,
+        name: 'Temperature',
+        maxDecimals: 1,
+        unit: '&deg;C',
+      },
+      { feature: Columns.C_MEANBP, name: 'mAP', maxDecimals: 0 },
       {
         computed: (tp) =>
           `${tp[Columns.C_SYSBP].value.toFixed(0)}/${tp[
@@ -32,45 +37,40 @@
           ].value.toFixed(0)}`,
         name: 'Blood Pressure',
       },
+      { feature: Columns.C_GCS },
+      { feature: Columns.C_RASS },
       { feature: Columns.C_SOFA },
       { feature: Columns.C_SIRS },
       { feature: Columns.C_SHOCK_INDEX, name: 'Shock Index' },
-      {
-        feature: Columns.C_TEMP_C,
-        name: 'Temperature',
-        maxDecimals: 1,
-        unit: '&deg;C',
-      },
-      { feature: Columns.C_CVP },
     ],
     [StateCategory.LABS]: [
-      { feature: Columns.C_POTASSIUM },
-      { feature: Columns.C_SODIUM },
-      { feature: Columns.C_CHLORIDE },
-      { feature: Columns.C_GLUCOSE },
-      { feature: Columns.C_BUN },
-      { feature: Columns.C_CREATININE },
-      { feature: Columns.C_MAGNESIUM },
-      { feature: Columns.C_CALCIUM },
-      { feature: Columns.C_IONISED_CA },
-      { feature: Columns.C_CO2_MEQL },
-      { feature: Columns.C_SGOT },
-      { feature: Columns.C_SGPT },
+      { feature: Columns.C_POTASSIUM, maxDecimals: 1 },
+      { feature: Columns.C_SODIUM, maxDecimals: 1 },
+      { feature: Columns.C_CHLORIDE, maxDecimals: 1 },
+      { feature: Columns.C_GLUCOSE, maxDecimals: 1 },
+      { feature: Columns.C_BUN, maxDecimals: 1 },
+      { feature: Columns.C_CREATININE, maxDecimals: 1 },
+      { feature: Columns.C_MAGNESIUM, maxDecimals: 1 },
+      { feature: Columns.C_CALCIUM, maxDecimals: 1 },
+      { feature: Columns.C_IONISED_CA, maxDecimals: 1 },
+      { feature: Columns.C_CO2_MEQL, maxDecimals: 1 },
+      { feature: Columns.C_SGOT, maxDecimals: 1 },
+      { feature: Columns.C_SGPT, maxDecimals: 1 },
       { feature: Columns.C_TOTAL_BILI },
       { feature: Columns.C_DIRECT_BILI },
       { feature: Columns.C_TOTAL_PROTEIN },
       { feature: Columns.C_ALBUMIN },
       { feature: Columns.C_TROPONIN },
       { feature: Columns.C_CRP },
-      { feature: Columns.C_HB },
-      { feature: Columns.C_HT },
-      { feature: Columns.C_RBC_COUNT },
-      { feature: Columns.C_WBC_COUNT },
-      { feature: Columns.C_PLATELETS_COUNT },
-      { feature: Columns.C_PTT },
-      { feature: Columns.C_PT },
-      { feature: Columns.C_ACT },
-      { feature: Columns.C_INR },
+      { feature: Columns.C_HB, maxDecimals: 1 },
+      { feature: Columns.C_HT, maxDecimals: 1 },
+      { feature: Columns.C_RBC_COUNT, maxDecimals: 1 },
+      { feature: Columns.C_WBC_COUNT, maxDecimals: 1 },
+      { feature: Columns.C_PLATELETS_COUNT, maxDecimals: 1 },
+      { feature: Columns.C_PTT, maxDecimals: 1 },
+      { feature: Columns.C_PT, maxDecimals: 1 },
+      { feature: Columns.C_ACT, maxDecimals: 1 },
+      { feature: Columns.C_INR, maxDecimals: 1 },
       { feature: Columns.C_ARTERIAL_PH },
       { feature: Columns.C_PAO2 },
       { feature: Columns.C_PACO2 },
@@ -79,25 +79,26 @@
       { feature: Columns.C_HCO3 },
     ],
     [StateCategory.RESPIRATORY]: [
-      { feature: Columns.C_PAO2_FIO2 },
-      { feature: Columns.C_RR },
-      { feature: Columns.C_SPO2 },
+      { feature: Columns.C_PAO2_FIO2, maxDecimals: 1 },
+      { feature: Columns.C_RR, maxDecimals: 1 },
+      { feature: Columns.C_SPO2, maxDecimals: 1 },
       { feature: Columns.C_PAPSYS },
       { feature: Columns.C_PAPMEAN },
       { feature: Columns.C_PAPDIA },
       { feature: Columns.C_CI },
       { feature: Columns.C_SVR },
       { feature: Columns.C_INTERFACE },
-      { feature: Columns.C_FIO2_1 },
+      { feature: Columns.C_FIO2_1, name: 'FiO2', maxDecimals: 2 },
       { feature: Columns.C_O2FLOW },
       { feature: Columns.C_PEEP },
-      { feature: Columns.C_TIDALVOLUME },
-      { feature: Columns.C_MINUTEVENTIL },
-      { feature: Columns.C_PAWMEAN },
-      { feature: Columns.C_PAWPEAK },
-      { feature: Columns.C_PAWPLATEAU },
+      { feature: Columns.C_TIDALVOLUME, maxDecimals: 1 },
+      { feature: Columns.C_MINUTEVENTIL, maxDecimals: 2 },
+      { feature: Columns.C_PAWMEAN, maxDecimals: 1 },
+      { feature: Columns.C_PAWPEAK, maxDecimals: 1 },
+      { feature: Columns.C_PAWPLATEAU, maxDecimals: 1 },
       { feature: Columns.C_ETCO2 },
       { feature: Columns.C_SVO2 },
+      { feature: Columns.C_CVP, maxDecimals: 1 },
       { feature: Columns.C_MECHVENT },
       { feature: Columns.C_EXTUBATED },
     ],
@@ -183,6 +184,15 @@
                 ? ts[row.feature].value
                 : null
             )}
+          extremeValue={!row.computed
+            ? detectExtremeValue(
+                row.feature,
+                timePoint[row.feature] != null
+                  ? timePoint[row.feature].value
+                  : null,
+                $patient.gender
+              )
+            : 0}
           maxDecimals={row.hasOwnProperty('maxDecimals') ? row.maxDecimals : 3}
           trend={!row.computed ? computeTrend(row.feature, $currentBloc) : 0}
           unit={row.unit}

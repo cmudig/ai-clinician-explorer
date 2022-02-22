@@ -13,6 +13,8 @@
   export let trend = 0;
   export let maxDecimals = 3;
   export let historicalValues = [];
+  export let extremeValue = 0; // 1 = too high, -1 = too low
+
   let historicalData = [];
 
   let valueString;
@@ -55,6 +57,12 @@
       ];
     } else ticks = [];
   }
+
+  $: console.log(feature, valueColor, defaultColor);
+
+  let defaultColor;
+  $: if (extremeValue != 0) defaultColor = dark ? 'light-red' : 'dark-red';
+  else defaultColor = dark ? 'white' : 'black';
 </script>
 
 <tr
@@ -87,7 +95,7 @@
     {/if}
   </td>
   <td class="feature-value f4 fw5 pv2 pr3" class:white={dark}>
-    <p class="mv0" style="color: {valueColor || (dark ? 'white' : 'black')};">
+    <p class="mv0 {valueColor != null ? valueColor : defaultColor}">
       {#if trend != 0}
         <span class="trend-marker">{@html trend > 0 ? '&uarr;' : '&darr;'}</span
         >
