@@ -231,9 +231,7 @@
               {/if}
             </div>
           </div>
-          <div
-            class="prediction-column flex-auto h-100 flex justify-center ph4"
-          >
+          <div class="prediction-column flex-auto h-100">
             <Predictions />
           </div>
         </div>
@@ -291,6 +289,7 @@
   }
   .prediction-column {
     flex-basis: 100%;
+    overflow-y: scroll;
   }
 
   .timestep-selector {

@@ -43,11 +43,11 @@
   }
 </script>
 
-<div class="actions-heatmap flex ">
+<div class="actions-heatmap flex mb3">
   {#if !!visData}
-    <div class="heatmap-plot h-100 flex-auto ml3">
+    <div class="heatmap-plot h-100 flex-auto ml4">
       <LayerCake
-        padding={{ top: 10, right: 10, bottom: 10, left: 35 }}
+        padding={{ top: 10, right: 10, bottom: 30, left: 35 }}
         x="x"
         y="y"
         z="z"
@@ -93,7 +93,13 @@
       </LayerCake>
     </div>
     <div class="legend-container h-100">
-      <Colorbar width={60} {colorMap} {valueDomain} numTicks={6} />
+      <Colorbar
+        width={60}
+        {colorMap}
+        {valueDomain}
+        numTicks={6}
+        margin={{ top: 10, bottom: 30 }}
+      />
     </div>
   {/if}
 </div>

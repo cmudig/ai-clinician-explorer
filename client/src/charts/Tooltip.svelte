@@ -4,8 +4,8 @@
   const { data, x, y, xScale, yScale, custom } = getContext('LayerCake');
 
   export let formatText = null;
-  export let dx = 0; // in plot coordinates
-  export let dy = 0; // in plot coordinates
+  export let dx = null; // in plot coordinates
+  export let dy = null; // in plot coordinates
 
   let padding = 8;
 
@@ -24,8 +24,9 @@
   {#if getHovered($custom, d)}
     <div
       class="tooltip"
-      style="left: {$xScale($x(d) + dx)}px; top: {$yScale($y(d) - dy) +
-        padding}px; padding: {padding}px;"
+      style="left: {$xScale(dx != null ? $x(d) + dx : $x(d))}px; top: {$yScale(
+        dy != null ? $y(d) - dy : $y(d)
+      ) + padding}px; padding: {padding}px;"
     >
       {@html formatTooltip(d)}
     </div>

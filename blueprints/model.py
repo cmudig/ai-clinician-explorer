@@ -1,5 +1,6 @@
 import os
 from flask import Blueprint, request, abort, jsonify
+from .firestore import db
 from ai_clinician.modeling.models import AIClinicianModel
 from ai_clinician.modeling.columns import ALL_FEATURE_COLUMNS
 from ai_clinician.preprocessing.columns import *
@@ -19,6 +20,9 @@ MODELS = {
     }
     for model_name in os.listdir(MODEL_DIR) if os.path.isdir(os.path.join(MODEL_DIR, model_name))
 }
+
+# Initialize Firestore DB - we retrieve model state information from here
+model_db = db.collection('AI_clinician_models')
 
 def get_model_info(model):
     if isinstance(model, AIClinicianModel):
@@ -59,6 +63,17 @@ def model_info(model_id):
         model = MODELS[model_id]['model']
         return {'model': get_model_info(model)}
 
+def explain_states(model_id, states):
+    """
+    Retrieves explanations of the given list of states, and returns them as a
+    list of dictionaries corresponding to the states in the list.
+    """
+    unique_states = set(states)
+    states_collection = model_db.document(model_id).collection('states')
+    explanations = {s: states_collection.document(str(s)).get().to_dict()
+                    for s in unique_states}
+    return [explanations[s] for s in states]
+    
 @model_blueprint.route('/<model_id>/predict', methods=['POST'])
 def predict(model_id):
     """
@@ -115,8 +130,15 @@ def predict(model_id):
     else:
         clin_actions = None
     
+    try:
+        explanations = explain_states(model_id, state_reps)
+    except Exception as e:
+        print(e)
+        return "Error retrieving explanations", 400
+        
     return jsonify({'results': [{
         'state': int(state_reps[i]),
+        'state_explanation': explanations[i],
         'model_Q': [x if not np.isnan(x) else None for x in Q[i].astype(float).tolist()],
         'physician_prob': physprob[i].astype(float).tolist(),
         'recommendation': int(np.argmax(np.where(np.isnan(Q[i]), -1e9, Q[i]))),

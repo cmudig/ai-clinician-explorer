@@ -1,17 +1,14 @@
 from flask import Blueprint, request, abort, jsonify
-from firebase_admin import credentials, firestore, initialize_app
 from google_auth_oauthlib import flow
 from google.cloud.exceptions import NotFound
 from google.cloud import bigquery
 from ai_clinician.preprocessing.columns import *
 from ai_clinician.modeling.columns import *
+from .firestore import db
 
 patient_blueprint = Blueprint('patient', __name__, url_prefix='/api/patient')
 
 # Initialize Firestore DB - we retrieve detailed patient data from there
-cred = credentials.Certificate('firestore_key.json')
-default_app = initialize_app(cred)
-db = firestore.client()
 mimic_data = db.collection('MIMICIV_provenance')
 
 # Also initialize BigQuery client - we use this for fast search, filtering, and sorting

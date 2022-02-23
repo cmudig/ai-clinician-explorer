@@ -12,6 +12,11 @@
 
   export let numTicks = 7;
 
+  export let markerValue = null;
+  export let markerText = null;
+
+  export let title = null;
+
   let gradientID = 'gradient' + Math.floor(Math.random() * 999999);
 
   export let margin = {};
@@ -64,6 +69,23 @@
     sel.selectAll('*').remove();
     sel.call(legendAxis);
   }
+
+  let markerX;
+  let markerY;
+  let markerWidth = 18;
+  let markerHeight = 5;
+  $: if (markerValue != null && !!actualHeight) {
+    markerX = actualMargin.left + markerWidth * 0.75;
+    let height = actualHeight - actualMargin.top - actualMargin.bottom;
+    markerY =
+      actualMargin.top +
+      height *
+        (1.0 -
+          (markerValue - valueDomain[0]) / (valueDomain[1] - valueDomain[0]));
+  } else {
+    markerX = null;
+    markerY = null;
+  }
 </script>
 
 <div
@@ -71,6 +93,9 @@
   bind:clientWidth={actualWidth}
   bind:clientHeight={actualHeight}
 >
+  {#if !!title}
+    <p class="colorbar-title">{title}</p>
+  {/if}
   <svg
     style="width: 100%; height: 100%;"
     transform="translate({actualMargin.left}px, {actualMargin.top}px)"
@@ -109,5 +134,39 @@
       style="transform: translate(calc(100% - {actualMargin.right -
         2}px), {actualMargin.top}px);"
     />
+    {#if markerValue != null && !!markerX && !!markerY}
+      <polygon
+        points="{markerX},{markerY} {markerX - markerWidth},{markerY -
+          markerHeight} {markerX - markerWidth},{markerY + markerHeight}"
+        style="fill:#333;stroke:white;stroke-width:2"
+      />
+      {#if !!markerText}
+        <text
+          x={markerX - markerWidth - 2}
+          y={markerY}
+          text-anchor="end"
+          alignment-baseline="central"
+          class="marker-text">{markerText}</text
+        >
+      {/if}
+    {/if}
   </svg>
 </div>
+
+<style>
+  .colorbar-title {
+    position: absolute;
+    text-align: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-size: 0.8em;
+    fill: #333;
+    font-weight: 500;
+  }
+
+  .marker-text {
+    fill: #333;
+    font-weight: 500;
+  }
+</style>
