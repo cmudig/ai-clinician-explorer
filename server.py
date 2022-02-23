@@ -1,8 +1,10 @@
 from flask import Flask, send_from_directory
 from blueprints.patient import patient_blueprint
+from blueprints.model import model_blueprint
 
 app = Flask(__name__)
 app.register_blueprint(patient_blueprint)
+app.register_blueprint(model_blueprint)
 
 # Path for our main Svelte page
 @app.route("/")
