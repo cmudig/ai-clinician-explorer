@@ -6,6 +6,11 @@ from ai_clinician.preprocessing.columns import *
 from ai_clinician.modeling.columns import *
 from .firestore import db
 
+from google.oauth2 import service_account
+credentials = service_account.Credentials.from_service_account_file(
+    'firestore_key.json', scopes=["https://www.googleapis.com/auth/cloud-platform"],
+)
+
 patient_blueprint = Blueprint('patient', __name__, url_prefix='/api/patient')
 
 # Initialize Firestore DB - we retrieve detailed patient data from there
@@ -13,7 +18,7 @@ mimic_data = db.collection('MIMICIV_provenance')
 
 # Also initialize BigQuery client - we use this for fast search, filtering, and sorting
 project = "ai-clinician"
-bq_client = bigquery.Client(project=project)
+bq_client = bigquery.Client(credentials=credentials, project=project)
 default_dataset = "mimiciv_220217_best"
 
 METADATA_FIELDS = [
@@ -66,10 +71,10 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
                             for statement in filters)
     if timestep_relevant:
         # We need to do a group by here because the bloc may not necessarily be 1
-        fields = ", ".join([f"MAX({f}) as {f}" for f in METADATA_FIELDS])
-        query = f"SELECT {fields} FROM `{project}.{dataset}.stays` "
-        query += "WHERE " + filters.join(' AND ') + " "
-        query += "GROUP BY icustayid"
+        fields = ", ".join([f"MAX({f}) as {f}" if f != C_ICUSTAYID else f for f in METADATA_FIELDS])
+        query = f"SELECT {fields}, MIN({C_BLOC}) as {C_BLOC} FROM `{project}.{dataset}.stays` "
+        query += "WHERE " + ' AND '.join(filters) + " "
+        query += "GROUP BY icustayid "
     else:
         query = f"SELECT {', '.join(METADATA_FIELDS)} FROM `{project}.{dataset}.stays` "
         if filters:
