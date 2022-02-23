@@ -19,17 +19,21 @@
       .then((d) => (patients = d.results));
   }
 
- $("#age-sort").click(function(){
-    fetch('./api/patient?sort=age')
-      .then((d) => d.json())
-      .then((d) => (patients = d.results));
- });
- $("#id-sort").click(function(){
-    fetch('./api/patient?sort=icustayid')
-      .then((d) => d.json())
-      .then((d) => (patients = d.results));
- });
+  export let sort = "icustayid";
+  let cursor_id = "30850150";
+  let cursor_sort = "21";
+  let size = 20;
 
+  function reSort(sortParam) {
+    fetch(`./api/patient/?sort=${sortParam}`)
+      .then((d) => d.json())
+      .then((d) => (patients = d.results));
+  }
+
+  function changeSort(sortingCriterion) {
+    sort = sortingCriterion;
+    reSort(sortingCriterion);
+  }
 
 </script>
 <style>
@@ -69,7 +73,7 @@ th {
 }
 
 a {
-  color: white;
+  color: rgb(0, 0, 0);
 }
 tr {
   background-color: #fcfdff;
@@ -124,45 +128,93 @@ tr {
 <div class="gradient">
 
 <h1 class="text-image">MIMIC Data</h1>
+<div on:mousemove>Currently sorting based on {sort}</div>
 <div style="overflow-x:auto">
 <table class="patient-data">
 <tr>
   <th>
-  <a class="id-sort">Patient ID <i class="fa-solid fa-sort"></i></a></th>
-  <th><a class="age-sort">Age <i class="fa-solid fa-sort"></a></th>
-  <th><a class="gender-filter">Gender <i class="fa-solid fa-filter"></a></th>
-  <th>Duration of Stay <i class="fa-solid fa-sort"></th>
-  <th>Re-Admission</th>
-  <th>90-Day Mortality</th>
-  <th>Patient Outcome <i class="fa-solid fa-filter"></th>
+  <button
+    on:click={changeSort("icustayid")}
+    on:click={reSort()}
+    on:click={() => console.log('Sorting ID!')}>
+  Patient ID <i class="fa-solid fa-sort"></i>
+  </button></th>
+  <th>
+  <button
+    on:click={changeSort("age")}
+    on:click={() => console.log('Sorting Age!')}>
+    Age <i class="fa-solid fa-sort"></i>
+  </button></th>
+  <th>
+  <button
+    on:click={changeSort("gender")}
+    on:click={() => console.log('Filtering Gender!')}>
+    Gender <i class="fa-solid fa-filter"></i>
+  </button></th>
+  <th>
+    <button
+
+      on:click={() => console.log('Sorting duration of stay')}>
+      Duration of Stay <i class="fa-solid fa-filter"></i>
+    </button></th>
+    <th>
+      <button
+      
+        on:click={() => console.log('Sorting readmission!')}>
+        Re-Admission<i class="fa-solid fa-filter"></i>
+      </button></th>
+    <th>
+      <button
+       
+        on:click={() => console.log('Sorting morta_90!')}>
+        90-Day Mortality<i class="fa-solid fa-filter"></i>
+      </button></th>
+    <th>
+      <button
+
+        on:click={() => console.log('Sorting outcome!')}>
+        Patient Outcome<i class="fa-solid fa-filter"></i>
+      </button></th>
 </tr>
 {#each patients as patient}
 <tr>
   <td>
-    <a class="rel" href="/patient?id={patient.icustayid}">ID {patient.icustayid}</a>
+    <a href="/patient?id={patient.icustayid}">Patient ID {patient.icustayid}</a>
   </td>
   <td>
-    <a class="entry">{patient.age}</a>
+    {patient.age}
   </td>
   <td>
-    <a class="entry">{patient.gender}</a>
+    {patient.gender}
   </td>
   <td>
-    <a class="entry">{patient.delay_end_of_record_and_discharge_or_death}</a>
+    {patient.delay_end_of_record_and_discharge_or_death}
   </td>
   <td>
-    <a class="entry">{patient.re_admission}</a>
+    {patient.re_admission}
   </td>
   <td>
-    <a class="entry">{patient.morta_90}</a>
+    {patient.morta_90}
   </td>
   <td>
-    <a class="entry">{patient.died_in_hosp}</a>
+    {patient.died_in_hosp}
   </td>
 </tr>
 {/each}
 </table>
 </div>
-
-
+<ul>
+  <li>
+    <button>
+      First
+    </button>
+  </li>
+  <li>
+    <button>
+     Previous
+    </button>
+  </li>
+  <li>
+  </li>
+</ul>
 </div>
