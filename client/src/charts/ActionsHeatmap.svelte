@@ -1,5 +1,5 @@
 <script>
-  import { LayerCake, Svg } from 'layercake';
+  import { Html, LayerCake, Svg } from 'layercake';
   import { scaleLinear } from 'd3-scale';
   import AxisX from './AxisX.svelte';
   import AxisY from './AxisY.svelte';
@@ -82,12 +82,14 @@
             on:hover={(e) => (hoveredAction = e.detail ? e.detail.i : null)}
             on:click={(e) => dispatch('select', e.detail.i)}
           />
+        </Svg>
+        <Html pointerEvents={false}>
           <Tooltip
             formatText={formatTooltip}
-            dx={0.5}
+            dx={-0.5}
             horizontalAlign="middle"
           />
-        </Svg>
+        </Html>
       </LayerCake>
     </div>
     <div class="legend-container h-100">

@@ -169,6 +169,7 @@
     {#if !!timePoint}
       {#each featureRows as row}
         <DataFeature
+          patientID={$patient[Columns.C_ICUSTAYID]}
           feature={row.name || row.feature}
           value={!!row.computed
             ? row.computed(timePoint)
@@ -177,13 +178,7 @@
             : null}
           historicalValues={$patient.timesteps
             .slice(0, $currentBloc)
-            .map((ts) =>
-              !!row.computed
-                ? row.computed(ts)
-                : ts[row.feature] != null
-                ? ts[row.feature].value
-                : null
-            )}
+            .map((ts) => (!!row.computed ? row.computed(ts) : ts[row.feature]))}
           extremeValue={!row.computed
             ? detectExtremeValue(
                 row.feature,

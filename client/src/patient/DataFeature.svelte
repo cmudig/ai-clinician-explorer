@@ -1,8 +1,9 @@
 <script>
-  import { LayerCake, Svg } from 'layercake';
+  import { Html, LayerCake, Svg } from 'layercake';
   import Line from '../charts/Line.svelte';
-  import AxisX from '../charts/AxisX.svelte';
   import AxisY from '../charts/AxisY.svelte';
+  import ShadingX from '../charts/ShadingX.svelte';
+  import Tooltip from '../charts/Tooltip.svelte';
 
   export let dark = false;
 
@@ -14,6 +15,7 @@
   export let maxDecimals = 3;
   export let historicalValues = [];
   export let extremeValue = 0; // 1 = too high, -1 = too low
+  export let patientID = null;
 
   let historicalData = [];
 
@@ -39,7 +41,7 @@
       historicalData = historicalValues.map((v, i) => {
         return {
           t: i,
-          value: v,
+          value: v.value,
         };
       });
     }
@@ -58,11 +60,34 @@
     } else ticks = [];
   }
 
-  $: console.log(feature, valueColor, defaultColor);
-
   let defaultColor;
   $: if (extremeValue != 0) defaultColor = dark ? 'light-red' : 'dark-red';
   else defaultColor = dark ? 'white' : 'black';
+
+  let hoveredMissingValueSegment = null;
+
+  function suspectedMissingValue(d) {
+    // Look up its provenance
+    if (d.value == null) return false;
+    let provenance = historicalValues[d.t].provenance;
+    if (!provenance) return false;
+    if (!!provenance.KNN && !!patientID && provenance.KNN != patientID)
+      return true;
+    if (provenance.SAH && !provenance.not_SAH) return true;
+    return false;
+  }
+
+  function missingValueExplanation(d) {
+    let provenance = historicalValues[d.t].provenance;
+    if (!provenance) return '';
+    if (!!provenance.KNN && !!patientID && provenance.KNN != patientID) {
+      console.log(provenance.KNN, patientID);
+      return 'Value imputed from another patient';
+    }
+    if (provenance.SAH && !provenance.not_SAH)
+      return 'Value assumed constant from previous timestep';
+    return '';
+  }
 </script>
 
 <tr
@@ -79,8 +104,21 @@
 
   <td class="historical-chart pv3 pr2">
     {#if historicalData.length > 0}
-      <LayerCake x="t" y="value" data={historicalData} padding={{ left: 4 }}>
+      <LayerCake
+        x="t"
+        y="value"
+        data={historicalData}
+        padding={{ left: 4 }}
+        custom={{ hoveredGet: (d) => d.t == hoveredMissingValueSegment }}
+      >
         <Svg>
+          <ShadingX
+            highlightFn={suspectedMissingValue}
+            color="transparent"
+            on:hover={(e) =>
+              (hoveredMissingValueSegment =
+                e.detail != null ? e.detail.t : null)}
+          />
           <AxisY
             gridlines={false}
             tickMarks={false}
@@ -89,8 +127,11 @@
             textAnchor="end"
             dyTick="0.5em"
           />
-          <Line stroke="steelblue" />
+          <Line stroke="steelblue" dashFn={suspectedMissingValue} />
         </Svg>
+        <Html pointerEvents={false}>
+          <Tooltip formatText={missingValueExplanation} />
+        </Html>
       </LayerCake>
     {/if}
   </td>

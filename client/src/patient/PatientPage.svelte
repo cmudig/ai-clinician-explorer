@@ -21,7 +21,8 @@
   let patient = writable(null);
   let modelInfo = writable(null);
   let modelPredictions = writable(null);
-  let currentBloc = writable(0);
+  // let currentBloc = writable(0);
+  export let currentBloc = writable(0);
 
   setContext('patient', {
     patient,
@@ -58,7 +59,6 @@
       response = await response.json();
       $patient = response.result;
       console.log('patient:', $patient);
-      $currentBloc = 1;
       loadingPatientInfo = false;
     } catch (e) {
       console.log('error loading patient info:', e);
@@ -147,8 +147,6 @@
       loadingModelPrediction = false;
     }
   }
-
-  $: console.log(statesTab, treatmentTab);
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
