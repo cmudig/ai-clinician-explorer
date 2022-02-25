@@ -58,6 +58,7 @@
       }
       response = await response.json();
       $patient = response.result;
+      if ($currentBloc == 0) $currentBloc = 1;
       console.log('patient:', $patient);
       loadingPatientInfo = false;
     } catch (e) {

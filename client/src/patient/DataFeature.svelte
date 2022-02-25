@@ -66,14 +66,14 @@
 
   let hoveredMissingValueSegment = null;
 
-  function suspectedMissingValue(d) {
+  function suspectedMissingValue(d, knn = true, sah = true) {
     // Look up its provenance
     if (d.value == null) return false;
     let provenance = historicalValues[d.t].provenance;
     if (!provenance) return false;
-    if (!!provenance.KNN && !!patientID && provenance.KNN != patientID)
+    if (knn && !!provenance.KNN && !!patientID && provenance.KNN != patientID)
       return true;
-    if (provenance.SAH && !provenance.not_SAH) return true;
+    if (sah && provenance.SAH && !provenance.not_SAH) return true;
     return false;
   }
 
@@ -113,7 +113,14 @@
       >
         <Svg>
           <ShadingX
-            highlightFn={suspectedMissingValue}
+            highlightFn={(d) => suspectedMissingValue(d, true, false)}
+            color="#FF725C33"
+            on:hover={(e) =>
+              (hoveredMissingValueSegment =
+                e.detail != null ? e.detail.t : null)}
+          />
+          <ShadingX
+            highlightFn={(d) => suspectedMissingValue(d, false, true)}
             color="transparent"
             on:hover={(e) =>
               (hoveredMissingValueSegment =
