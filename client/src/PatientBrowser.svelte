@@ -6,6 +6,7 @@
 
 <script>
   import { onMount } from 'svelte';
+  import SortButton from './utils/SortButton.svelte';
 
   let patients = [];
 
@@ -19,20 +20,69 @@
       .then((d) => (patients = d.results));
   }
 
-  export let sort = "icustayid";
-  let cursor_id = "30850150";
-  let cursor_sort = "21";
-  let size = 20;
+  let active = false;
 
-  function reSort(sortParam) {
-    fetch(`./api/patient/?sort=${sortParam}`)
+  export let sort = "icustayid";
+  export let size = 20;
+  export let isAgeAscending = 1;
+  export let isFemale = 1;
+  export let isIDAscending = 1;
+  export let isTimeAscending = 1;
+  export let isMorta90 = 1;
+  export let isDeath = 1;
+  export let isSOFA = 1;
+  export let isSIRS = 1;
+  export let isVaso = 1;
+  export let isAscending = 1;
+  export let offset = 0;
+  export let changeCriterion = true;
+
+  function reSort(sortParam, changeOffset) {
+    if (changeCriterion) {
+      if (sortParam == "age") {
+        isAgeAscending = (isAgeAscending + 1) % 2;
+        isAscending = isAgeAscending;
+      } else if (sortParam == "icustayid") {
+        isIDAscending = (isIDAscending + 1) % 2;
+        isAscending = isIDAscending;
+      } else if (sortParam == "morta_90") {
+        isMorta90 = (isMorta90 + 1) % 2;
+        isAscending = isMorta90Ascending;
+      } else if (sortParam == "died_in_hosp") {
+        isDeath = (isDeath + 1) % 2;
+        isAscending = isDeath;
+      } else if (sortParam == "gender") {
+        isFemale = (isFemale + 1) % 2;
+        isAscending = isFemale;
+      } else if (sortParam == "num_timesteps") {
+        isTimeAscending = (isTimeAscending + 1) % 2;
+        isAscending = isTimeAscending;
+      } else if (sortParam == "max_SOFA") {
+        isSOFA = (isSOFA + 1) % 2;
+        isAscending = isSOFA;
+      } else if (sortParam == "max_SIRS") {
+        isSIRS = (isSIRS + 1) % 2;
+        isAscending = isSIRS;
+      } else if (sortParam == "max_dose_vaso") {
+        isVaso = (isVaso + 1) % 2;
+        isAscending = isVaso;
+      }
+    } else {
+      changeCriterion = true;
+    }
+    if (offset + changeOffset < 0) {
+      offset = 0;
+    } else {
+      offset = offset + changeOffset;
+    }
+    fetch(`./api/patient/?sort=${sortParam}&ascending=${isAscending}&offset=${offset}`)
       .then((d) => d.json())
       .then((d) => (patients = d.results));
   }
 
-  function changeSort(sortingCriterion) {
+  function changeSort(sortingCriterion, changeOffset=0) {
     sort = sortingCriterion;
-    reSort(sortingCriterion);
+    reSort(sortingCriterion, changeOffset);
   }
 
 </script>
@@ -40,25 +90,27 @@
 .patient-data {
   margin-left: auto;
   margin-right: auto;
-
 }
 
-.fa-cog {
-  color: white;
-}
-
-.entry {
-  text-align: center;
-  color: inherit;
-  text-decoration: inherit;
-}
+.bg-navy-90 {
+    background-color: #001b44e7;
+    z-index: 1;
+  }
 
 table, td {
-  width: 80%;
+  width: 60%;
   padding-top: 10px;
   padding-bottom: 20px;
   padding-left: 40px;
   padding-right: 40px;
+  border-bottom: 2px solid #FFFFFF;
+  border-collapse: collapse;
+}
+
+ul {
+    width: 70%;
+    margin: auto;
+    text-align: center;
 }
 
 th {
@@ -67,8 +119,8 @@ th {
   padding-bottom: 5px;
   padding-left: 40px;
   padding-right: 40px;
-  background-color: #323b87;
-  color: white;
+  background-color: #678bc0e7;
+  color: #6666FF;;
   opacity: 0.9;
 }
 
@@ -76,104 +128,100 @@ a {
   color: rgb(0, 0, 0);
 }
 tr {
-  background-color: #fcfdff;
+  background-color: #e9f0fae7;
   opacity: 0.8;
 }
-.gradient {
-  height: auto;
-  width: auto;
-  color: inherit;
-  background-image: linear-gradient(
-      349deg,
-      #bcedf5 12%,
-      rgba(255, 255, 255, 0) 89%
-    ),
-    radial-gradient(
-      ellipse at 106% -172%,
-      #a291c0 6%,
-      rgba(255, 255, 255, 0) 69%
-    ),
-    linear-gradient(76deg, #e4e585 2%, rgba(255, 255, 255, 0) 74%),
-    linear-gradient(80deg, #e50290 16%, rgba(255, 255, 255, 0) 68%),
-    radial-gradient(circle at -31% -20%, #1cd3fb 54%, rgba(255, 255, 255, 0) 0%);
-}
-@font-face {
-  font-family: Aldrich;
-  src: url(https://fonts.googleapis.com/css2?family=Aldrich:wght@400);
-}
-.text-image {
-  background-image: url(https://www.genengnews.com/wp-content/uploads/2020/11/Jan1_2020_GettyImages_1157048386_BinaryCode3DIllustration-scaled.jpg);
-  background-position-x: 5%;
-  background-position-y: bottom;
-  background-size: cover;
-  filter: blur(0px);
-  font-family: Aldrich;
-  font-size: 35px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0em;
-  line-height: 1;
-  mix-blend-mode: none;
-  opacity: 1;
-  padding-bottom: 2px;
-  padding-left: 2px;
-  padding-top: 2px;
-  padding-right: 0px;
-  text-transform: none;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+
+
 </style>
 
-<div class="gradient">
-
-<h1 class="text-image">MIMIC Data</h1>
+<header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
+  <nav class="f6 fw6 ttu tracked">
+    <a class="link dim white dib mr3" href="/" title="Patient List">Patient List</a>
+  </nav>
+</header>
+<br><br><br><br>
 <div on:mousemove>Currently sorting based on {sort}</div>
+<div on:mousemove>isAgeAscending: {isAgeAscending}</div>
+<div on:mousemove>isIDAscending: {isIDAscending}</div>
+<div on:mousemove>isTimeAscending: {isTimeAscending}</div>
+<div on:mousemove>isMorta90: {isMorta90}</div>
+<div on:mousemove>isDeath: {isDeath}</div>
+<div on:mousemove>isAscending: {isAscending}</div>
+<div on:mousemove>Displaying the {offset}th patient entry</div>
+
 <div style="overflow-x:auto">
 <table class="patient-data">
 <tr>
   <th>
-  <button
-    on:click={changeSort("icustayid")}
-    on:click={reSort()}
-    on:click={() => console.log('Sorting ID!')}>
-  Patient ID <i class="fa-solid fa-sort"></i>
-  </button></th>
-  <th>
-  <button
-    on:click={changeSort("age")}
-    on:click={() => console.log('Sorting Age!')}>
-    Age <i class="fa-solid fa-sort"></i>
-  </button></th>
-  <th>
-  <button
-    on:click={changeSort("gender")}
-    on:click={() => console.log('Filtering Gender!')}>
-    Gender <i class="fa-solid fa-filter"></i>
-  </button></th>
+    <SortButton
+      active={sort == "icustayid"} 
+      isAscending={isIDAscending}
+      name={"Patient ID"}
+      on:click={() => changeSort("icustayid", -offset)}
+      on:click={() => console.log('Sorting ID!')}>
+    </SortButton></th>
   <th>
     <button
-
-      on:click={() => console.log('Sorting duration of stay')}>
-      Duration of Stay <i class="fa-solid fa-filter"></i>
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeSort("age", -offset)}
+      on:click={() => console.log('Sorting Age!')}>
+      Age <i class="fa-solid fa-sort"></i>
     </button></th>
-    <th>
+  <th>
+    <button
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeSort("gender", -offset)}
+      on:click={() => console.log('Filtering Gender!')}>
+      Gender <i class="fa-solid fa-filter"></i>
+    </button></th>
+  <th>
+    <button
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeSort("num_timesteps", -offset)}
+      on:click={() => console.log('Sorting num_timesteps')}>
+      Number of Timesteps <i class="fa-solid fa-filter"></i>
+    </button></th>
+    <!-- <th>
       <button
-      
+        class:active={active} on:click="{() => active = !active}"
         on:click={() => console.log('Sorting readmission!')}>
         Re-Admission<i class="fa-solid fa-filter"></i>
-      </button></th>
+      </button></th> -->
     <th>
       <button
-       
+        class:active={active} on:click="{() => active = !active}"
+        on:click={() => changeSort("morta_90", -offset)}
         on:click={() => console.log('Sorting morta_90!')}>
         90-Day Mortality<i class="fa-solid fa-filter"></i>
       </button></th>
     <th>
       <button
-
+        class:active={active} on:click="{() => active = !active}"
+        on:click={() => changeSort("died_in_hosp", -offset)}
         on:click={() => console.log('Sorting outcome!')}>
         Patient Outcome<i class="fa-solid fa-filter"></i>
+      </button></th>
+    <th>
+      <button
+        class:active={active} on:click="{() => active = !active}"
+        on:click={() => changeSort("max_SOFA", -offset)}
+        on:click={() => console.log('Sorting max_SOFA!')}>
+        max_SOFA<i class="fa-solid fa-sort"></i>
+      </button></th>
+    <th>
+      <button
+        class:active={active} on:click="{() => active = !active}"
+        on:click={() => changeSort("max_SIRS", -offset)}
+        on:click={() => console.log('Sorting max_SIRS!')}>
+        max_SIRS<i class="fa-solid fa-sort"></i>
+      </button></th>
+    <th>
+      <button
+        class:active={active} on:click="{() => active = !active}"
+        on:click={() => changeSort("max_dose_vaso", -offset)}
+        on:click={() => console.log('Sorting max_dose_vaso!')}>
+        max_dose_vaso<i class="fa-solid fa-sort"></i>
       </button></th>
 </tr>
 {#each patients as patient}
@@ -188,33 +236,55 @@ tr {
     {patient.gender}
   </td>
   <td>
-    {patient.delay_end_of_record_and_discharge_or_death}
+    {patient.num_timesteps}
   </td>
-  <td>
+  <!-- <td>
     {patient.re_admission}
-  </td>
+  </td> -->
   <td>
     {patient.morta_90}
   </td>
   <td>
     {patient.died_in_hosp}
   </td>
+  <td>
+    {patient.max_SOFA}
+  </td>
+  <td>
+    {patient.max_SIRS}
+  </td>
+  <td>
+    {patient.max_dose_vaso}
+  </td>
 </tr>
 {/each}
 </table>
 </div>
+<br><br>
 <ul>
-  <li>
-    <button>
+    <button 
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeCriterion = false}
+      on:click={() => changeSort(sort, -offset)}>
       First
     </button>
-  </li>
-  <li>
-    <button>
+    <button
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeCriterion = false}
+      on:click={() => changeSort(sort, -size)}>
      Previous
     </button>
-  </li>
-  <li>
-  </li>
+<!-- Tried to set changeCriterion to false when changing pages -->
+<!-- on:click={() => changeCriterion = false} -->    
+    <button 
+      class:active={active} on:click="{() => active = !active}"
+      on:click={() => changeCriterion = false}
+      on:click={() => changeSort(sort, size)}>
+      Next
+    </button>
 </ul>
-</div>
+<br>
+<ul>
+  Page {Math.floor(offset/20)+1} / xxx
+</ul>
+<br><br><br>
