@@ -164,35 +164,43 @@
     </div>
   {/if}
 </div>
-<div class="ph4">
-  <h5 class="f5 tc b mb2">Predicted Patient State</h5>
-  {#if !!$modelInfo && physicianActionIdx != null}
-    <p class="f6 lh-copy">
-      The patient is predicted to be in state <strong>{predictedState}</strong>,
-      which has been observed <strong>{stateExplanations.count} times</strong> in
-      the dataset. Patients in this state are distinguished based on these features:
-    </p>
-  {/if}
-  <div class="state-interpret-container flex">
-    <div class="h-100 flex-auto">
-      <FeatureImportanceChart
-        importances={stateExplanations.feature_importances}
-        deviations={stateExplanations.deviations}
-      />
-    </div>
-    <div class="death-rate-bar h-100">
-      <Colorbar
-        colorMap={interpolateReds}
-        valueDomain={[0, 0.3]}
-        width={120}
-        title="Mortality"
-        margin={{ top: 42, left: 54, bottom: 32 }}
-        markerValue={stateExplanations.death_rate}
-        markerText={(stateExplanations.death_rate * 100).toFixed(1) + '%'}
-      />
+{#if !!stateExplanations}
+  <div class="ph4">
+    <h5 class="f5 tc b mb2">Predicted Patient State</h5>
+    {#if !!$modelInfo && physicianActionIdx != null}
+      <p class="f6 lh-copy">
+        The patient is predicted to be in state <strong>{predictedState}</strong
+        >, which has been observed
+        <strong>{stateExplanations.count} times</strong> in the dataset {#if stateExplanations.count_percentile < 50}
+          (less than {(100 - stateExplanations.count_percentile).toFixed(0)}% of
+          states).
+        {:else}
+          (more than {stateExplanations.count_percentile.toFixed(0)}% of
+          states).
+        {/if} Patients in this state are distinguished based on these features:
+      </p>
+    {/if}
+    <div class="state-interpret-container flex">
+      <div class="h-100 flex-auto">
+        <FeatureImportanceChart
+          importances={stateExplanations.feature_importances}
+          deviations={stateExplanations.deviations}
+        />
+      </div>
+      <div class="death-rate-bar h-100">
+        <Colorbar
+          colorMap={interpolateReds}
+          valueDomain={[0, 0.8]}
+          width={120}
+          title="Mortality"
+          margin={{ top: 42, left: 54, bottom: 32 }}
+          markerValue={stateExplanations.mortality}
+          markerText={(stateExplanations.mortality * 100).toFixed(1) + '%'}
+        />
+      </div>
     </div>
   </div>
-</div>
+{/if}
 
 <style>
   .heatmap {

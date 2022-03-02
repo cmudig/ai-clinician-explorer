@@ -29,6 +29,7 @@
       feature: name,
       absImportance: Math.abs(importances[name]),
       importance: importances[name],
+      decrease: !!deviations && !!deviations[name] && deviations[name].raw < 0,
     }));
   } else barData = null;
 
@@ -48,10 +49,13 @@
     let dev = (deviations || {})[d.feature];
     if (!dev)
       return `<strong>${d.feature}:</strong> ${d.importance.toFixed(3)}`;
-    if (dev.type == 'binary')
-      return `<strong>${d.feature}</strong> is ${(dev.percent * 100).toFixed(
-        0
-      )}% more likely to be 1 compared to other states`;
+    if (dev.type == 'binary') {
+      return `<strong>${d.feature}</strong> is ${(
+        Math.abs(dev.percent) * 100
+      ).toFixed(0)}% ${
+        dev.percent > 0 ? 'more' : 'less'
+      } likely to be 1 compared to other states`;
+    }
     if (dev.raw > 0)
       return `<strong>${
         d.feature
@@ -88,7 +92,7 @@
         />
         <AxisY gridlines={false} />
         <Bar
-          fillFn={(d) => (d.importance >= 0 ? '#1f77b4' : '#ff7f0e')}
+          fillFn={(d) => (d.decrease ? '#ff7f0e' : '#1f77b4')}
           on:hover={(e) =>
             (hoveredFeature = e.detail != null ? e.detail.feature : null)}
         />

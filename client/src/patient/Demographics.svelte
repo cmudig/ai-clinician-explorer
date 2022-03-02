@@ -18,6 +18,11 @@
       />
       <DataFeature
         dark
+        feature="Re-admission"
+        value={$patient.re_admission ? 'Yes' : 'No'}
+      />
+      <DataFeature
+        dark
         feature="Length of Stay"
         value={$patient.num_timesteps * 4}
         unit="hrs"
