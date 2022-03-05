@@ -1,0 +1,41 @@
+import Columns from './columns';
+
+export const Comorbidities = {
+  [Columns.C_CONGESTIVE_HEART_FAILURE]: 'Congestive heart failure',
+  [Columns.C_CARDIAC_ARRHYTHMIAS]: 'Cardiac arrhythmias',
+  [Columns.C_VALVULAR_DISEASE]: 'Valvular disease',
+  [Columns.C_PULMONARY_CIRCULATION]: 'Pulmonary circulation disorder',
+  [Columns.C_PERIPHERAL_VASCULAR]: 'Peripheral vascular disorder',
+  [Columns.C_HYPERTENSION]: 'Hypertension',
+  [Columns.C_PARALYSIS]: 'Paralysis',
+  [Columns.C_OTHER_NEUROLOGICAL]: 'Other neurological disorder',
+  [Columns.C_CHRONIC_PULMONARY]: 'Chronic pulmonary disorder',
+  [Columns.C_DIABETES_UNCOMPLICATED]: 'Diabetes (uncomplicated)',
+  [Columns.C_DIABETES_COMPLICATED]: 'Diabetes (complicated)',
+  [Columns.C_HYPOTHYROIDISM]: 'Hypothyroidism',
+  [Columns.C_RENAL_FAILURE]: 'Renal failure',
+  [Columns.C_LIVER_DISEASE]: 'Liver disease',
+  [Columns.C_PEPTIC_ULCER]: 'Peptic ulcer',
+  [Columns.C_AIDS]: 'AIDS',
+  [Columns.C_LYMPHOMA]: 'Lymphoma',
+  [Columns.C_METASTATIC_CANCER]: 'Metastatic cancer',
+  [Columns.C_SOLID_TUMOR]: 'Solid tumor',
+  [Columns.C_RHEUMATOID_ARTHRITIS]: 'Rheumatoid arthritis',
+  [Columns.C_COAGULOPATHY]: 'Coagulopathy',
+  [Columns.C_OBESITY]: 'Obesity',
+  [Columns.C_WEIGHT_LOSS]: 'Weight loss',
+  [Columns.C_FLUID_ELECTROLYTE]: 'Fluid or electrolyte disorder',
+  [Columns.C_BLOOD_LOSS_ANEMIA]: 'Blood loss anemia',
+  [Columns.C_DEFICIENCY_ANEMIAS]: 'Deficiency anemia',
+  [Columns.C_ALCOHOL_ABUSE]: 'Alcohol abuse',
+  [Columns.C_DRUG_ABUSE]: 'Drug abuse',
+  [Columns.C_PSYCHOSES]: 'Psychoses',
+  [Columns.C_DEPRESSION]: 'Depression',
+};
+
+export const StateCategory = {
+  VITALS: 'Vitals',
+  LABS: 'Labs',
+  RESPIRATORY: 'Cardio/Resp.',
+  FLUIDS_PRESSORS: 'Fluids/Pressors',
+};

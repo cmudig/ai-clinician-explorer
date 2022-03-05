@@ -8,7 +8,7 @@
   });
 
   function loadPatients() {
-    fetch('./api/patient/')
+    fetch('./api/patient?size=100')
       .then((d) => d.json())
       .then((d) => (patients = d.results));
   }
