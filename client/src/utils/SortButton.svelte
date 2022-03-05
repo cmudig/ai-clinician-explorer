@@ -12,7 +12,7 @@
 </script>
 
 <button
-  class="ph2 mr2 link dib f6 {active
+  class="ph2 mr2 link dib f6 pointer {active
     ? 'white bg-dark-blue hover-bg-navy-dark'
     : 'dark-gray bg-transparent dim'}"
   on:click
