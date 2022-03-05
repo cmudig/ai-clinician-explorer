@@ -100,7 +100,7 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
         query += "ASC " if ascending else "DESC "
         query += ", icustayid ASC "
     else:
-        query += "ORDER BY {field_prefix}icustayid "
+        query += f"ORDER BY {field_prefix}icustayid "
         query += "ASC " if ascending else "DESC "
     query += f"LIMIT {size} "
     if offset:
