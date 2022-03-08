@@ -20,11 +20,11 @@
   {name}
 
   {#if active && isAscending}
-    <Fa icon={faSortUp} />
+    <Fa style="padding-left: 6px;" icon={faSortUp} />
   {:else if active && !isAscending}
-    <Fa icon={faSortDown} />
+    <Fa style="padding-left: 6px;" icon={faSortDown} />
   {:else}
-    <Fa icon={faSort} />
+    <Fa style="padding-left: 6px;" icon={faSort} />
   {/if}
 </button>
 
