@@ -228,7 +228,7 @@ def read(patient_id):
             return "Invalid value for ascending query parameter", 400
 
         try:
-            size = int(args.get("size", 10))
+            size = int(args.get("size", 20))
         except ValueError:
             return "Invalid value for size query parameter", 400
 
