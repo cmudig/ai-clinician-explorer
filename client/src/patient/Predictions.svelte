@@ -38,20 +38,26 @@
 
   let maxPhysicianProb = 1.0;
   let minModelQ = 0.0;
+  let maxModelQ = 0.0;
   $: if (!!$modelPredictions) {
     // Compute thresholds for visualization based on all timesteps
-    let maxProb = $modelPredictions
-      .map((p) => p.physician_prob)
-      .flat()
+    let maxProb = $modelPredictions[$currentBloc - 1].physician_prob
+      // .map((p) => p.physician_prob)
+      // .flat()
       .reduce((curr, p) => Math.max(curr, p), 0);
     maxPhysicianProb = Math.ceil(maxProb * 10) / 10;
 
-    let minQ = $modelPredictions
-      .map((p) => p.model_Q)
-      .flat()
+    let minQ = $modelPredictions[$currentBloc - 1].model_Q
+      // .map((p) => p.model_Q)
+      // .flat()
       .reduce((curr, p) => (p != null ? Math.min(curr, p) : curr), 1e9);
-    let rewardResolution = rewardVal / 10;
+    let rewardResolution = rewardVal / 100;
     minModelQ = Math.floor(minQ / rewardResolution) * rewardResolution;
+    let maxQ = $modelPredictions[$currentBloc - 1].model_Q
+      // .map((p) => p.model_Q)
+      // .flat()
+      .reduce((curr, p) => (p != null ? Math.max(curr, p) : curr), -1e9);
+    maxModelQ = Math.ceil(maxQ / rewardResolution) * rewardResolution;
   }
 
   let rewardVal = null;
@@ -116,7 +122,7 @@
       {/if}
       <ActionsHeatmap
         data={modelQ}
-        valueDomain={!!rewardVal ? [minModelQ, rewardVal] : [0, 100]}
+        valueDomain={!!rewardVal ? [minModelQ, maxModelQ] : [0, 100]}
         colorMap={interpolateBlues}
         fluidBins={actionBins != null ? actionBins[0] : null}
         vasopressorBins={actionBins != null ? actionBins[1] : null}
@@ -209,7 +215,7 @@
   }
 
   .above-plot {
-    min-height: 60px;
+    min-height: 64px;
   }
 
   .state-interpret-container {

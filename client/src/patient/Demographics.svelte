@@ -13,31 +13,35 @@
     <table class="w-100">
       <DataFeature
         dark
-        feature="Profile"
+        feature="Age/Gender"
         value="{$patient.age} y/o {$patient.gender ? 'female' : 'male'}"
       />
+      <TextFeature dark label="Comorbidities">
+        {#if $patient.comorbidities.length == 0}
+          <p class="mv2">None</p>
+        {:else}
+          {#each $patient.comorbidities as com}
+            <p class="mv2">{Comorbidities[com]}</p>
+          {/each}
+        {/if}
+        <!--{$patient.comorbidities.map((c) => Comorbidities[c]).join(', ')}-->
+      </TextFeature>
       <DataFeature
         dark
-        feature="Re-admission"
+        feature="Is Re-Admission"
         value={$patient.re_admission ? 'Yes' : 'No'}
       />
       <DataFeature
         dark
-        feature="Length of Stay"
-        value={$patient.num_timesteps * 4}
-        unit="hrs"
+        feature="Discharge Status"
+        value={$patient.died_in_hosp ? 'Death' : 'Discharge'}
       />
       <DataFeature
         dark
-        feature="Outcome"
-        value={$patient.died_in_hosp ? 'Death' : 'Discharge'}
+        feature="ICU Length of Stay"
+        value={$patient.num_timesteps * 4}
+        unit="hrs"
       />
-      <TextFeature dark label="Comorbidities">
-        {#each $patient.comorbidities as com}
-          <p class="mv2">{Comorbidities[com]}</p>
-        {/each}
-        <!--{$patient.comorbidities.map((c) => Comorbidities[c]).join(', ')}-->
-      </TextFeature>
     </table>
   {/if}
 </div>

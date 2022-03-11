@@ -61,7 +61,7 @@
       .axisRight()
       .scale(legendScale)
       .tickValues(linspace(valueDomain[0], valueDomain[1], numTicks))
-      .tickFormat(d3.format('.2r'));
+      .tickFormat(d3.format('.3g'));
   }
 
   $: if (!!legendAxisContainer && !!legendAxis) {

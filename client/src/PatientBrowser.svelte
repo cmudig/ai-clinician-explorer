@@ -78,23 +78,15 @@
                 <SortButton
                   active={sort == 'num_timesteps'}
                   {isAscending}
-                  name={'Number of Timesteps'}
+                  name={'ICU Length of Stay'}
                   on:click={() => changeSort('num_timesteps')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'morta_90'}
-                  {isAscending}
-                  name={'90-Day Mortality'}
-                  on:click={() => changeSort('morta_90')}
                 />
               </th>
               <th>
                 <SortButton
                   active={sort == 'died_in_hosp'}
                   {isAscending}
-                  name={'Patient Outcome'}
+                  name={'Discharge Status'}
                   on:click={() => changeSort('died_in_hosp')}
                 />
               </th>
@@ -114,22 +106,24 @@
                   on:click={() => changeSort('max_SIRS')}
                 />
               </th>
-              <th class="pr3">
+              <th>
                 <SortButton
-                  active={sort == 'max_dose_vaso'}
+                  active={sort == 'elixhauser'}
                   {isAscending}
-                  name={'Max Vasopressor Dose'}
-                  on:click={() => changeSort('max_dose_vaso')}
+                  name={'Elixhauser Score'}
+                  on:click={() => changeSort('elixhauser')}
                 />
               </th>
             </tr>
           </thead>
           {#each patients as patient}
-            <tr>
+            <tr
+              class="hover-bg-near-white pointer"
+              on:click={(e) =>
+                (document.location = `/patient?id=${patient.icustayid}`)}
+            >
               <td class="pl3">
-                <a class="link black dim" href="/patient?id={patient.icustayid}"
-                  >{patient.icustayid}</a
-                >
+                {patient.icustayid}
               </td>
               <td>
                 {patient.age} yrs
@@ -138,10 +132,7 @@
                 {patient.gender ? 'Female' : 'Male'}
               </td>
               <td>
-                {patient.num_timesteps}
-              </td>
-              <td>
-                {patient.morta_90 ? 'Yes' : 'No'}
+                {4 * patient.num_timesteps} hrs
               </td>
               <td>
                 {patient.died_in_hosp ? 'Death' : 'Discharge'}
@@ -153,7 +144,7 @@
                 {patient.max_SIRS}
               </td>
               <td class="pr3">
-                {patient.max_dose_vaso}
+                {patient.elixhauser}
               </td>
             </tr>
           {/each}
