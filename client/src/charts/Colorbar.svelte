@@ -36,10 +36,10 @@
   // $: if (!!colorMap && !!legendSvg) updateColourScale(colorMap);
 
   function linspace(start, end, n) {
-    var out = [];
-    var delta = (end - start) / (n - 1);
+    let out = [];
+    let delta = (end - start) / (n - 1);
 
-    var i = 0;
+    let i = 0;
     while (i < n - 1) {
       out.push(start + i * delta);
       i++;
@@ -53,7 +53,7 @@
   let legendAxisContainer;
 
   $: {
-    var legendScale = d3
+    let legendScale = d3
       .scaleLinear()
       .domain(valueDomain)
       .range([actualHeight - actualMargin.top - actualMargin.bottom, 0]);

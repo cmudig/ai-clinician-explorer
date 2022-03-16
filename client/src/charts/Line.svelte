@@ -17,8 +17,8 @@
   $: {
     // Generate path, omitting null or undefined values
     let segments = $data.map((d, i) => {
-      let y = $y(d);
-      if (y == null || y == undefined)
+      let yCoord = $y(d);
+      if (yCoord == null || yCoord == undefined)
         return {
           startX: null,
           endX: null,
