@@ -150,7 +150,7 @@
       {/if}
       {valueString}
     </p>
-    {#if !!unit && value != 0.0}
+    {#if !!unit}
       <p class="mv0 f6">{@html unit}</p>
     {/if}
   </td>

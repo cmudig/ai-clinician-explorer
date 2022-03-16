@@ -1,27 +1,40 @@
 <script>
-    export let name;
-    export let active = false;
-    export let isAscending = true;
+  import Fa from 'svelte-fa';
+  import {
+    faSortUp,
+    faSortDown,
+    faSort,
+  } from '@fortawesome/free-solid-svg-icons';
 
+  export let name;
+  export let active = false;
+  export let isAscending = true;
 </script>
 
-<style>
-    
-    .active {
-		background-color: #6666FF;
-	}
-
-</style>
-
 <button
-      class:active={active}
-      on:click>
-      {name}
+  class="ph2 mr2 link dib f6 pointer {active
+    ? 'white bg-dark-blue hover-bg-navy-dark'
+    : 'dark-gray bg-transparent dim'}"
+  on:click
+>
+  {name}
 
-      {#if active && isAscending}
-        <i class="fa-solid fa-sort-up"></i>
-      {:else if active && !isAscending}
-        <i class="fa-solid fa-sort-down"></i>
-      {/if}
-
+  {#if active && isAscending}
+    <Fa style="padding-left: 6px;" icon={faSortUp} />
+  {:else if active && !isAscending}
+    <Fa style="padding-left: 6px;" icon={faSortDown} />
+  {:else}
+    <Fa style="padding-left: 6px;" icon={faSort} />
+  {/if}
 </button>
+
+<style>
+  button {
+    border: none;
+    outline: none;
+  }
+
+  .hover-bg-navy-dark:hover {
+    background-color: #013274;
+  }
+</style>
