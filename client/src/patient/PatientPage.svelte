@@ -200,8 +200,8 @@
                   { name: StateCategory.VITALS, value: StateCategory.VITALS },
                   { name: StateCategory.LABS, value: StateCategory.LABS },
                   {
-                    name: StateCategory.RESPIRATORY,
-                    value: StateCategory.RESPIRATORY,
+                    name: StateCategory.CARDIOPULM,
+                    value: StateCategory.CARDIOPULM,
                   },
                 ]}
               />

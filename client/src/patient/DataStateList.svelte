@@ -19,6 +19,13 @@
       $currentBloc > 1 ? $patient.timesteps[$currentBloc - 2] : null;
   }
 
+  function everVentilated(tp) {
+    return (
+      (tp[Columns.C_MECHVENT] || { value: null }).value ||
+      (tp[Columns.C_EXTUBATED] || { value: null }).value
+    );
+  }
+
   const featureRowSpec = {
     [StateCategory.VITALS]: [
       {
@@ -181,30 +188,92 @@
       // { feature: Columns.C_ARTERIAL_BE },
       // { feature: Columns.C_HCO3 },
     ],
-    [StateCategory.RESPIRATORY]: [
+    [StateCategory.CARDIOPULM]: [
       {
+        header: 'Vent Settings',
+        expanded: true,
         rows: [
-          { feature: Columns.C_PAO2_FIO2, maxDecimals: 1 },
-          { feature: Columns.C_RR, maxDecimals: 1 },
-          { feature: Columns.C_SPO2, maxDecimals: 1 },
-          { feature: Columns.C_PAPSYS },
-          { feature: Columns.C_PAPMEAN },
-          { feature: Columns.C_PAPDIA },
-          { feature: Columns.C_CI },
+          {
+            name: 'Ever ventilated?',
+            computed: (tp) => (everVentilated(tp) ? 'Yes' : 'No'),
+          },
+          {
+            name: 'Currently ventilated?',
+            computed: (tp) =>
+              (tp[Columns.C_MECHVENT] || { value: null }).value ? 'Yes' : 'No',
+          },
+          {
+            feature: Columns.C_TIDALVOLUME,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+          { feature: Columns.C_RR, maxDecimals: 1, condition: everVentilated },
+          { feature: Columns.C_PEEP, condition: everVentilated },
+          {
+            feature: Columns.C_FIO2_1,
+            name: 'FiO2',
+            maxDecimals: 2,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_SPO2,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_PAO2_FIO2,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_MINUTEVENTIL,
+            maxDecimals: 2,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_PAWPLATEAU,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_PAWPEAK,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+          {
+            feature: Columns.C_PAWMEAN,
+            maxDecimals: 1,
+            condition: everVentilated,
+          },
+        ],
+      },
+      {
+        header: 'O<sub>2</sub> Flow',
+        expanded: true,
+        rows: [{ feature: Columns.C_O2FLOW, unit: 'L/min' }],
+      },
+      {
+        header: 'Other',
+        expanded: true,
+        rows: [
+          { feature: Columns.C_CI, unit: 'L/min/m<sup>2</sup>' },
+          { feature: Columns.C_PAPMEAN, unit: 'mmHg' },
+          {
+            computed: (tp) =>
+              !!tp[Columns.C_PAPSYS].value && !!tp[Columns.C_PAPDIA].value
+                ? `${tp[Columns.C_PAPSYS].value.toFixed(0)}/${tp[
+                    Columns.C_PAPDIA
+                  ].value.toFixed(0)}`
+                : '--',
+            name: 'PAP',
+            unit: 'mmHg',
+          },
           { feature: Columns.C_SVR },
-          { feature: Columns.C_INTERFACE },
-          { feature: Columns.C_FIO2_1, name: 'FiO2', maxDecimals: 2 },
-          { feature: Columns.C_O2FLOW },
-          { feature: Columns.C_PEEP },
-          { feature: Columns.C_TIDALVOLUME, maxDecimals: 1 },
-          { feature: Columns.C_MINUTEVENTIL, maxDecimals: 2 },
-          { feature: Columns.C_PAWMEAN, maxDecimals: 1 },
-          { feature: Columns.C_PAWPEAK, maxDecimals: 1 },
-          { feature: Columns.C_PAWPLATEAU, maxDecimals: 1 },
-          { feature: Columns.C_ETCO2 },
+          // { feature: Columns.C_INTERFACE },
+          // { feature: Columns.C_ETCO2 },
           { feature: Columns.C_SVO2 },
-          { feature: Columns.C_MECHVENT },
-          { feature: Columns.C_EXTUBATED },
+          // { feature: Columns.C_MECHVENT },
+          // { feature: Columns.C_EXTUBATED },
         ],
       },
     ],
@@ -236,7 +305,7 @@
     featureRows = [
       StateCategory.VITALS,
       StateCategory.LABS,
-      StateCategory.RESPIRATORY,
+      StateCategory.CARDIOPULM,
       StateCategory.FLUIDS_PRESSORS,
     ]
       .map((c) => featureRowSpec[c] || [])
@@ -286,42 +355,44 @@
               on:click={() => (section.expanded = !section.expanded)}
             >
               <i class="arrow {section.expanded ? 'down' : 'right'}" />
-              <span class="pl2">{section.header.toUpperCase()}</span>
+              <span class="pl2">{@html section.header}</span>
             </td>
           </tr>
         {/if}
         {#if !section.hasOwnProperty('expanded') || section.expanded}
           {#each section.rows as row}
-            <DataFeature
-              patientID={$patient[Columns.C_ICUSTAYID]}
-              feature={row.name || row.feature}
-              value={!!row.computed
-                ? row.computed(timePoint)
-                : timePoint[row.feature] != null
-                ? timePoint[row.feature].value
-                : null}
-              historicalValues={$patient.timesteps
-                .slice(0, $currentBloc)
-                .map((ts) =>
-                  !!row.computed ? row.computed(ts) : ts[row.feature]
-                )}
-              extremeValue={!row.computed
-                ? detectExtremeValue(
-                    row.feature,
-                    timePoint[row.feature] != null
-                      ? timePoint[row.feature].value
-                      : null,
-                    $patient.gender
-                  )
-                : 0}
-              maxDecimals={row.hasOwnProperty('maxDecimals')
-                ? row.maxDecimals
-                : 3}
-              trend={!row.computed
-                ? computeTrend(row.feature, $currentBloc)
-                : 0}
-              unit={row.unit}
-            />
+            {#if !row.condition || row.condition(timePoint)}
+              <DataFeature
+                patientID={$patient[Columns.C_ICUSTAYID]}
+                feature={row.name || row.feature}
+                value={!!row.computed
+                  ? row.computed(timePoint)
+                  : timePoint[row.feature] != null
+                  ? timePoint[row.feature].value
+                  : null}
+                historicalValues={$patient.timesteps
+                  .slice(0, $currentBloc)
+                  .map((ts) =>
+                    !!row.computed ? row.computed(ts) : ts[row.feature]
+                  )}
+                extremeValue={!row.computed
+                  ? detectExtremeValue(
+                      row.feature,
+                      timePoint[row.feature] != null
+                        ? timePoint[row.feature].value
+                        : null,
+                      $patient.gender
+                    )
+                  : 0}
+                maxDecimals={row.hasOwnProperty('maxDecimals')
+                  ? row.maxDecimals
+                  : 3}
+                trend={!row.computed
+                  ? computeTrend(row.feature, $currentBloc)
+                  : 0}
+                unit={row.unit}
+              />
+            {/if}
           {/each}
         {/if}
       {/each}
@@ -338,6 +409,7 @@
     padding: 18px 12px 18px 14px;
     background-color: #024fc220;
     border-bottom: 1px solid #cccccc;
+    text-transform: uppercase;
   }
 
   .header-row:hover {
