@@ -98,7 +98,7 @@
 >
   <td class="feature-name pl3 f6 {dark ? 'white' : 'dark-gray'}">
     {#if !!feature}
-      {feature}
+      {@html feature}
     {/if}
   </td>
 
