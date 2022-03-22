@@ -3,12 +3,21 @@
   import AxisX from './AxisX.svelte';
   import AxisY from './AxisY.svelte';
   import Bar from './Bar.svelte';
-  import { scaleBand } from 'd3-scale';
+  import { scaleBand, scaleOrdinal } from 'd3-scale';
+  import { schemeTableau10 } from 'd3-scale-chromatic';
   import Tooltip from './Tooltip.svelte';
+  import CategoricalLegend from './CategoricalLegend.svelte';
 
   export let importances;
   export let deviations;
   export let numKeys = 10;
+
+  function colorCoding(d) {
+    return d.decrease ? 'less than average' : 'greater than average';
+  }
+  let colorScale = scaleOrdinal()
+    .domain(['greater than average', 'less than average'])
+    .range(schemeTableau10);
 
   let featureNames = [];
   $: if (!!importances) {
@@ -92,10 +101,11 @@
         />
         <AxisY gridlines={false} />
         <Bar
-          fillFn={(d) => (d.decrease ? '#ff7f0e' : '#1f77b4')}
+          fillFn={(d) => colorScale(colorCoding(d))}
           on:hover={(e) =>
             (hoveredFeature = e.detail != null ? e.detail.feature : null)}
         />
+        <CategoricalLegend scale={colorScale} inset={{ x: 20, y: 8 }} />
         <!-- interpolateRdBu((d.importance + maxImportance) / (2 * maxImportance)) -->
       </Svg>
       <Html pointerEvents={false}>
