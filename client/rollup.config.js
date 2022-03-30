@@ -4,6 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import html from '@rollup/plugin-html';
+import css from 'rollup-plugin-css-only';
 
 const production = !process.env.ROLLUP_WATCH;
 const dir = production ? 'dist' : 'public';
@@ -70,10 +71,11 @@ const COMMON = function (mydir, page, index) {
       }),*/
       svelte({
         dev: !production,
-        css: (css) => {
+        /*css: (css) => {
           css.write(mydir + path + '/bundle.css', !production); // disable sourcemap in prod
-        },
+        },*/
       }),
+      css({ output: 'bundle.css' }),
       html({
         publicPath: path + '/',
         title: pageTitle,
