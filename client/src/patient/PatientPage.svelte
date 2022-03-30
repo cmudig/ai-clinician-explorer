@@ -32,7 +32,7 @@
   });
 
   export let patientID = '';
-  export let modelID = 'mimiciv_220217_best';
+  export let modelID = 'mimiciv_220328_best';
 
   let loadingModelPrediction = false;
   let loadingPatientInfo = false;
