@@ -181,12 +181,12 @@
       <div class="sidebar bg-blue-gray">
         {#if !!$patient}
           <div
-            class="timestep-selector bg-navy-gray flex justify-center items-center w-100 pv3 white"
+            class="timestep-selector bg-navy-gray flex justify-between items-center w-100 pv3 ph3 white"
           >
             <span class="f6 b pb0 mr3">Day {dayIndex}, {currentTime}</span>
             <input
               class="ph0"
-              style="width: 140px;"
+              style="width: 180px;"
               type="range"
               bind:value={$currentBloc}
               min={1}
