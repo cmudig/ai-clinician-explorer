@@ -24,26 +24,26 @@
     isLoading = true;
     if (filterStatement != null) {
       fetch(
-      `./api/patient/?sort=${sort}&ascending=${
-        isAscending ? 1 : 0
-      }&offset=${offset}&filters=${encodeURIComponent(filterStatement)}`
-    )
-      .then((d) => d.json())
-      .then((d) => {
-        isLoading = false;
-        patients = d.results;
-      });
+        `./api/patient/?sort=${sort}&ascending=${
+          isAscending ? 1 : 0
+        }&offset=${offset}&filters=${encodeURIComponent(filterStatement)}`,
+      )
+        .then((d) => d.json())
+        .then((d) => {
+          isLoading = false;
+          patients = d.results;
+        });
     } else {
       fetch(
-      `./api/patient/?sort=${sort}&ascending=${
-        isAscending ? 1 : 0
-      }&offset=${offset}`
-    )
-      .then((d) => d.json())
-      .then((d) => {
-        isLoading = false;
-        patients = d.results;
-      });
+        `./api/patient/?sort=${sort}&ascending=${
+          isAscending ? 1 : 0
+        }&offset=${offset}`,
+      )
+        .then((d) => d.json())
+        .then((d) => {
+          isLoading = false;
+          patients = d.results;
+        });
     }
   }
 
@@ -53,7 +53,6 @@
     offset = 0;
     sort = sortingCriterion;
   }
-
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
@@ -64,12 +63,11 @@
   </nav>
 </header>
 
-<main class="pa0 h-100">
-  
-  <SideBar bind:filterStatement/>
+<main class="pa0 h-100 flex">
+  <SideBar bind:filterStatement />
 
-  {#if patients.length > 0}
-    <div class="patient-list-container">
+  <div class="pa0 h-100 patient-list-container">
+    {#if patients.length > 0}
       <div class="w-100 horizontal-scroll">
         <table class="patient-data">
           <thead>
@@ -131,7 +129,7 @@
                 />
               </th>
               <th>
-                <SortButton               
+                <SortButton
                   active={sort == 'elixhauser'}
                   {isAscending}
                   name={'Elixhauser Score'}
@@ -174,46 +172,52 @@
           {/each}
         </table>
       </div>
-    </div>
-    <div class="flex w-100 justify-center mt4">
-      <button
-        class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-        on:click={() => (offset = 0)}
+      <div class="flex w-100 justify-center mt4">
+        <button
+          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+          on:click={() => (offset = 0)}
+        >
+          First
+        </button>
+        <button
+          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+          on:click={() => (offset -= size)}
+        >
+          Previous
+        </button>
+        <button
+          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+          on:click={() => (offset += size)}
+        >
+          Next
+        </button>
+      </div>
+      <p class="w-100 tc f6 pb4">
+        Page {Math.floor(offset / size) + 1}
+      </p>
+    {/if}
+    {#if isLoading}
+      <div
+        transition:fade={{ duration: 200 }}
+        class="loading-overlay w-100 h-100 flex flex-column items-center justify-center"
       >
-        First
-      </button>
-      <button
-        class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-        on:click={() => (offset -= size)}
-      >
-        Previous
-      </button>
-      <button
-        class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-        on:click={() => (offset += size)}
-      >
-        Next
-      </button>
-    </div>
-    <p class="w-100 tc f6 pb4">
-      Page {Math.floor(offset / size) + 1}
-    </p>
-  {/if}
-  {#if isLoading}
-    <div
-      transition:fade={{ duration: 200 }}
-      class="loading-overlay w-100 h-100 flex flex-column items-center justify-center"
-    >
-      <p class="mb3 f5 tc b dark-gray">Loading records...</p>
-      <LoadingBar />
-    </div>
-  {/if}
+        <p class="mb3 f5 tc b dark-gray">Loading records...</p>
+        <LoadingBar />
+      </div>
+    {/if}
+  </div>
 </main>
 
 <style>
   main {
     padding-top: 48px;
+  }
+
+  .patient-list-container {
     position: relative;
+    overflow-x: auto;
+    overflow-y: scroll;
+    flex-grow: 1;
   }
 
   .loading-overlay {
@@ -221,11 +225,6 @@
     top: 0;
     left: 0;
     background-color: #ffffffdd;
-  }
-
-  .patient-list-container {
-    overflow-x: auto;
-    overflow-y: scroll;
   }
 
   .patient-data {

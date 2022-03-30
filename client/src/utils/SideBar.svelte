@@ -32,42 +32,42 @@
 
   $: {
     SOFAFilter =
-      "max_SOFA" +
-      " >= " +
+      'max_SOFA' +
+      ' >= ' +
       SOFALowerBound +
-      ";" +
-      "max_SOFA" +
-      " <= " +
+      ';' +
+      'max_SOFA' +
+      ' <= ' +
       SOFAUpperBound +
-      ";";
+      ';';
     ageFilter =
-      "age" +
-      " >= " +
+      'age' +
+      ' >= ' +
       ageLowerBound +
-      ";" +
-      "age" +
-      " <= " +
+      ';' +
+      'age' +
+      ' <= ' +
       ageUpperBound +
-      ";";
+      ';';
     elixFilter =
-      "elixhauser" +
-      " >= " +
+      'elixhauser' +
+      ' >= ' +
       elixLowerBound +
-      ";" +
-      "elixhauser" +
-      " <= " +
+      ';' +
+      'elixhauser' +
+      ' <= ' +
       elixUpperBound +
-      ";";
+      ';';
     idFilter =
-      "icustayid" +
-      " >= " +
+      'icustayid' +
+      ' >= ' +
       idLowerBound +
-      ";" +
-      "icustayid" +
-      " <= " +
+      ';' +
+      'icustayid' +
+      ' <= ' +
       idUpperBound +
-      ";";
-    deathFilter = isFilterByDeath ? "died_in_hosp = " + died_in_hosp : "";
+      ';';
+    deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
 
     // clinicianFormatted = "(";
     // for (var i = 0; i < clinicianActions.length; i++) {
@@ -88,37 +88,33 @@
   }
 </script>
 
-<header
-  class="flex justify-between bg-gray-200 p-2 items-center text-gray-600 border-b-2"
->
-  <div class="sidebar bg-blue-gray">
-    <h4>Enter an age lower bound:</h4>
-    <input bind:value={ageLowerBound} />
-    <h4>Enter an age upper bound:</h4>
-    <input bind:value={ageUpperBound} />
-    <h4>Enter a SOFA lower bound:</h4>
-    <input bind:value={SOFALowerBound} />
-    <h4>Enter a SOFA upper bound:</h4>
-    <input bind:value={SOFAUpperBound} />
-    <h4>Enter an ELIX lower bound:</h4>
-    <input bind:value={elixLowerBound} />
-    <h4>Enter an ELIX upper bound:</h4>
-    <input bind:value={elixUpperBound} />
+<div class="sidebar bg-blue-gray">
+  <h4>Enter an age lower bound:</h4>
+  <input bind:value={ageLowerBound} />
+  <h4>Enter an age upper bound:</h4>
+  <input bind:value={ageUpperBound} />
+  <h4>Enter a SOFA lower bound:</h4>
+  <input bind:value={SOFALowerBound} />
+  <h4>Enter a SOFA upper bound:</h4>
+  <input bind:value={SOFAUpperBound} />
+  <h4>Enter an ELIX lower bound:</h4>
+  <input bind:value={elixLowerBound} />
+  <h4>Enter an ELIX upper bound:</h4>
+  <input bind:value={elixUpperBound} />
 
-    <button on:click={() => (isFilterByDeath = !isFilterByDeath)}
-      >Filter by Death</button
-    >
-    {#if isFilterByDeath}
-      <button on:click={() => (died_in_hosp = died_in_hosp == 0 ? 1 : 0)}>
-        {#if died_in_hosp == 0}
-          Death only
-        {:else}
-          Discharge only
-        {/if}
-      </button>
-    {/if}
-  </div>
-</header>
+  <button on:click={() => (isFilterByDeath = !isFilterByDeath)}
+    >Filter by Death</button
+  >
+  {#if isFilterByDeath}
+    <button on:click={() => (died_in_hosp = died_in_hosp == 0 ? 1 : 0)}>
+      {#if died_in_hosp == 0}
+        Death only
+      {:else}
+        Discharge only
+      {/if}
+    </button>
+  {/if}
+</div>
 
 <!-- Age histogram -->
 
@@ -178,78 +174,17 @@
     >  -->
 
 <!-- Implement multi-select on the 5x5 grid -->
-
-<!-- 
-<style>
-    /* .chart-container {
-      width: 100%;
-      height: 100%;
-    } */
-  
-    main {
-      padding-top: 48px;
-      position: relative;
-    }
-  
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      background-color: #ffffffdd;
-    }
-  
-    .patient-list-container {
-      overflow-x: auto;
-      overflow-y: scroll;
-    }
-  
-    .patient-data {
-      margin-left: auto;
-      margin-right: auto;
-    }
-  
-    .bg-navy-90 {
-      background-color: #001b44e7;
-      z-index: 1;
-    }
-  
-    .hover-bg-navy-dark:hover {
-      background-color: #013274;
-    }
-  
-    table {
-      border-collapse: collapse;
-    }
-  
-    th {
-      background-color: #eeeeee;
-      border-bottom: 2px solid #cccccc;
-      padding-top: 8px;
-      padding-bottom: 8px;
-      min-width: 84px;
-    }
-  
-    tr {
-      background-color: white;
-      border-bottom: 1px solid #cccccc;
-    }
-  
-    td {
-      min-height: 54px;
-      padding-top: 8px;
-      padding-bottom: 8px;
-      min-width: 84px;
-    }
-  
-    button {
-      border: none;
-      outline: none;
-    }
-  </style> -->
 <style>
   button {
     border: none;
     outline: none;
+  }
+
+  .sidebar {
+    width: 400px;
+    border-right: 1px solid #777777;
+    overflow-y: scroll;
+    flex: 0 0 auto;
   }
 
   .hover-bg-navy-dark:hover {
@@ -258,5 +193,13 @@
   .chart-container {
     width: 100%;
     height: 100%;
+  }
+
+  .bg-blue-gray {
+    background-color: #404a5a;
+  }
+
+  .bg-navy-gray {
+    background-color: #2e3847;
   }
 </style>
