@@ -16,36 +16,53 @@
 
   $: {
     // Generate path, omitting null or undefined values
-    let segments = $data.map((d, i) => {
-      let yCoord = $y(d);
-      if (yCoord == null || yCoord == undefined)
-        return {
-          startX: null,
-          endX: null,
-          startY: null,
-          endY: null,
-          dash: null,
-        };
+    let segments = $data
+      .map((d, i) => {
+        let yCoord = $y(d);
+        if (yCoord == null || yCoord == undefined)
+          return [
+            {
+              startX: null,
+              endX: null,
+              startY: null,
+              endY: null,
+              dash: null,
+            },
+          ];
 
-      let previousX = i > 0 ? $x($data[i - 1]) : null;
-      let nextX = i < $data.length - 1 ? $x($data[i + 1]) : null;
-      let startX =
-        ((previousX != null ? previousX : $x($data[i])) + $x($data[i])) * 0.5;
-      let endX = ((nextX != null ? nextX : $x($data[i])) + $x($data[i])) * 0.5;
-      let previousY = i > 0 ? $y($data[i - 1]) : null;
-      let nextY = i < $data.length - 1 ? $y($data[i + 1]) : null;
-      let startY =
-        ((previousY != null ? previousY : $y($data[i])) + $y($data[i])) * 0.5;
-      let endY = ((nextY != null ? nextY : $y($data[i])) + $y($data[i])) * 0.5;
-      let dash = !!dashFn && dashFn(d);
-      return {
-        startX,
-        endX,
-        startY,
-        endY,
-        dash,
-      };
-    });
+        let previousX = i > 0 ? $x($data[i - 1]) : null;
+        let nextX = i < $data.length - 1 ? $x($data[i + 1]) : null;
+        let startX =
+          ((previousX != null ? previousX : $x($data[i])) + $x($data[i])) * 0.5;
+        let midX = $x($data[i]);
+        let endX =
+          ((nextX != null ? nextX : $x($data[i])) + $x($data[i])) * 0.5;
+        let previousY = i > 0 ? $y($data[i - 1]) : null;
+        let nextY = i < $data.length - 1 ? $y($data[i + 1]) : null;
+        let startY =
+          ((previousY != null ? previousY : $y($data[i])) + $y($data[i])) * 0.5;
+        let midY = $y($data[i]);
+        let endY =
+          ((nextY != null ? nextY : $y($data[i])) + $y($data[i])) * 0.5;
+        let dash = !!dashFn && dashFn(d);
+        return [
+          {
+            startX,
+            endX: midX,
+            startY,
+            endY: midY,
+            dash,
+          },
+          {
+            startX: midX,
+            endX,
+            startY: midY,
+            endY,
+            dash,
+          },
+        ];
+      })
+      .flat();
 
     paths = [{ path: '', dash: false }];
     segments.forEach(({ startX, endX, startY, endY, dash }) => {

@@ -339,7 +339,7 @@
     let lastWindow = $patient.timesteps
       .slice(
         Math.max(0, blocNumber - currentTrendWindow - lastTrendWindow),
-        blocNumber - currentTrendWindow
+        blocNumber - currentTrendWindow,
       )
       .map((v) => (v[feature] != null ? v[feature].value : null))
       .filter((v) => v != null && v != undefined);
@@ -390,7 +390,7 @@
                 historicalValues={$patient.timesteps
                   .slice(0, $currentBloc)
                   .map((ts) =>
-                    !!row.computed ? row.computed(ts) : ts[row.feature]
+                    !!row.computed ? row.computed(ts) : ts[row.feature],
                   )}
                 extremeValue={!row.computed
                   ? detectExtremeValue(
@@ -398,7 +398,7 @@
                       timePoint[row.feature] != null
                         ? timePoint[row.feature].value
                         : null,
-                      $patient.gender
+                      $patient.gender,
                     )
                   : 0}
                 maxDecimals={row.hasOwnProperty('maxDecimals')
