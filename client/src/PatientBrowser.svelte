@@ -24,26 +24,26 @@
     isLoading = true;
     if (filterStatement != null) {
       fetch(
-      `./api/patient/?sort=${sort}&ascending=${
-        isAscending ? 1 : 0
-      }&offset=${offset}&filters=${encodeURIComponent(filterStatement)}`
-    )
-      .then((d) => d.json())
-      .then((d) => {
-        isLoading = false;
-        patients = d.results;
-      });
+        `./api/patient/?sort=${sort}&ascending=${
+          isAscending ? 1 : 0
+        }&offset=${offset}&filters=${encodeURIComponent(filterStatement)}`,
+      )
+        .then((d) => d.json())
+        .then((d) => {
+          isLoading = false;
+          patients = d.results;
+        });
     } else {
       fetch(
-      `./api/patient/?sort=${sort}&ascending=${
-        isAscending ? 1 : 0
-      }&offset=${offset}`
-    )
-      .then((d) => d.json())
-      .then((d) => {
-        isLoading = false;
-        patients = d.results;
-      });
+        `./api/patient/?sort=${sort}&ascending=${
+          isAscending ? 1 : 0
+        }&offset=${offset}`,
+      )
+        .then((d) => d.json())
+        .then((d) => {
+          isLoading = false;
+          patients = d.results;
+        });
     }
   }
 
@@ -53,7 +53,6 @@
     offset = 0;
     sort = sortingCriterion;
   }
-
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
@@ -65,8 +64,7 @@
 </header>
 
 <main class="pa0 h-100">
-  
-  <SideBar bind:filterStatement/>
+  <SideBar bind:filterStatement />
 
   {#if patients.length > 0}
     <div class="patient-list-container">
@@ -131,7 +129,7 @@
                 />
               </th>
               <th>
-                <SortButton               
+                <SortButton
                   active={sort == 'elixhauser'}
                   {isAscending}
                   name={'Elixhauser Score'}
