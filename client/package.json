@@ -2,6 +2,7 @@
   "name": "ai-clinician-explorer",
   "version": "1.0.0",
   "devDependencies": {
+    "@bulatdashiev/svelte-slider": "^1.0.3",
     "@rollup/plugin-html": "^0.2.4",
     "layercake": "^6.1.0",
     "npm-run-all": "^4.1.5",

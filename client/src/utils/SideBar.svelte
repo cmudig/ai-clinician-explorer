@@ -1,6 +1,8 @@
 <script>
-  export let ageLowerBound = 50;
-  export let ageUpperBound = 59;
+  import ActionFilter from './ActionFilter.svelte';
+  import RangeFilter from './RangeFilter.svelte';
+
+  let ageBound = [50, 59];
 
   export let SOFAUpperBound = 20;
   export let SOFALowerBound = 0;
@@ -11,63 +13,48 @@
   export let idUpperBound = 39994129;
   export let idLowerBound = 30001446;
 
+  let clinicianActions = new Set();
+
   export let died_in_hosp = 0;
   export let isFilterByDeath = false;
-
   export let filters = [];
-  export let SOFAFilter;
-  export let ageFilter;
-  export let elixFilter;
-  export let idFilter;
   export let deathFilter;
-  // export let clinicianActions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-  //                                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  //                                21, 22, 23, 24, 25];
-  // let clinicianFormatted;
-  // export let physicianActions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-  //                                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  //                                21, 22, 23, 24, 25];
-  // let physicianFormatted;
+  export let clinicianFilter;
+
   export let filterStatement;
 
   $: {
-    SOFAFilter =
-      'max_SOFA' +
-      ' >= ' +
-      SOFALowerBound +
-      ';' +
-      'max_SOFA' +
-      ' <= ' +
-      SOFAUpperBound +
-      ';';
-    ageFilter =
-      'age' +
-      ' >= ' +
-      ageLowerBound +
-      ';' +
-      'age' +
-      ' <= ' +
-      ageUpperBound +
-      ';';
-    elixFilter =
-      'elixhauser' +
-      ' >= ' +
-      elixLowerBound +
-      ';' +
-      'elixhauser' +
-      ' <= ' +
-      elixUpperBound +
-      ';';
-    idFilter =
-      'icustayid' +
-      ' >= ' +
-      idLowerBound +
-      ';' +
-      'icustayid' +
-      ' <= ' +
-      idUpperBound +
-      ';';
+    let temp = [];
+    for (let i = 0; i < 25; i++) {
+      if (clinicianActions[i]) {
+        temp.push(toString(i));
+      }
+    }
+    clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
     deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
+
+    filters = [
+      // SOFAFilter
+      'max_SOFA >= ' + SOFALowerBound,
+      'max_SOFA <= ' + SOFAUpperBound,
+      // ageFilter
+      'age >= ' + ageBound[0],
+      'age <= ' + ageBound[1],
+      // elixFilter
+      'elixhauser >= ' + elixLowerBound,
+      'elixhauser <= ' + elixUpperBound,
+      // idFilter
+      'icustayid >= ' + idLowerBound,
+      'icustayid <= ' + idUpperBound,
+      // clinician actions
+      // clinicianFilter,
+      // deathFilter
+      deathFilter,
+    ];
+
+    if (!isFilterByDeath) {
+      filters.pop();
+    }
 
     // clinicianFormatted = "(";
     // for (var i = 0; i < clinicianActions.length; i++) {
@@ -81,18 +68,14 @@
     // }
     // physicianFormatted += ")";
 
-    filterStatement =
-      SOFAFilter + ageFilter + elixFilter + idFilter + deathFilter;
+    filterStatement = filters.join(';');
 
     console.log(filterStatement);
   }
 </script>
 
 <div class="sidebar bg-blue-gray">
-  <h4>Enter an age lower bound:</h4>
-  <input bind:value={ageLowerBound} />
-  <h4>Enter an age upper bound:</h4>
-  <input bind:value={ageUpperBound} />
+  <RangeFilter name={'age'} bind:range={ageBound} />
   <h4>Enter a SOFA lower bound:</h4>
   <input bind:value={SOFALowerBound} />
   <h4>Enter a SOFA upper bound:</h4>
@@ -101,7 +84,10 @@
   <input bind:value={elixLowerBound} />
   <h4>Enter an ELIX upper bound:</h4>
   <input bind:value={elixUpperBound} />
-
+  <h4>Enter an ID lower bound:</h4>
+  <input bind:value={idLowerBound} />
+  <h4>Enter an ID upper bound:</h4>
+  <input bind:value={idUpperBound} />
   <button on:click={() => (isFilterByDeath = !isFilterByDeath)}
     >Filter by Death</button
   >
@@ -114,6 +100,7 @@
       {/if}
     </button>
   {/if}
+  <ActionFilter bind:clinicianActions />
 </div>
 
 <!-- Age histogram -->
