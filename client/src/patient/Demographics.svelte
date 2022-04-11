@@ -39,8 +39,9 @@
       <DataFeature
         dark
         feature="ICU Length of Stay"
-        value={$patient.num_timesteps * 4}
-        unit="hrs"
+        value={($patient.num_timesteps * 4 > 24
+          ? `${Math.floor(($patient.num_timesteps * 4) / 24)}d `
+          : '') + `${($patient.num_timesteps * 4) % 24}h`}
       />
     </table>
   {/if}

@@ -32,7 +32,7 @@
   });
 
   export let patientID = '';
-  export let modelID = 'mimiciv_220217_best';
+  export let modelID = 'mimiciv_220328_best';
 
   let loadingModelPrediction = false;
   let loadingPatientInfo = false;
@@ -148,6 +148,17 @@
       loadingModelPrediction = false;
     }
   }
+
+  let currentTime;
+  let dayIndex;
+  $: if (!!$patient && $currentBloc > 0) {
+    dayIndex = Math.floor((($currentBloc - 1) * 4) / 24) + 1;
+    let timestamp = $patient.timesteps[$currentBloc - 1].timestep;
+    currentTime = new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      hour12: true,
+    });
+  }
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
@@ -170,14 +181,12 @@
       <div class="sidebar bg-blue-gray">
         {#if !!$patient}
           <div
-            class="timestep-selector bg-navy-gray flex justify-center items-center w-100 pv3 white"
+            class="timestep-selector bg-navy-gray flex justify-between items-center w-100 pv3 ph3 white"
           >
-            <span class="f6 b pb0 mr3"
-              >Hour {$currentBloc * 4}/{$patient.timesteps.length * 4}</span
-            >
+            <span class="f6 b pb0 mr3">Day {dayIndex}, {currentTime}</span>
             <input
               class="ph0"
-              style="width: 140px;"
+              style="width: 180px;"
               type="range"
               bind:value={$currentBloc}
               min={1}
@@ -200,8 +209,8 @@
                   { name: StateCategory.VITALS, value: StateCategory.VITALS },
                   { name: StateCategory.LABS, value: StateCategory.LABS },
                   {
-                    name: StateCategory.RESPIRATORY,
-                    value: StateCategory.RESPIRATORY,
+                    name: StateCategory.CARDIOPULM,
+                    value: StateCategory.CARDIOPULM,
                   },
                 ]}
               />

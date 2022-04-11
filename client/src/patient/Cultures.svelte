@@ -32,7 +32,9 @@
   function deltaTime(timestamp) {
     if (timestamp == null) return '--';
     let numMins = (timestamp - blocTime) / 60;
-    if (Math.abs(numMins) >= 60)
+    if (Math.abs(numMins) / 60 >= 24)
+      return rtf.format(Math.round(numMins / (60 * 24)), 'day');
+    else if (Math.abs(numMins) >= 60)
       return rtf.format(Math.round(numMins / 60), 'hour');
     return rtf.format(Math.round(numMins), 'minute');
   }
@@ -41,7 +43,7 @@
   $: console.log(expandedIndex);
 </script>
 
-<div class="ph2 h-100">
+<div class="h-100">
   {#if cultures.length > 0}
     <table class="w-100 f6">
       {#each cultures as event, i}
@@ -54,7 +56,7 @@
               expandedIndex = i;
           }}
         >
-          <td class="ph2">
+          <td class="ph3">
             {#if !!event.antibiotics && event.antibiotics.length > 0}<i
                 class="arrow {expandedIndex == i ? 'down' : 'right'}"
               />{/if}
@@ -67,7 +69,7 @@
               Negative
             {/if}
           </td>
-          <td class="pr2 tr time-delta">{deltaTime(event.charttime)}</td>
+          <td class="pr3 tr time-delta">{deltaTime(event.charttime)}</td>
         </tr>
         {#if expandedIndex == i}
           {#each event.antibiotics as ab}

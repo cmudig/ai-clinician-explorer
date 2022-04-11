@@ -113,7 +113,9 @@ def predict(model_id):
         return "Missing value(s) in input state data", 400
     
     normed_X = normer.transform(X[ALL_FEATURE_COLUMNS])
+    print(X, normed_X)
     state_reps = model.compute_states(normed_X.values)
+    print(state_reps)
     Q = model.compute_Q(states=state_reps)
     physprob = model.compute_physician_probabilities(states=state_reps, soften=False)
     Q = np.where(physprob <= 1e-6, np.nan, Q)
@@ -127,6 +129,7 @@ def predict(model_id):
             model.metadata['actions']['action_bins'])
         clin_actions = [a if C_INPUT_STEP in x and C_MAX_DOSE_VASO in x else -1
                         for a, x in zip(clin_actions, action_info)]
+        clin_actions = clin_actions[1:] + [-1]
     else:
         clin_actions = None
     
