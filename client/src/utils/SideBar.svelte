@@ -3,22 +3,23 @@
   import RangeFilter from './RangeFilter.svelte';
   import SelectFilter from './SelectFilter.svelte';
   import { Comorbidities } from './strings';
+  import TextFilter from './TextFilter.svelte';
 
-  let ageBound = [18, 100];
-  let sofaBound = [0, 20];
-  let sirsBound = [0, 4];
-  let elixBound = [0, 15];
-  let lengthOfStayBound = [0, 160];
-  let selectedGender = null;
-  let selectedOutcome = null;
-  let selectedComorbidities = null;
+  export let ageBound = [18, 100];
+  export let sofaBound = [0, 20];
+  export let sirsBound = [0, 4];
+  export let elixBound = [0, 15];
+  export let lengthOfStayBound = [0, 160];
+  export let selectedGender = null;
+  export let selectedOutcome = null;
+  export let selectedComorbidities = null;
 
-  let clinicianFluidBound = [0, 4];
-  let clinicianVasoBound = [0, 4];
-  let modelFluidBound = [0, 4];
-  let modelVasoBound = [0, 4];
-  let actionDifferenceBound = [0, 5];
-  let selectedStates = null;
+  export let clinicianFluidBound = [0, 4];
+  export let clinicianVasoBound = [0, 4];
+  export let modelFluidBound = [0, 4];
+  export let modelVasoBound = [0, 4];
+  export let actionDifferenceBound = [0, 5];
+  export let selectedStates = null;
 
   let clinicianActions = new Set();
 
@@ -77,6 +78,12 @@
     if (!!selectedOutcome) {
       filters.push('died_in_hosp = ' + selectedOutcome.value);
     }
+    if (!!selectedStates && selectedStates.length > 0) {
+      console.log('selected states', selectedStates);
+      filters.push(
+        'state in (' + selectedStates.map((v) => v).join(', ') + ')',
+      );
+    }
 
     let allowedPhysicianActions = new Array(25)
       .fill(0)
@@ -124,6 +131,7 @@
       Object.assign(obj, filter);
       obj.filters = tempFilters;
       filter = obj;
+      console.log('reassigning filter', filter);
     }
 
     if (!!selectedComorbidities && selectedComorbidities.length > 0) {
@@ -133,6 +141,7 @@
     } else {
       tempComorbidityFilters = '';
     }
+    console.log(tempFilters);
   }
 
   $: filterEmpty =
@@ -158,7 +167,8 @@
     actionDifferenceBound[1] == 5 &&
     !selectedGender &&
     !selectedOutcome &&
-    (!selectedComorbidities || selectedComorbidities.length == 0);
+    (!selectedComorbidities || selectedComorbidities.length == 0) &&
+    (!selectedStates || selectedStates.length == 0);
 
   function resetFilter() {
     ageBound = [18, 100];
@@ -174,8 +184,9 @@
     selectedGender = null;
     selectedOutcome = null;
     selectedComorbidities = null;
+    selectedStates = null;
     setTimeout(() => {
-      if (filterNeedsUpdate()) updateFilter();
+      if (filterNeedsUpdate) updateFilter();
     });
   }
 
@@ -255,6 +266,12 @@
     <RangeFilter min={0} max={20} name={'Max SOFA'} bind:range={sofaBound} />
     <RangeFilter min={0} max={4} name={'Max SIRS'} bind:range={sirsBound} />
     <hr class="mv3" />
+    <SelectFilter
+      name={'States'}
+      bind:selected={selectedStates}
+      multi
+      items={new Array(750).fill(0).map((_, i) => i)}
+    />
     <RangeFilter
       min={0}
       max={5}

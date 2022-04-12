@@ -18,6 +18,8 @@
 
   export let offset = 0;
 
+  export let filteredStates = null;
+
   let isLoading = false;
 
   let filter = {};
@@ -42,7 +44,8 @@
   }
 
   function changeSort(sortingCriterion) {
-    if (sortingCriterion != sort) isAscending = true;
+    if (sortingCriterion != sort)
+      isAscending = sortingCriterion == 'icustayid' ? true : false;
     else isAscending = !isAscending;
     offset = 0;
     sort = sortingCriterion;
@@ -58,7 +61,7 @@
 </header>
 
 <main class="pa0 h-100 flex">
-  <SideBar bind:filter />
+  <SideBar bind:filter bind:selectedStates={filteredStates} />
 
   <div class="pa0 h-100 patient-list-container">
     {#if patients.length > 0}
@@ -163,8 +166,8 @@
               <td>
                 <span
                   class="mortality-indicator"
-                  class:bg-pink={patient.died_in_hosp}
-                  class:bg-green={!patient.died_in_hosp}
+                  class:bg-dark-pink={patient.died_in_hosp}
+                  class:bg-light-green={!patient.died_in_hosp}
                 />
                 {patient.died_in_hosp ? 'Death' : 'Alive'}
               </td>
