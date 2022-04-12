@@ -25,4 +25,6 @@ Create a user profile by running the `blueprints/user.py` script. Also, make sur
 you have uploaded the `firestore_key.json` file.
 
 In the production environment, set the environment variable `PRODUCTION_MODE` to
-`1`.
+`1`. You can also set a different value for the environment variable `FIRESTORE_KEY_PATH`
+to retrieve the key from somewhere other than the default `firestore_key.json`
+path.

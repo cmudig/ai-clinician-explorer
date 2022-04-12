@@ -10,8 +10,11 @@ import os
 PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE") == "1"
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "client", "public"))
+csrf = CSRFProtect(app)
+
 app.register_blueprint(patient_blueprint)
 app.register_blueprint(model_blueprint)
+csrf.exempt(model_blueprint)
 app.config['LOGIN_DISABLED'] = not PRODUCTION_MODE
 
 # Read secret key from secret.txt if available, otherwise fallback (dev only)
@@ -25,7 +28,6 @@ else:
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/login"
-csrf = CSRFProtect(app)
 
 # Path for our main Svelte page
 @app.route("/")

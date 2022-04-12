@@ -113,9 +113,8 @@ def predict(model_id):
         return "Missing value(s) in input state data", 400
     
     normed_X = normer.transform(X[ALL_FEATURE_COLUMNS])
-    print(X, normed_X)
     state_reps = model.compute_states(normed_X.values)
-    print(state_reps)
+
     Q = model.compute_Q(states=state_reps)
     physprob = model.compute_physician_probabilities(states=state_reps, soften=False)
     Q = np.where(physprob <= 1e-6, np.nan, Q)

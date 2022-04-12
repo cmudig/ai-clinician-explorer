@@ -4,11 +4,11 @@ from google.cloud.exceptions import NotFound
 from google.cloud import bigquery
 from ai_clinician.preprocessing.columns import *
 from ai_clinician.modeling.columns import *
-from .firestore import db
+from .firestore import db, FIRESTORE_KEY_PATH
 
 from google.oauth2 import service_account
 credentials = service_account.Credentials.from_service_account_file(
-    'firestore_key.json', scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    FIRESTORE_KEY_PATH, scopes=["https://www.googleapis.com/auth/cloud-platform"],
 )
 
 patient_blueprint = Blueprint('patient', __name__, url_prefix='/api/patient')
