@@ -162,9 +162,12 @@
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
-  <nav class="f6 fw6 ttu tracked">
+  <nav class="f6 fw6 ttu tracked flex justify-between">
     <a class="link dim white dib mr3" href="/" title="Patient List"
       ><i class="arrow left" />&nbsp; Back to List</a
+    >
+    <a class="link dim white dib ml3" href="/logout" title="Sign Out"
+      >Sign Out</a
     >
   </nav>
 </header>
