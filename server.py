@@ -8,8 +8,9 @@ import os
 
 # If in production mode, enable authentication
 PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE") == "1"
+TEMPLATE_FOLDER = os.path.join(os.path.dirname(__file__), "client", "public" if not PRODUCTION_MODE else "dist")
 
-app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "client", "public"))
+app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
 csrf = CSRFProtect(app)
 
 app.register_blueprint(patient_blueprint)
