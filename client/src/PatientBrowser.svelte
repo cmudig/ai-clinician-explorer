@@ -5,9 +5,11 @@
   import SortButton from './utils/SortButton.svelte';
   import Select from 'svelte-select';
   import SideBar from './utils/SideBar.svelte';
+  import { interpolateReds, interpolateBlues } from 'd3-scale-chromatic';
 
   // Quick question about what { Comorbidities } does
   import { Comorbidities } from './utils/strings';
+  import TableCellBar from './utils/TableCellBar.svelte';
   let patients = [];
 
   export let sort = 'icustayid';
@@ -146,18 +148,43 @@
                 {patient.gender ? 'Female' : 'Male'}
               </td>
               <td>
+                <TableCellBar
+                  maxWidth={60}
+                  fraction={(4 * patient.num_timesteps) / 160}
+                  colorScale={interpolateBlues}
+                />
                 {4 * patient.num_timesteps} hrs
               </td>
               <td>
+                <span
+                  class="mortality-indicator"
+                  class:bg-pink={patient.died_in_hosp}
+                  class:bg-green={!patient.died_in_hosp}
+                />
                 {patient.died_in_hosp ? 'Death' : 'Alive'}
               </td>
               <td>
+                <TableCellBar
+                  maxWidth={60}
+                  fraction={patient.max_SOFA / 20}
+                  colorScale={interpolateReds}
+                />
                 {patient.max_SOFA}
               </td>
               <td>
+                <TableCellBar
+                  maxWidth={60}
+                  fraction={patient.max_SIRS / 4}
+                  colorScale={interpolateReds}
+                />
                 {patient.max_SIRS}
               </td>
               <td class="pr3">
+                <TableCellBar
+                  maxWidth={60}
+                  fraction={patient.elixhauser / 15}
+                  colorScale={interpolateReds}
+                />
                 {patient.elixhauser}
               </td>
             </tr>
@@ -252,5 +279,13 @@
     padding-top: 8px;
     padding-bottom: 8px;
     min-width: 84px;
+  }
+
+  .mortality-indicator {
+    display: inline-block;
+    border-radius: 4px;
+    width: 8px;
+    height: 8px;
+    transform: translateY(-2px);
   }
 </style>

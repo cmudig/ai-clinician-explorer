@@ -52,3 +52,22 @@ button:active {
 button:focus {
   border-color: #666;
 }
+
+.bg-navy-90 {
+  background-color: #001b44e7;
+  z-index: 1;
+}
+
+.bg-light-blue-gray {
+  background-color: #dfe4eb;
+}
+
+.hover-bg-navy-dark:hover {
+  background-color: #013274;
+}
+
+button,
+input[type='button'] {
+  border: none;
+  outline: none;
+}
