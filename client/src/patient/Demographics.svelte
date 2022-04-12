@@ -34,7 +34,7 @@
       <DataFeature
         dark
         feature="Discharge Status"
-        value={$patient.died_in_hosp ? 'Death' : 'Discharge'}
+        value={$patient.died_in_hosp ? 'Death' : 'Alive'}
       />
       <DataFeature
         dark

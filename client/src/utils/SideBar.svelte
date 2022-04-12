@@ -1,17 +1,17 @@
 <script>
   import ActionFilter from './ActionFilter.svelte';
   import RangeFilter from './RangeFilter.svelte';
+  import SelectFilter from './SelectFilter.svelte';
+  import { Comorbidities } from './strings';
 
-  let ageBound = [50, 59];
-
-  export let SOFAUpperBound = 20;
-  export let SOFALowerBound = 0;
-
-  export let elixUpperBound = 15;
-  export let elixLowerBound = 0;
-
-  export let idUpperBound = 39994129;
-  export let idLowerBound = 30001446;
+  let ageBound = [18, 100];
+  let sofaBound = [0, 20];
+  let sirsBound = [0, 4];
+  let elixBound = [0, 15];
+  let lengthOfStayBound = [0, 160];
+  let selectedGender = null;
+  let selectedOutcome = null;
+  let selectedComorbidities = null;
 
   let clinicianActions = new Set();
 
@@ -21,7 +21,18 @@
   export let deathFilter;
   export let clinicianFilter;
 
-  export let filterStatement;
+  function makeEmptyFilter() {
+    return { filters: '', comorbidityFilters: '' };
+  }
+  export let filter = makeEmptyFilter();
+
+  // Store the filter statement that would be generated with the current values.
+  // When the user clicks the Apply button this statement will be transferred to
+  // the filterStatement variable.
+  let tempFilters = '';
+  let tempComorbidityFilters = '';
+
+  let filterEmpty = true;
 
   $: {
     let temp = [];
@@ -34,26 +45,28 @@
     deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
 
     filters = [
-      // SOFAFilter
-      'max_SOFA >= ' + SOFALowerBound,
-      'max_SOFA <= ' + SOFAUpperBound,
-      // ageFilter
+      'max_SOFA >= ' + sofaBound[0],
+      'max_SOFA <= ' + sofaBound[1],
+      'max_SIRS >= ' + sirsBound[0],
+      'max_SIRS <= ' + sirsBound[1],
       'age >= ' + ageBound[0],
       'age <= ' + ageBound[1],
-      // elixFilter
-      'elixhauser >= ' + elixLowerBound,
-      'elixhauser <= ' + elixUpperBound,
-      // idFilter
-      'icustayid >= ' + idLowerBound,
-      'icustayid <= ' + idUpperBound,
+      'elixhauser >= ' + elixBound[0],
+      'elixhauser <= ' + elixBound[1],
+      'num_timesteps >= ' + lengthOfStayBound[0] / 4,
+      'num_timesteps <= ' + lengthOfStayBound[1] / 4,
       // clinician actions
       // clinicianFilter,
-      // deathFilter
-      deathFilter,
     ];
 
-    if (!isFilterByDeath) {
-      filters.pop();
+    if (isFilterByDeath) {
+      filters.push(deathFilter);
+    }
+    if (!!selectedGender) {
+      filters.push('gender = ' + selectedGender.value);
+    }
+    if (!!selectedOutcome) {
+      filters.push('died_in_hosp = ' + selectedOutcome.value);
     }
 
     // clinicianFormatted = "(";
@@ -68,39 +81,127 @@
     // }
     // physicianFormatted += ")";
 
-    filterStatement = filters.join(';');
+    tempFilters = filters.join(';');
+    if (!filter.filters) {
+      let obj = makeEmptyFilter();
+      Object.assign(obj, filter);
+      obj.filters = tempFilters;
+      filter = obj;
+    }
 
-    console.log(filterStatement);
+    if (!!selectedComorbidities && selectedComorbidities.length > 0) {
+      tempComorbidityFilters = selectedComorbidities
+        .map((v) => `${v.value} = 1`)
+        .join(';');
+    } else {
+      tempComorbidityFilters = '';
+    }
+  }
+
+  $: filterEmpty =
+    ageBound[0] == 18 &&
+    ageBound[1] == 100 &&
+    sofaBound[0] == 0 &&
+    sofaBound[1] == 20 &&
+    sirsBound[0] == 0 &&
+    sirsBound[1] == 4 &&
+    elixBound[0] == 0 &&
+    elixBound[1] == 15 &&
+    lengthOfStayBound[0] == 0 &&
+    lengthOfStayBound[1] == 160 &&
+    !selectedGender &&
+    !selectedOutcome &&
+    (!selectedComorbidities || selectedComorbidities.length == 0);
+
+  function resetFilter() {
+    ageBound = [18, 100];
+    sofaBound = [0, 20];
+    sirsBound = [0, 4];
+    elixBound = [0, 15];
+    lengthOfStayBound = [0, 160];
+    selectedGender = null;
+    selectedOutcome = null;
+    selectedComorbidities = null;
+    setTimeout(() => {
+      if (filterNeedsUpdate()) updateFilter();
+    });
+  }
+
+  function updateFilter() {
+    filter = {
+      filters: tempFilters,
+      comorbidityFilters: tempComorbidityFilters,
+    };
+  }
+
+  let filterNeedsUpdate;
+
+  $: {
+    filterNeedsUpdate =
+      filter.filters != tempFilters ||
+      filter.comorbidityFilters != tempComorbidityFilters;
   }
 </script>
 
-<div class="sidebar bg-blue-gray">
-  <RangeFilter name={'age'} bind:range={ageBound} />
-  <h4>Enter a SOFA lower bound:</h4>
-  <input bind:value={SOFALowerBound} />
-  <h4>Enter a SOFA upper bound:</h4>
-  <input bind:value={SOFAUpperBound} />
-  <h4>Enter an ELIX lower bound:</h4>
-  <input bind:value={elixLowerBound} />
-  <h4>Enter an ELIX upper bound:</h4>
-  <input bind:value={elixUpperBound} />
-  <h4>Enter an ID lower bound:</h4>
-  <input bind:value={idLowerBound} />
-  <h4>Enter an ID upper bound:</h4>
-  <input bind:value={idUpperBound} />
-  <button on:click={() => (isFilterByDeath = !isFilterByDeath)}
-    >Filter by Death</button
-  >
-  {#if isFilterByDeath}
-    <button on:click={() => (died_in_hosp = died_in_hosp == 0 ? 1 : 0)}>
-      {#if died_in_hosp == 0}
-        Death only
-      {:else}
-        Discharge only
-      {/if}
-    </button>
-  {/if}
-  <ActionFilter bind:clinicianActions />
+<div class="sidebar bg-light-blue-gray ph3">
+  <div class="flex items-center pv3 mb2">
+    <p class="mv0 flex-auto f4">Filters</p>
+    <input
+      type="button"
+      class="pa2 mh1 link dib white bg-gray f6 b {!filterEmpty
+        ? 'pointer hover-bg-dark-gray'
+        : 'disabled-button'}"
+      disabled={filterEmpty}
+      value="Reset"
+      on:click={resetFilter}
+    />
+    <input
+      type="button"
+      class="pa2 mh1 link dib white bg-dark-blue f6 b {filterNeedsUpdate
+        ? 'pointer hover-bg-navy-dark '
+        : 'disabled-button'}"
+      disabled={!filterNeedsUpdate}
+      value="Apply"
+      on:click={updateFilter}
+    />
+  </div>
+  <SelectFilter
+    name="Gender"
+    items={[
+      { label: 'Male', value: 0 },
+      { label: 'Female', value: 1 },
+    ]}
+    bind:selected={selectedGender}
+  />
+  <RangeFilter min={18} max={100} name={'Age'} bind:range={ageBound} />
+  <RangeFilter min={0} max={15} name={'Elixhauser'} bind:range={elixBound} />
+  <SelectFilter
+    name="Comorbidities"
+    multi
+    items={Object.keys(Comorbidities).map((k) => ({
+      value: k,
+      label: Comorbidities[k],
+    }))}
+    bind:selected={selectedComorbidities}
+  />
+  <RangeFilter
+    min={0}
+    max={160}
+    step={4}
+    name={'ICU Stay Length'}
+    bind:range={lengthOfStayBound}
+  />
+  <SelectFilter
+    name="Discharge Status"
+    items={[
+      { label: 'Alive', value: 0 },
+      { label: 'Death', value: 1 },
+    ]}
+    bind:selected={selectedOutcome}
+  />
+  <RangeFilter min={0} max={20} name={'Max SOFA'} bind:range={sofaBound} />
+  <RangeFilter min={0} max={4} name={'Max SIRS'} bind:range={sirsBound} />
+  <!-- <ActionFilter bind:clinicianActions /> -->
 </div>
 
 <!-- Age histogram -->
@@ -162,11 +263,6 @@
 
 <!-- Implement multi-select on the 5x5 grid -->
 <style>
-  button {
-    border: none;
-    outline: none;
-  }
-
   .sidebar {
     width: 400px;
     border-right: 1px solid #777777;
@@ -174,19 +270,12 @@
     flex: 0 0 auto;
   }
 
-  .hover-bg-navy-dark:hover {
-    background-color: #013274;
-  }
   .chart-container {
     width: 100%;
     height: 100%;
   }
 
-  .bg-blue-gray {
-    background-color: #404a5a;
-  }
-
-  .bg-navy-gray {
-    background-color: #2e3847;
+  .disabled-button {
+    opacity: 0.2;
   }
 </style>

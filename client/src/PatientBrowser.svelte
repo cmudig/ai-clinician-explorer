@@ -18,33 +18,25 @@
 
   let isLoading = false;
 
-  let filterStatement;
+  let filter = {};
 
   $: {
     isLoading = true;
-    if (filterStatement != null) {
-      fetch(
-        `./api/patient/?sort=${sort}&ascending=${
-          isAscending ? 1 : 0
-        }&offset=${offset}&filters=${encodeURIComponent(filterStatement)}`,
-      )
-        .then((d) => d.json())
-        .then((d) => {
-          isLoading = false;
-          patients = d.results;
-        });
-    } else {
-      fetch(
-        `./api/patient/?sort=${sort}&ascending=${
-          isAscending ? 1 : 0
-        }&offset=${offset}`,
-      )
-        .then((d) => d.json())
-        .then((d) => {
-          isLoading = false;
-          patients = d.results;
-        });
+    let url = `./api/patient/?sort=${sort}&ascending=${
+      isAscending ? 1 : 0
+    }&offset=${offset}`;
+    if (!!filter) {
+      if (!!filter.filters && filter.filters.length > 0)
+        url += '&filters=' + encodeURIComponent(filter.filters);
+      if (!!filter.comorbidityFilters && filter.comorbidityFilters.length > 0)
+        url += '&cm_filters=' + encodeURIComponent(filter.comorbidityFilters);
     }
+    fetch(url)
+      .then((d) => d.json())
+      .then((d) => {
+        isLoading = false;
+        patients = d.results;
+      });
   }
 
   function changeSort(sortingCriterion) {
@@ -64,7 +56,7 @@
 </header>
 
 <main class="pa0 h-100 flex">
-  <SideBar bind:filterStatement />
+  <SideBar bind:filter />
 
   <div class="pa0 h-100 patient-list-container">
     {#if patients.length > 0}
@@ -157,7 +149,7 @@
                 {4 * patient.num_timesteps} hrs
               </td>
               <td>
-                {patient.died_in_hosp ? 'Death' : 'Discharge'}
+                {patient.died_in_hosp ? 'Death' : 'Alive'}
               </td>
               <td>
                 {patient.max_SOFA}
@@ -232,15 +224,6 @@
     margin-right: auto;
   }
 
-  .bg-navy-90 {
-    background-color: #001b44e7;
-    z-index: 1;
-  }
-
-  .hover-bg-navy-dark:hover {
-    background-color: #013274;
-  }
-
   table {
     border-collapse: collapse;
   }
@@ -269,10 +252,5 @@
     padding-top: 8px;
     padding-bottom: 8px;
     min-width: 84px;
-  }
-
-  button {
-    border: none;
-    outline: none;
   }
 </style>
