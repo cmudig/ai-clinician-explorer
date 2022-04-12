@@ -27,3 +27,5 @@ urllib3==1.26.7
 Werkzeug==2.0.2
 flask-login==0.6.0
 Flask-WTF==1.0.1
+Gunicorn==20.1.0
+-e git+https://github.com/cmudig/AI-Clinician-MIMICIV@main#egg=ai-clinician
