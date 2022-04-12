@@ -185,7 +185,11 @@
     <h5 class="f5 tc b mb2">Predicted Patient State</h5>
     {#if !!$modelInfo && physicianActionIdx != null}
       <p class="f6 lh-copy">
-        The patient is predicted to be in state <strong>{predictedState}</strong
+        The patient is predicted to be in state <a
+          class="link dim blue"
+          href="/?states={predictedState}"
+        >
+          <strong>{predictedState}</strong></a
         >, which has been observed
         <strong>{stateExplanations.count} times</strong> in the dataset {#if stateExplanations.count_percentile < 50}
           (less than {(100 - stateExplanations.count_percentile).toFixed(0)}% of
