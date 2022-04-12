@@ -1,10 +1,8 @@
 <script>
-  import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import LoadingBar from './utils/LoadingBar.svelte';
   import SortButton from './utils/SortButton.svelte';
-  import Select from 'svelte-select';
-  import SideBar from './utils/SideBar.svelte';
+  import SideBar from './filters/SideBar.svelte';
   import { interpolateReds, interpolateBlues } from 'd3-scale-chromatic';
   import TableCellBar from './utils/TableCellBar.svelte';
 

@@ -2,7 +2,7 @@
   import ActionFilter from './ActionFilter.svelte';
   import RangeFilter from './RangeFilter.svelte';
   import SelectFilter from './SelectFilter.svelte';
-  import { Comorbidities } from './strings';
+  import { Comorbidities } from '../utils/strings';
   import TextFilter from './TextFilter.svelte';
 
   export let ageBound = [18, 100];
