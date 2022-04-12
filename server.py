@@ -6,9 +6,13 @@ from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_wtf.csrf import CSRFProtect
 import os
 
+# If in production mode, enable authentication
+PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE") == "1"
+
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "client", "public"))
 app.register_blueprint(patient_blueprint)
 app.register_blueprint(model_blueprint)
+app.config['LOGIN_DISABLED'] = not PRODUCTION_MODE
 
 # Read secret key from secret.txt if available, otherwise fallback (dev only)
 if os.path.exists("secret.txt"):
