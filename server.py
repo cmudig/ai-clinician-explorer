@@ -8,9 +8,9 @@ import os
 
 # If in production mode, enable authentication
 PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE") == "1"
-TEMPLATE_FOLDER = os.path.join(os.path.dirname(__file__), "client", "public" if not PRODUCTION_MODE else "dist")
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(__file__), "client", "public" if not PRODUCTION_MODE else "dist")
 
-app = Flask(__name__, template_folder=TEMPLATE_FOLDER)
+app = Flask(__name__, template_folder=FRONTEND_BUILD_DIR)
 csrf = CSRFProtect(app)
 
 app.register_blueprint(patient_blueprint)
@@ -64,7 +64,7 @@ def logout():
 # Path for all the static files (compiled JS/CSS, etc.)
 @app.route("/<path:path>")
 def home(path):
-    return send_from_directory('client/public', path)
+    return send_from_directory(FRONTEND_BUILD_DIR, path)
 
 @login_manager.user_loader
 def load_user(user_id):
