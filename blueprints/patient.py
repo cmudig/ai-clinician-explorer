@@ -34,6 +34,7 @@ METADATA_FIELDS = [
     C_DIED_IN_HOSP,
     C_RE_ADMISSION,
     C_HEIGHT,
+    'avg_action_difference'
 ]
 
 # If these are used, the query should not limit to bloc == 0
@@ -42,7 +43,8 @@ TIMESTEP_RELEVANT_FIELDS = [
     'bloc',
     'timestep',
     'physician_action',
-    'state'
+    'state',
+    'action_difference'
 ]
 
 def build_filter_query(filters, table_name, dataset=None):
@@ -144,6 +146,10 @@ def read(patient_id):
         * "died_within_48h_of_out_time" - whether the patient died within 48
             hours of being discharged from the ICU
         * "morta_90" - 90-day mortality (not guaranteed to be accurate)
+        * "max_SOFA" - maximum SOFA score throughout the trajectory
+        * "max_SIRS" - maximum SIRS score throughout the trajectory
+        * "avg_action_difference" - average difference in fluids and vasopressors 
+            over all timesteps
         
         Some examples of how filters might look:
         * "state = 10"

@@ -52,7 +52,7 @@
         loadingPatientInfo = false;
         console.log(
           `error ${response.status} loading patient info:`,
-          await response.text()
+          await response.text(),
         );
         return;
       }
@@ -80,7 +80,7 @@
       if (response.status != 200) {
         console.log(
           `error ${response.status} loading model info:`,
-          await response.text()
+          await response.text(),
         );
         return;
       }
@@ -134,7 +134,7 @@
       if (response.status != 200) {
         console.log(
           `error ${response.status} loading model prediction:`,
-          await response.text()
+          await response.text(),
         );
         loadingModelPrediction = false;
         return;
@@ -164,7 +164,7 @@
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked">
     <a class="link dim white dib mr3" href="/" title="Patient List"
-      >Patient List</a
+      ><i class="arrow left" />&nbsp; Back to List</a
     >
   </nav>
 </header>
@@ -304,5 +304,17 @@
 
   .timestep-selector {
     border-bottom: 1px solid #666666;
+  }
+
+  .arrow {
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+  }
+
+  .arrow.left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
   }
 </style>

@@ -51,8 +51,8 @@
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked">
-    <a class="link dim white dib mr3" href="/" title="Patient List"
-      >Patient List</a
+    <a class="link dim white dib mr3" href="#" title="Patient List"
+      >AI Clinician Explorer</a
     >
   </nav>
 </header>
@@ -136,7 +136,12 @@
             <tr
               class="hover-bg-near-white pointer"
               on:click={(e) =>
-                (document.location = `/patient?id=${patient.icustayid}`)}
+                window
+                  .open(
+                    `/patient?id=${patient.icustayid}&bloc=${patient.bloc}`,
+                    '_blank',
+                  )
+                  .focus()}
             >
               <td class="pl3">
                 {patient.icustayid}

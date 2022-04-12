@@ -13,6 +13,13 @@
   let selectedOutcome = null;
   let selectedComorbidities = null;
 
+  let clinicianFluidBound = [0, 4];
+  let clinicianVasoBound = [0, 4];
+  let modelFluidBound = [0, 4];
+  let modelVasoBound = [0, 4];
+  let actionDifferenceBound = [0, 5];
+  let selectedStates = null;
+
   let clinicianActions = new Set();
 
   export let died_in_hosp = 0;
@@ -55,6 +62,8 @@
       'elixhauser <= ' + elixBound[1],
       'num_timesteps >= ' + lengthOfStayBound[0] / 4,
       'num_timesteps <= ' + lengthOfStayBound[1] / 4,
+      'avg_action_difference >= ' + actionDifferenceBound[0],
+      'avg_action_difference <= ' + actionDifferenceBound[1],
       // clinician actions
       // clinicianFilter,
     ];
@@ -68,6 +77,34 @@
     if (!!selectedOutcome) {
       filters.push('died_in_hosp = ' + selectedOutcome.value);
     }
+
+    let allowedPhysicianActions = new Array(25)
+      .fill(0)
+      .map((_, ac) => ac)
+      .filter(
+        (ac) =>
+          Math.floor(ac / 5) >= clinicianFluidBound[0] &&
+          Math.floor(ac / 5) <= clinicianFluidBound[1] &&
+          Math.floor(ac % 5) >= clinicianVasoBound[0] &&
+          Math.floor(ac % 5) <= clinicianVasoBound[1],
+      );
+    if (allowedPhysicianActions.length < 25)
+      filters.push(
+        'physician_action in (' + allowedPhysicianActions.join(', ') + ')',
+      );
+
+    let allowedModelActions = new Array(25)
+      .fill(0)
+      .map((_, ac) => ac)
+      .filter(
+        (ac) =>
+          Math.floor(ac / 5) >= modelFluidBound[0] &&
+          Math.floor(ac / 5) <= modelFluidBound[1] &&
+          Math.floor(ac % 5) >= modelVasoBound[0] &&
+          Math.floor(ac % 5) <= modelVasoBound[1],
+      );
+    if (allowedModelActions.length < 25)
+      filters.push('model_action in (' + allowedModelActions.join(', ') + ')');
 
     // clinicianFormatted = "(";
     // for (var i = 0; i < clinicianActions.length; i++) {
@@ -109,6 +146,16 @@
     elixBound[1] == 15 &&
     lengthOfStayBound[0] == 0 &&
     lengthOfStayBound[1] == 160 &&
+    clinicianFluidBound[0] == 0 &&
+    clinicianFluidBound[1] == 4 &&
+    clinicianVasoBound[0] == 0 &&
+    clinicianVasoBound[1] == 4 &&
+    modelFluidBound[0] == 0 &&
+    modelFluidBound[1] == 4 &&
+    modelVasoBound[0] == 0 &&
+    modelVasoBound[1] == 4 &&
+    actionDifferenceBound[0] == 0 &&
+    actionDifferenceBound[1] == 5 &&
     !selectedGender &&
     !selectedOutcome &&
     (!selectedComorbidities || selectedComorbidities.length == 0);
@@ -119,6 +166,11 @@
     sirsBound = [0, 4];
     elixBound = [0, 15];
     lengthOfStayBound = [0, 160];
+    clinicianFluidBound = [0, 4];
+    clinicianVasoBound = [0, 4];
+    modelFluidBound = [0, 4];
+    modelVasoBound = [0, 4];
+    actionDifferenceBound = [0, 5];
     selectedGender = null;
     selectedOutcome = null;
     selectedComorbidities = null;
@@ -143,8 +195,8 @@
   }
 </script>
 
-<div class="sidebar bg-light-blue-gray ph3">
-  <div class="flex items-center pv3 mb2">
+<div class="sidebar bg-light-blue-gray flex flex-column">
+  <div class="flex items-center pv3 mb2 ph3">
     <p class="mv0 flex-auto f4">Filters</p>
     <input
       type="button"
@@ -165,43 +217,77 @@
       on:click={updateFilter}
     />
   </div>
-  <SelectFilter
-    name="Gender"
-    items={[
-      { label: 'Male', value: 0 },
-      { label: 'Female', value: 1 },
-    ]}
-    bind:selected={selectedGender}
-  />
-  <RangeFilter min={18} max={100} name={'Age'} bind:range={ageBound} />
-  <RangeFilter min={0} max={15} name={'Elixhauser'} bind:range={elixBound} />
-  <SelectFilter
-    name="Comorbidities"
-    multi
-    items={Object.keys(Comorbidities).map((k) => ({
-      value: k,
-      label: Comorbidities[k],
-    }))}
-    bind:selected={selectedComorbidities}
-  />
-  <RangeFilter
-    min={0}
-    max={160}
-    step={4}
-    name={'ICU Stay Length'}
-    bind:range={lengthOfStayBound}
-  />
-  <SelectFilter
-    name="Discharge Status"
-    items={[
-      { label: 'Alive', value: 0 },
-      { label: 'Death', value: 1 },
-    ]}
-    bind:selected={selectedOutcome}
-  />
-  <RangeFilter min={0} max={20} name={'Max SOFA'} bind:range={sofaBound} />
-  <RangeFilter min={0} max={4} name={'Max SIRS'} bind:range={sirsBound} />
-  <!-- <ActionFilter bind:clinicianActions /> -->
+  <div class="sidebar-filter-view flex-auto pb3 ph3">
+    <SelectFilter
+      name="Gender"
+      items={[
+        { label: 'Male', value: 0 },
+        { label: 'Female', value: 1 },
+      ]}
+      bind:selected={selectedGender}
+    />
+    <RangeFilter min={18} max={100} name={'Age'} bind:range={ageBound} />
+    <RangeFilter min={0} max={15} name={'Elixhauser'} bind:range={elixBound} />
+    <SelectFilter
+      name="Comorbidities"
+      multi
+      items={Object.keys(Comorbidities).map((k) => ({
+        value: k,
+        label: Comorbidities[k],
+      }))}
+      bind:selected={selectedComorbidities}
+    />
+    <RangeFilter
+      min={0}
+      max={160}
+      step={4}
+      name={'ICU Stay Length'}
+      bind:range={lengthOfStayBound}
+    />
+    <SelectFilter
+      name="Discharge Status"
+      items={[
+        { label: 'Alive', value: 0 },
+        { label: 'Death', value: 1 },
+      ]}
+      bind:selected={selectedOutcome}
+    />
+    <RangeFilter min={0} max={20} name={'Max SOFA'} bind:range={sofaBound} />
+    <RangeFilter min={0} max={4} name={'Max SIRS'} bind:range={sirsBound} />
+    <hr class="mv3" />
+    <RangeFilter
+      min={0}
+      max={5}
+      step={0.1}
+      name={'Avg Action Difference'}
+      bind:range={actionDifferenceBound}
+    />
+    <RangeFilter
+      min={0}
+      max={4}
+      name={'Clinician Fluids'}
+      bind:range={clinicianFluidBound}
+    />
+    <RangeFilter
+      min={0}
+      max={4}
+      name={'Clinician Vasopressors'}
+      bind:range={clinicianVasoBound}
+    />
+    <RangeFilter
+      min={0}
+      max={4}
+      name={'Model Fluids'}
+      bind:range={modelFluidBound}
+    />
+    <RangeFilter
+      min={0}
+      max={4}
+      name={'Model Vasopressors'}
+      bind:range={modelVasoBound}
+    />
+    <!-- <ActionFilter bind:clinicianActions /> -->
+  </div>
 </div>
 
 <!-- Age histogram -->
@@ -266,8 +352,11 @@
   .sidebar {
     width: 400px;
     border-right: 1px solid #777777;
-    overflow-y: scroll;
     flex: 0 0 auto;
+  }
+
+  .sidebar-filter-view {
+    overflow-y: scroll;
   }
 
   .chart-container {

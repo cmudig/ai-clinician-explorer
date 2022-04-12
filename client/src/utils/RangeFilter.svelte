@@ -16,7 +16,9 @@
     <h4 class="tr f5 b mt0 mb1">
       {name}
     </h4>
-    <p class="tr f6 mv0">{range[0]} - {range[1]}</p>
+    <p class="tr f6 mv0">
+      {range[0].toLocaleString()} - {range[1].toLocaleString()}
+    </p>
   </div>
   <div class="w-50">
     <Slider {min} {max} {step} bind:value={range} range order />
