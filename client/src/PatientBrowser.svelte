@@ -6,11 +6,10 @@
   import Select from 'svelte-select';
   import SideBar from './utils/SideBar.svelte';
   import { interpolateReds, interpolateBlues } from 'd3-scale-chromatic';
-
-  // Quick question about what { Comorbidities } does
-  import { Comorbidities } from './utils/strings';
   import TableCellBar from './utils/TableCellBar.svelte';
+
   let patients = [];
+  let resultCount = 0;
 
   export let sort = 'icustayid';
   export let size = 20;
@@ -40,6 +39,7 @@
       .then((d) => {
         isLoading = false;
         patients = d.results;
+        resultCount = d.result_count;
       });
   }
 
@@ -65,163 +65,168 @@
 
   <div class="pa0 h-100 patient-list-container">
     {#if patients.length > 0}
-      <div class="w-100 horizontal-scroll">
-        <table class="patient-data">
-          <thead>
-            <tr>
-              <th class="pl3">
-                <SortButton
-                  active={sort == 'icustayid'}
-                  {isAscending}
-                  name={'Patient ID'}
-                  on:click={() => changeSort('icustayid')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'age'}
-                  {isAscending}
-                  name={'Age'}
-                  on:click={() => changeSort('age')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'gender'}
-                  {isAscending}
-                  name={'Gender'}
-                  on:click={() => changeSort('gender')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'num_timesteps'}
-                  {isAscending}
-                  name={'ICU Length of Stay'}
-                  on:click={() => changeSort('num_timesteps')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'died_in_hosp'}
-                  {isAscending}
-                  name={'Discharge Status'}
-                  on:click={() => changeSort('died_in_hosp')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'max_SOFA'}
-                  {isAscending}
-                  name={'Max SOFA Score'}
-                  on:click={() => changeSort('max_SOFA')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'max_SIRS'}
-                  {isAscending}
-                  name={'Max SIRS Score'}
-                  on:click={() => changeSort('max_SIRS')}
-                />
-              </th>
-              <th>
-                <SortButton
-                  active={sort == 'elixhauser'}
-                  {isAscending}
-                  name={'Elixhauser Score'}
-                  on:click={() => changeSort('elixhauser')}
-                />
-              </th>
-            </tr>
-          </thead>
-          {#each patients as patient}
-            <tr
-              class="hover-bg-near-white pointer"
-              on:click={(e) =>
-                window
-                  .open(
-                    `/patient?id=${patient.icustayid}&bloc=${patient.bloc}`,
-                    '_blank',
-                  )
-                  .focus()}
-            >
-              <td class="pl3">
-                {patient.icustayid}
-              </td>
-              <td>
-                {patient.age} yrs
-              </td>
-              <td>
-                {patient.gender ? 'Female' : 'Male'}
-              </td>
-              <td>
-                <TableCellBar
-                  maxWidth={60}
-                  fraction={(4 * patient.num_timesteps) / 160}
-                  colorScale={interpolateBlues}
-                />
-                {4 * patient.num_timesteps} hrs
-              </td>
-              <td>
-                <span
-                  class="mortality-indicator"
-                  class:bg-dark-pink={patient.died_in_hosp}
-                  class:bg-light-green={!patient.died_in_hosp}
-                />
-                {patient.died_in_hosp ? 'Death' : 'Alive'}
-              </td>
-              <td>
-                <TableCellBar
-                  maxWidth={60}
-                  fraction={patient.max_SOFA / 20}
-                  colorScale={interpolateReds}
-                />
-                {patient.max_SOFA}
-              </td>
-              <td>
-                <TableCellBar
-                  maxWidth={60}
-                  fraction={patient.max_SIRS / 4}
-                  colorScale={interpolateReds}
-                />
-                {patient.max_SIRS}
-              </td>
-              <td class="pr3">
-                <TableCellBar
-                  maxWidth={60}
-                  fraction={patient.elixhauser / 15}
-                  colorScale={interpolateReds}
-                />
-                {patient.elixhauser}
-              </td>
-            </tr>
-          {/each}
-        </table>
+      <div class="h-100 w-100 vertical-scroll">
+        <div class="w-100 horizontal-scroll">
+          <table class="patient-data">
+            <thead>
+              <tr>
+                <th class="pl3">
+                  <SortButton
+                    active={sort == 'icustayid'}
+                    {isAscending}
+                    name={'Patient ID'}
+                    on:click={() => changeSort('icustayid')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'age'}
+                    {isAscending}
+                    name={'Age'}
+                    on:click={() => changeSort('age')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'gender'}
+                    {isAscending}
+                    name={'Gender'}
+                    on:click={() => changeSort('gender')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'num_timesteps'}
+                    {isAscending}
+                    name={'ICU Length of Stay'}
+                    on:click={() => changeSort('num_timesteps')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'died_in_hosp'}
+                    {isAscending}
+                    name={'Discharge Status'}
+                    on:click={() => changeSort('died_in_hosp')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'max_SOFA'}
+                    {isAscending}
+                    name={'Max SOFA Score'}
+                    on:click={() => changeSort('max_SOFA')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'max_SIRS'}
+                    {isAscending}
+                    name={'Max SIRS Score'}
+                    on:click={() => changeSort('max_SIRS')}
+                  />
+                </th>
+                <th>
+                  <SortButton
+                    active={sort == 'elixhauser'}
+                    {isAscending}
+                    name={'Elixhauser Score'}
+                    on:click={() => changeSort('elixhauser')}
+                  />
+                </th>
+              </tr>
+            </thead>
+            {#each patients as patient}
+              <tr
+                class="hover-bg-near-white pointer"
+                on:click={(e) =>
+                  window
+                    .open(
+                      `/patient?id=${patient.icustayid}&bloc=${patient.bloc}`,
+                      '_blank',
+                    )
+                    .focus()}
+              >
+                <td class="pl3">
+                  {patient.icustayid}
+                </td>
+                <td>
+                  {patient.age} yrs
+                </td>
+                <td>
+                  {patient.gender ? 'Female' : 'Male'}
+                </td>
+                <td>
+                  <TableCellBar
+                    maxWidth={60}
+                    fraction={(4 * patient.num_timesteps) / 160}
+                    colorScale={interpolateBlues}
+                  />
+                  {4 * patient.num_timesteps} hrs
+                </td>
+                <td>
+                  <span
+                    class="mortality-indicator"
+                    class:bg-dark-pink={patient.died_in_hosp}
+                    class:bg-light-green={!patient.died_in_hosp}
+                  />
+                  {patient.died_in_hosp ? 'Death' : 'Alive'}
+                </td>
+                <td>
+                  <TableCellBar
+                    maxWidth={60}
+                    fraction={patient.max_SOFA / 20}
+                    colorScale={interpolateReds}
+                  />
+                  {patient.max_SOFA}
+                </td>
+                <td>
+                  <TableCellBar
+                    maxWidth={60}
+                    fraction={patient.max_SIRS / 4}
+                    colorScale={interpolateReds}
+                  />
+                  {patient.max_SIRS}
+                </td>
+                <td class="pr3">
+                  <TableCellBar
+                    maxWidth={60}
+                    fraction={patient.elixhauser / 15}
+                    colorScale={interpolateReds}
+                  />
+                  {patient.elixhauser}
+                </td>
+              </tr>
+            {/each}
+          </table>
+        </div>
+        <div class="flex w-100 justify-center mt4">
+          <button
+            class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+            on:click={() => (offset = 0)}
+          >
+            First
+          </button>
+          <button
+            class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+            on:click={() => (offset -= size)}
+          >
+            Previous
+          </button>
+          <button
+            class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
+            on:click={() => (offset += size)}
+          >
+            Next
+          </button>
+        </div>
+        <p class="w-100 tc f6 pb4">
+          Page {(Math.floor(offset / size) + 1).toLocaleString()} of {Math.ceil(
+            resultCount / size,
+          ).toLocaleString()} ({resultCount.toLocaleString()}
+          total patients)
+        </p>
       </div>
-      <div class="flex w-100 justify-center mt4">
-        <button
-          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-          on:click={() => (offset = 0)}
-        >
-          First
-        </button>
-        <button
-          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-          on:click={() => (offset -= size)}
-        >
-          Previous
-        </button>
-        <button
-          class="pa2 mh1 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b"
-          on:click={() => (offset += size)}
-        >
-          Next
-        </button>
-      </div>
-      <p class="w-100 tc f6 pb4">
-        Page {Math.floor(offset / size) + 1}
-      </p>
     {/if}
     {#if isLoading}
       <div
@@ -242,9 +247,11 @@
 
   .patient-list-container {
     position: relative;
-    overflow-x: auto;
-    overflow-y: scroll;
     flex-grow: 1;
+  }
+
+  .vertical-scroll {
+    overflow-y: scroll;
   }
 
   .loading-overlay {

@@ -66,6 +66,8 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
     If joins is not None, it should be a list of strings defining SQL select
     commands that will be used as part of inner joins on the main stays table.
     For example, ["SELECT <fields> FROM <table> WHERE <filters>", ...]
+    
+    Returns a tuple (results, result_count).
     """
     dataset = dataset or default_dataset
     if filters:
@@ -76,12 +78,12 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
     if timestep_relevant:
         # We need to do a group by here because the bloc may not necessarily be 1
         fields = ", ".join([f"MAX({f}) as {f}" if f != C_ICUSTAYID else f for f in METADATA_FIELDS])
-        query = f"SELECT {fields}, MIN({C_BLOC}) as {C_BLOC} FROM `{project}.{dataset}.stays` "
+        query = f"SELECT {fields}, MIN({C_BLOC}) as {C_BLOC}, COUNT(*) OVER() as result_count FROM `{project}.{dataset}.stays` "
         if filters:
             query += f"WHERE {' AND '.join(filters)} "
         query += "GROUP BY icustayid "
     else:
-        query = f"SELECT {', '.join(METADATA_FIELDS)} FROM `{project}.{dataset}.stays` "
+        query = f"SELECT {', '.join(METADATA_FIELDS)}, COUNT(*) OVER() as result_count FROM `{project}.{dataset}.stays` "
         if filters:
             query += f"WHERE {' AND '.join(filters)} "
             query += "AND bloc = 1 "
@@ -109,7 +111,11 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
         query += f"OFFSET {offset} "
     print(query)
     query_result = bq_client.query(query)
-    return [dict(row) for row in query_result]
+    results = [dict(row) for row in query_result]
+    if not results:
+        return [], 0
+    result_count = results[0]['result_count']
+    return [{k: v for k, v in result.items() if k != 'result_count'} for result in results], result_count
 
 
 @patient_blueprint.route('/', methods=['GET'], defaults={'patient_id': None})
@@ -255,17 +261,17 @@ def read(patient_id):
                               ] if args.get(filter_key, None)]
         
         try:                
-            docs = search_patients(filters.split(';') if filters else None,
-                                   sort_criterion, 
-                                   ascending=ascending, 
-                                   size=size, 
-                                   offset=offset, 
-                                   dataset=model,
-                                   joins=additional_filters)
+            docs, result_count = search_patients(filters.split(';') if filters else None,
+                                                 sort_criterion, 
+                                                 ascending=ascending, 
+                                                 size=size, 
+                                                 offset=offset, 
+                                                 dataset=model,
+                                                 joins=additional_filters)
         except Exception as e:
             print(e)
             return "An error occurred returning the results.", 400
-        return jsonify({'results': docs})
+        return jsonify({'results': docs, 'result_count': result_count})
     else:
         doc_ref = mimic_data.document(patient_id)
         doc = doc_ref.get()
