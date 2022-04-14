@@ -26,100 +26,25 @@
 
   export let clinicianActions = new Set();
   export let physicianActions = [];
-
-  let visData;
-  //   $: if (!!data && data.length == 25) {
-  //     visData = data.map((d, i) => ({
-  //       i,
-  //       x: Math.floor(i / 5) - 0.5,
-  //       y: (i % 5) - 0.5,
-  //       z: d,
-  //     }));
-  //   }
-
-  //   function formatTicks(bins) {
-  //     return (b) =>
-  //       bins[b].toLocaleString('en-US', {
-  //         maximumSignificantDigits: 3,
-  //         useGrouping: true,
-  //       });
-  //   }
 </script>
 
-<div class="actions-heatmap flex mb3">
-  <div class="heatmap-plot h-100 flex-auto ml4">
-    <LayerCake
-      padding={{ top: 10, right: 10, bottom: 30, left: 35 }}
-      x="x"
-      y="y"
-      z="z"
-      extents={{ x: [-0.5, 4.5], y: [-0.5, 4.5] }}
-      zScale={scaleLinear()}
-      zDomain={valueDomain}
-      zRange={[0, 1]}
-      custom={{
-        selectedGet:
-          selectedAction != null ? (d) => d.i == selectedAction : null,
-        hoveredGet: (d) => d.i == hoveredAction,
-      }}
-    >
-      <!-- deleted "data={visData}" after zRange -->
-      <Svg>
-        <AxisX
-          gridlines={false}
-          ticks={[0, 1, 2, 3, 4]}
-          label="IV Fluid (mL/4h)"
+<div class="container" style="grid-template-rows: 5; grid-template-columns: 5;">
+  {#each Array(5) as row}
+    <div>
+      {#each Array(5) as col}
+        <button
+          class:active={clinicianActions.has(row * 5 + col)}
+          on:click={() => {
+            if (clinicianActions.has(row * 5 + col)) {
+              clinicianActions.delete(row * 5 + col);
+            } else {
+              clinicianActions.add(row * 5 + col);
+            }
+          }}
         />
-        <AxisY
-          gridlines={false}
-          dyTick={4}
-          label="Vasopressor (ug/kg/min)"
-          textAnchor="end"
-        />
-        <Rect
-          {colorMap}
-          {nullColor}
-          on:hover={(e) => (hoveredAction = e.detail ? e.detail.i : null)}
-          on:click={(e) => dispatch('select', e.detail.i)}
-        />
-      </Svg>
-
-      <Html pointerEvents={false}>
-        <Tooltip
-          formatText={formatTooltip}
-          dx={-0.5}
-          horizontalAlign="middle"
-        />
-      </Html>
-    </LayerCake>
-  </div>
-  <div class="legend-container h-100">
-    <Colorbar
-      width={60}
-      {colorMap}
-      {valueDomain}
-      numTicks={6}
-      margin={{ top: 10, bottom: 30 }}
-    />
-  </div>
-  <div>
-    {#each Array(5) as row}
-      <div>
-        {#each Array(5) as col}
-          <button
-            class:active={clinicianActions.has(row * 5 + col)}
-            on:click={() => {
-              if (clinicianActions.has(row * 5 + col)) {
-                clinicianActions.delete(row * 5 + col);
-              } else {
-                clinicianActions.add(row * 5 + col);
-              }
-            }}
-          />
-        {/each}
-      </div>
-    {/each}
-  </div>
+      {/each}
+    </div>
+  {/each}
 </div>
 
 <style>

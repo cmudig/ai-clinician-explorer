@@ -29,6 +29,10 @@
   export let deathFilter;
   export let clinicianFilter;
 
+  let grid = [5, 5];
+  $: rows = `repeat(${grid[0]}, 1fr)`;
+  $: cols = `repeat(${grid[1]}, 1fr)`;
+
   function makeEmptyFilter() {
     return { filters: '', comorbidityFilters: '' };
   }
@@ -42,13 +46,14 @@
 
   let filterEmpty = true;
 
-  $: {
-    let temp = [];
-    for (let i = 0; i < 25; i++) {
-      if (clinicianActions[i]) {
-        temp.push(toString(i));
-      }
+  let temp = [];
+  for (let i = 1; i < 26; i++) {
+    if (clinicianActions[i]) {
+      temp.push(toString(i));
     }
+  }
+
+  $: {
     clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
     deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
 
@@ -65,8 +70,6 @@
       'num_timesteps <= ' + lengthOfStayBound[1] / 4,
       'avg_action_difference >= ' + actionDifferenceBound[0],
       'avg_action_difference <= ' + actionDifferenceBound[1],
-      // clinician actions
-      // clinicianFilter,
     ];
 
     if (isFilterByDeath) {
@@ -77,12 +80,6 @@
     }
     if (!!selectedOutcome) {
       filters.push('died_in_hosp = ' + selectedOutcome.value);
-    }
-    if (!!selectedStates && selectedStates.length > 0) {
-      console.log('selected states', selectedStates);
-      filters.push(
-        'state in (' + selectedStates.map((v) => v).join(', ') + ')',
-      );
     }
 
     let allowedPhysicianActions = new Array(25)
@@ -112,18 +109,6 @@
       );
     if (allowedModelActions.length < 25)
       filters.push('model_action in (' + allowedModelActions.join(', ') + ')');
-
-    // clinicianFormatted = "(";
-    // for (var i = 0; i < clinicianActions.length; i++) {
-    //   clinicianFormatted += clinicianActions[i].toString();
-    // }
-    // clinicianFormatted += ");";
-
-    // physicianFormatted = "(";
-    // for (var i = 0; i < physicianActions.length; i++) {
-    //   physicianFormatted += clinicianActions[i].toString();
-    // }
-    // physicianFormatted += ")";
 
     tempFilters = filters.join(';');
     if (!filter.filters) {
@@ -185,6 +170,10 @@
     selectedOutcome = null;
     selectedComorbidities = null;
     selectedStates = null;
+    clinicianActions = new Set();
+    selected = Array(5)
+      .fill(false)
+      .map(() => Array(5));
     setTimeout(() => {
       if (filterNeedsUpdate) updateFilter();
     });
@@ -203,6 +192,14 @@
     filterNeedsUpdate =
       filter.filters != tempFilters ||
       filter.comorbidityFilters != tempComorbidityFilters;
+  }
+
+  let selected = Array(5)
+    .fill(false)
+    .map(() => Array(5));
+
+  function toggleSelect(i, j) {
+    selected[i][j] = !selected[i][j];
   }
 </script>
 
@@ -229,6 +226,43 @@
     />
   </div>
   <div class="sidebar-filter-view flex-auto pb3 ph3">
+    <div class="flex items-center mb3">
+      <div
+        class="container"
+        style="grid-template-rows: {rows}; grid-template-columns: {cols};"
+      >
+        {#each { length: 5 } as _, row (row)}
+          {#each { length: 5 } as _, col (col)}
+            <div
+              class:active={selected[row][col]}
+              on:click={() => {
+                if (clinicianActions.has(row * 5 + col)) {
+                  clinicianActions.delete(row * 5 + col);
+                } else {
+                  clinicianActions.add(row * 5 + col);
+                }
+                console.log('Clicking' + row + ' ' + col);
+                console.log(clinicianActions);
+                selectedStates = Array.from(clinicianActions);
+                if (!!selectedStates && selectedStates.length > 0) {
+                  console.log('selected states', selectedStates);
+                  filters.push(
+                    'state in (' +
+                      selectedStates.map((v) => v).join(', ') +
+                      ')',
+                  );
+                }
+                toggleSelect(row, col);
+                console.log(filter);
+              }}
+            >
+              State {row * 5 + col}
+            </div>
+          {/each}
+        {/each}
+      </div>
+    </div>
+
     <SelectFilter
       name="Gender"
       items={[
@@ -307,63 +341,6 @@
   </div>
 </div>
 
-<!-- Age histogram -->
-
-<!-- <div class="chart-container">
-        <LayerCake
-          padding={{ top: 0, right: 0, bottom: 20, left: 20 }}
-          x={'Age'}
-          y={'Frequency'}
-          xScale={scaleBand().paddingInner([0.02]).round(true)}
-          xDomain={['0-20', '20-40', '40-60', '60-80', '80-100', '100-120']}
-          yDomain={[0, null]}
-          data={patientData}
-        >
-          <Svg>
-            <Column/>
-            <AxisX
-              gridlines={false}
-            />
-            <AxisY
-              gridlines={false}
-            />
-          </Svg>
-        </LayerCake>
-      </div> -->
-
-<!-- Question: How to make this clickable? -->
-<!-- If we want to implement multiselect on the histogram directly -->
-
-<!-- Select age ranges
-    <span class="f6 b pb0 mr3"
-        >Age Ranges</span
-    >
-    <!-- <Select items={ageOptions} isMulti={true}></Select> -->
-
-<!-- Select comorbidities -->
-<!-- <span class="f6 b pb0 mr3"
-        >Comorbidities</span
-    > -->
-<!-- <Select items={comorbidities} isMulti={true}></Select> -->
-
-<!-- Select predicted treatment value -->
-
-<!-- Select clinician action -->
-
-<!-- Previous work below: -->
-
-<!-- <Select items={comorbidities}> </Select> -->
-
-<!-- <span class="f6 b pb0 mr3"
-            >Clinician Action(s)</span
-    > -->
-
-<!-- Implement multi-select on the 5x5 grid -->
-
-<!-- <span class="f6 b pb0 mr3"
-            >Model Action(s)</span
-    >  -->
-
 <!-- Implement multi-select on the 5x5 grid -->
 <style>
   .sidebar {
@@ -376,12 +353,25 @@
     overflow-y: scroll;
   }
 
-  .chart-container {
-    width: 100%;
-    height: 100%;
-  }
-
   .disabled-button {
     opacity: 0.2;
+  }
+
+  .container {
+    display: grid;
+    border: 1px solid #999;
+    border-radius: 2px;
+    width: 200px;
+    height: 200px;
+    grid-gap: 1px;
+    background: #999;
+  }
+
+  .container div {
+    background: #fff;
+  }
+
+  div.active {
+    background: orange;
   }
 </style>
