@@ -81,8 +81,7 @@
     let provenance = historicalValues[d.t].provenance;
     if (!provenance) return '';
     if (!!provenance.KNN && !!patientID && provenance.KNN != patientID) {
-      console.log(provenance.KNN, patientID);
-      return 'Value imputed from another patient';
+      return 'Values imputed';
     }
     if (provenance.SAH && !provenance.not_SAH)
       return 'Value assumed constant from previous timestep';
@@ -98,7 +97,7 @@
 >
   <td class="feature-name pl3 f6 {dark ? 'white' : 'dark-gray'}">
     {#if !!feature}
-      {feature}
+      {@html feature}
     {/if}
   </td>
 

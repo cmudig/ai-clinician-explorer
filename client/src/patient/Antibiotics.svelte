@@ -37,28 +37,32 @@
     if (start == null || end == null) return '--';
     if (end >= blocTime) {
       let numMins = (start - blocTime) / 60;
-      if (Math.abs(numMins) >= 60)
+      if (Math.abs(numMins) / 60 >= 24)
+        return 'Started ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
+      else if (Math.abs(numMins) >= 60)
         return 'Started ' + rtf.format(Math.round(numMins / 60), 'hour');
       return 'Started ' + rtf.format(Math.round(numMins), 'minute');
     } else {
       let numMins = (end - blocTime) / 60;
-      if (Math.abs(numMins) >= 60)
+      if (Math.abs(numMins) / 60 >= 24)
+        return 'Ended ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
+      else if (Math.abs(numMins) >= 60)
         return 'Ended ' + rtf.format(Math.round(numMins / 60), 'hour');
       return 'Ended ' + rtf.format(Math.round(numMins), 'minute');
     }
   }
 </script>
 
-<div class="ph2 h-100">
+<div class="h-100">
   {#if antibiotics.length > 0}
     <table class="w-100 f6">
       {#each antibiotics as ab}
         <tr class="pv2 bg-animate hover-bg-near-white">
-          <td class="pl2 b">
+          <td class="pl3 b">
             {titleCase(ab.drug)}
           </td>
           <td>{ab.dose_val} {ab.dose_unit} {ab.route}</td>
-          <td class="pr2 tr">{deltaTime(ab.start, ab.end)}</td>
+          <td class="pr3 tr">{deltaTime(ab.start, ab.end)}</td>
         </tr>
       {/each}
     </table>

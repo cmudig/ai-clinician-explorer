@@ -36,6 +36,6 @@ export const Comorbidities = {
 export const StateCategory = {
   VITALS: 'Vitals',
   LABS: 'Labs',
-  RESPIRATORY: 'Cardio/Resp.',
+  CARDIOPULM: 'Cardiopulmonary',
   FLUIDS_PRESSORS: 'Fluids/Pressors',
 };

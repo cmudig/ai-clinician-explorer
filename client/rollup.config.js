@@ -18,6 +18,10 @@ const buildthese = [
     path: '/patient',
     title: 'Patient Info',
   },
+  {
+    path: '/login',
+    title: 'Login',
+  },
 ];
 
 function makeHTML({ publicPath, title }) {
@@ -26,6 +30,9 @@ function makeHTML({ publicPath, title }) {
 		<head>
 			<meta charset='utf-8'>
 			<meta name='viewport' content='width=device-width'>
+      <meta name="csrf-token" content="{{ csrf_token() }}" />
+      <meta name="open-template-params" content="{{ template_params if template_params is not none else '' }}" />
+
 			<title>${title}</title>
 			<link rel='icon' type='image/png' href='/favicon.png'>
 			<link rel='stylesheet' href='/global.css'>

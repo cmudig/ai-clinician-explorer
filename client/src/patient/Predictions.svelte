@@ -58,6 +58,7 @@
       // .flat()
       .reduce((curr, p) => (p != null ? Math.max(curr, p) : curr), -1e9);
     maxModelQ = Math.ceil(maxQ / rewardResolution) * rewardResolution;
+    console.log(minQ, maxQ, minModelQ, maxModelQ);
   }
 
   let rewardVal = null;
@@ -86,13 +87,17 @@
   let actualFluidDose;
   let actualVasopressorDose;
   $: if (!!$patient && $currentBloc > 0) {
-    // Fix timestep issue in AI Clinician
-    actualFluidDose = $patient.timesteps[$currentBloc - 1][
-      Columns.C_INPUT_STEP
-    ].value.toLocaleString({ maximumSignificantDigits: 3 });
-    actualVasopressorDose = $patient.timesteps[$currentBloc - 1][
-      Columns.C_MAX_DOSE_VASO
-    ].value.toLocaleString({ maximumSignificantDigits: 3 });
+    if ($currentBloc < $patient.timesteps.length) {
+      actualFluidDose = $patient.timesteps[$currentBloc][
+        Columns.C_INPUT_STEP
+      ].value.toLocaleString({ maximumSignificantDigits: 3 });
+      actualVasopressorDose = $patient.timesteps[$currentBloc][
+        Columns.C_MAX_DOSE_VASO
+      ].value.toLocaleString({ maximumSignificantDigits: 3 });
+    } else {
+      actualFluidDose = null;
+      actualVasopressorDose = null;
+    }
   }
 </script>
 
@@ -102,7 +107,7 @@
       <h5 class="f5 tc b mb2">Predicted Treatment Values</h5>
       {#if !!$modelInfo && modelRecommendationIdx != null}
         <p class="f6 lh-copy above-plot">
-          AI Clinician recommends {#if vasopressorDose(modelRecommendationIdx) == 0}
+          In the next epoch, AI Clinician recommends {#if vasopressorDose(modelRecommendationIdx) == 0}
             <strong>no vasopressor</strong>{:else}
             a vasopressor dosage of <strong
               >{vasopressorDose(modelRecommendationIdx).toLocaleString({
@@ -142,16 +147,21 @@
       <h5 class="f5 tc b mb2">Clinician Probabilities</h5>
       {#if !!$modelInfo && physicianActionIdx != null}
         <p class="f6 lh-copy above-plot">
-          The clinician action was {#if actualVasopressorDose == 0}
-            <strong>no vasopressor</strong>{:else}
-            a vasopressor dosage of <strong
-              >{actualVasopressorDose} ug/kg/min</strong
-            >
-          {/if} and {#if actualFluidDose == 0}
-            <strong>no IV fluids</strong>
+          {#if actualVasopressorDose == null || actualFluidDose == null}
+            The clinician action in the next epoch is unavailable because this
+            is the last available epoch.
           {:else}
-            <strong>{actualFluidDose} mL/4h</strong>
-            IV fluids{/if}.
+            The next clinician action was {#if actualVasopressorDose == 0}
+              <strong>no vasopressor</strong>{:else}
+              a vasopressor dosage of <strong
+                >{actualVasopressorDose} ug/kg/min</strong
+              >
+            {/if} and {#if actualFluidDose == 0}
+              <strong>no IV fluids</strong>
+            {:else}
+              <strong>{actualFluidDose} mL/4h</strong>
+              IV fluids{/if}.
+          {/if}
         </p>
       {/if}
       <ActionsHeatmap
@@ -175,7 +185,11 @@
     <h5 class="f5 tc b mb2">Predicted Patient State</h5>
     {#if !!$modelInfo && physicianActionIdx != null}
       <p class="f6 lh-copy">
-        The patient is predicted to be in state <strong>{predictedState}</strong
+        The patient is predicted to be in state <a
+          class="link dim blue"
+          href="/?states={predictedState}"
+        >
+          <strong>{predictedState}</strong></a
         >, which has been observed
         <strong>{stateExplanations.count} times</strong> in the dataset {#if stateExplanations.count_percentile < 50}
           (less than {(100 - stateExplanations.count_percentile).toFixed(0)}% of

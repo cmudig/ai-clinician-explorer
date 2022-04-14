@@ -32,7 +32,7 @@
   });
 
   export let patientID = '';
-  export let modelID = 'mimiciv_220217_best';
+  export let modelID = 'mimiciv_220328_best';
 
   let loadingModelPrediction = false;
   let loadingPatientInfo = false;
@@ -52,7 +52,7 @@
         loadingPatientInfo = false;
         console.log(
           `error ${response.status} loading patient info:`,
-          await response.text()
+          await response.text(),
         );
         return;
       }
@@ -80,7 +80,7 @@
       if (response.status != 200) {
         console.log(
           `error ${response.status} loading model info:`,
-          await response.text()
+          await response.text(),
         );
         return;
       }
@@ -134,7 +134,7 @@
       if (response.status != 200) {
         console.log(
           `error ${response.status} loading model prediction:`,
-          await response.text()
+          await response.text(),
         );
         loadingModelPrediction = false;
         return;
@@ -148,12 +148,26 @@
       loadingModelPrediction = false;
     }
   }
+
+  let currentTime;
+  let dayIndex;
+  $: if (!!$patient && $currentBloc > 0) {
+    dayIndex = Math.floor((($currentBloc - 1) * 4) / 24) + 1;
+    let timestamp = $patient.timesteps[$currentBloc - 1].timestep;
+    currentTime = new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      hour12: true,
+    });
+  }
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
-  <nav class="f6 fw6 ttu tracked">
+  <nav class="f6 fw6 ttu tracked flex justify-between">
     <a class="link dim white dib mr3" href="/" title="Patient List"
-      >Patient List</a
+      ><i class="arrow left" />&nbsp; Back to List</a
+    >
+    <a class="link dim white dib ml3" href="/logout" title="Sign Out"
+      >Sign Out</a
     >
   </nav>
 </header>
@@ -170,14 +184,12 @@
       <div class="sidebar bg-blue-gray">
         {#if !!$patient}
           <div
-            class="timestep-selector bg-navy-gray flex justify-center items-center w-100 pv3 white"
+            class="timestep-selector bg-navy-gray flex justify-between items-center w-100 pv3 ph3 white"
           >
-            <span class="f6 b pb0 mr3"
-              >Hour {$currentBloc * 4}/{$patient.timesteps.length * 4}</span
-            >
+            <span class="f6 b pb0 mr3">Day {dayIndex}, {currentTime}</span>
             <input
               class="ph0"
-              style="width: 140px;"
+              style="width: 180px;"
               type="range"
               bind:value={$currentBloc}
               min={1}
@@ -200,8 +212,8 @@
                   { name: StateCategory.VITALS, value: StateCategory.VITALS },
                   { name: StateCategory.LABS, value: StateCategory.LABS },
                   {
-                    name: StateCategory.RESPIRATORY,
-                    value: StateCategory.RESPIRATORY,
+                    name: StateCategory.CARDIOPULM,
+                    value: StateCategory.CARDIOPULM,
                   },
                 ]}
               />
@@ -295,5 +307,17 @@
 
   .timestep-selector {
     border-bottom: 1px solid #666666;
+  }
+
+  .arrow {
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+  }
+
+  .arrow.left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
   }
 </style>
