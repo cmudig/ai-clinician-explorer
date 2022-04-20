@@ -57,6 +57,8 @@
     clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
     deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
 
+    console.log('updating filters');
+
     filters = [
       'max_SOFA >= ' + sofaBound[0],
       'max_SOFA <= ' + sofaBound[1],
@@ -82,17 +84,15 @@
       filters.push('died_in_hosp = ' + selectedOutcome.value);
     }
 
-    let allowedPhysicianActions = new Array(25)
-      .fill(0)
-      .map((_, ac) => ac)
-      .filter(
-        (ac) =>
-          Math.floor(ac / 5) >= clinicianFluidBound[0] &&
-          Math.floor(ac / 5) <= clinicianFluidBound[1] &&
-          Math.floor(ac % 5) >= clinicianVasoBound[0] &&
-          Math.floor(ac % 5) <= clinicianVasoBound[1],
+    if (!!selectedStates && selectedStates.length > 0) {
+      filters.push(
+        'state in (' + selectedStates.map((v) => v).join(', ') + ')',
       );
-    if (allowedPhysicianActions.length < 25)
+    }
+
+    let allowedPhysicianActions = Array.from(clinicianActions);
+
+    if (allowedPhysicianActions.length > 0)
       filters.push(
         'physician_action in (' + allowedPhysicianActions.join(', ') + ')',
       );
@@ -171,9 +171,7 @@
     selectedComorbidities = null;
     selectedStates = null;
     clinicianActions = new Set();
-    selected = Array(5)
-      .fill(false)
-      .map(() => Array(5));
+
     setTimeout(() => {
       if (filterNeedsUpdate) updateFilter();
     });
@@ -192,14 +190,6 @@
     filterNeedsUpdate =
       filter.filters != tempFilters ||
       filter.comorbidityFilters != tempComorbidityFilters;
-  }
-
-  let selected = Array(5)
-    .fill(false)
-    .map(() => Array(5));
-
-  function toggleSelect(i, j) {
-    selected[i][j] = !selected[i][j];
   }
 </script>
 
@@ -226,6 +216,8 @@
     />
   </div>
   <div class="sidebar-filter-view flex-auto pb3 ph3">
+    <ActionFilter bind:actionFilter={selectedActions} />
+    <!-- Put everything below in ActionFilter.svelte -->
     <div class="flex items-center mb3">
       <div
         class="container"
@@ -234,29 +226,20 @@
         {#each { length: 5 } as _, row (row)}
           {#each { length: 5 } as _, col (col)}
             <div
-              class:active={selected[row][col]}
+              class:active={clinicianActions.has(col * 5 - row + 4)}
               on:click={() => {
-                if (clinicianActions.has(row * 5 + col)) {
-                  clinicianActions.delete(row * 5 + col);
+                let index = col * 5 - row + 4;
+                if (clinicianActions.has(index)) {
+                  clinicianActions.delete(index);
                 } else {
-                  clinicianActions.add(row * 5 + col);
+                  clinicianActions.add(index);
                 }
+                clinicianActions = new Set(clinicianActions);
                 console.log('Clicking' + row + ' ' + col);
                 console.log(clinicianActions);
-                selectedStates = Array.from(clinicianActions);
-                if (!!selectedStates && selectedStates.length > 0) {
-                  console.log('selected states', selectedStates);
-                  filters.push(
-                    'state in (' +
-                      selectedStates.map((v) => v).join(', ') +
-                      ')',
-                  );
-                }
-                toggleSelect(row, col);
-                console.log(filter);
               }}
             >
-              State {row * 5 + col}
+              Action {col * 5 - row + 4}
             </div>
           {/each}
         {/each}
