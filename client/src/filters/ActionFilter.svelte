@@ -25,7 +25,7 @@
   let hoveredAction = null;
 
   export let clinicianActions = new Set();
-  export let physicianActions = [];
+  export let physicianActions = new Set();
 </script>
 
 <div class="container" style="grid-template-rows: 5; grid-template-columns: 5;">
@@ -39,6 +39,25 @@
               clinicianActions.delete(row * 5 + col);
             } else {
               clinicianActions.add(row * 5 + col);
+            }
+          }}
+        />
+      {/each}
+    </div>
+  {/each}
+</div>
+
+<div class="container" style="grid-template-rows: 5; grid-template-columns: 5;">
+  {#each Array(5) as row}
+    <div>
+      {#each Array(5) as col}
+        <button
+          class:active={physicianActions.has(row * 5 + col)}
+          on:click={() => {
+            if (physicianActions.has(row * 5 + col)) {
+              physicianActions.delete(row * 5 + col);
+            } else {
+              physicianActions.add(row * 5 + col);
             }
           }}
         />

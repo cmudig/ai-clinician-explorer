@@ -22,6 +22,7 @@
   export let selectedStates = null;
 
   let clinicianActions = new Set();
+  let physicianActions = new Set();
 
   export let died_in_hosp = 0;
   export let isFilterByDeath = false;
@@ -30,8 +31,8 @@
   export let clinicianFilter;
 
   let grid = [5, 5];
-  $: rows = `repeat(${grid[0]}, 1fr)`;
-  $: cols = `repeat(${grid[1]}, 1fr)`;
+  $: rows = `repeat(${grid[0]}, 1fr) 20px`;
+  $: cols = `20px repeat(${grid[1]}, 1fr)`;
 
   function makeEmptyFilter() {
     return { filters: '', comorbidityFilters: '' };
@@ -47,11 +48,11 @@
   let filterEmpty = true;
 
   let temp = [];
-  for (let i = 1; i < 26; i++) {
-    if (clinicianActions[i]) {
-      temp.push(toString(i));
-    }
-  }
+  // for (let i = 1; i < 26; i++) {
+  //   if (clinicianActions[i]) {
+  //     temp.push(toString(i));
+  //   }
+  // }
 
   $: {
     clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
@@ -171,6 +172,7 @@
     selectedComorbidities = null;
     selectedStates = null;
     clinicianActions = new Set();
+    physicianAction = new Set();
 
     setTimeout(() => {
       if (filterNeedsUpdate) updateFilter();
@@ -191,6 +193,8 @@
       filter.filters != tempFilters ||
       filter.comorbidityFilters != tempComorbidityFilters;
   }
+
+  let vaso = [0, 0.04, 0.113, 0.225, 0.54];
 </script>
 
 <div class="sidebar bg-light-blue-gray flex flex-column">
@@ -216,17 +220,26 @@
     />
   </div>
   <div class="sidebar-filter-view flex-auto pb3 ph3">
-    <ActionFilter bind:actionFilter={selectedActions} />
+    <!-- <ActionFilter bind:actionFilter={selectedActions} /> -->
     <!-- Put everything below in ActionFilter.svelte -->
+    <h4>Clinician Actions</h4>
     <div class="flex items-center mb3">
+      <div>
+        <div>Vasopressor (ug/kg/min)</div>
+      </div>
       <div
         class="container"
         style="grid-template-rows: {rows}; grid-template-columns: {cols};"
       >
         {#each { length: 5 } as _, row (row)}
+          <div>
+            {vaso[row]}
+          </div>
           {#each { length: 5 } as _, col (col)}
             <div
-              class:active={clinicianActions.has(col * 5 - row + 4)}
+              class={clinicianActions.has(col * 5 - row + 4)
+                ? 'bg-blue'
+                : 'bg-white'}
               on:click={() => {
                 let index = col * 5 - row + 4;
                 if (clinicianActions.has(index)) {
@@ -238,13 +251,86 @@
                 console.log('Clicking' + row + ' ' + col);
                 console.log(clinicianActions);
               }}
-            >
-              Action {col * 5 - row + 4}
-            </div>
+            />
           {/each}
         {/each}
+        <div>
+          <div />
+        </div>
+        <div>
+          <div>0</div>
+        </div>
+        <div>
+          <div>20</div>
+        </div>
+        <div>
+          <div>100</div>
+        </div>
+        <div>
+          <div>300</div>
+        </div>
+        <div>
+          <div>819</div>
+        </div>
       </div>
     </div>
+    <div>
+      <div />
+      <bold>IV Fluid (mL/4h)</bold>
+    </div>
+    <h4>Model Actions</h4>
+    <div class="flex items-center mb3">
+      <div>
+        <div>Vasopressor (ug/kg/min)</div>
+      </div>
+      <div
+        class="container bg-light-blue-gray"
+        style="grid-template-rows: {rows}; grid-template-columns: {cols};"
+      >
+        {#each { length: 5 } as _, row (row)}
+          <div>
+            {vaso[row]}
+          </div>
+          {#each { length: 5 } as _, col (col)}
+            <div
+              class={physicianActions.has(col * 5 - row + 4)
+                ? 'bg-blue'
+                : 'bg-white'}
+              on:click={() => {
+                let index = col * 5 - row + 4;
+                if (physicianActions.has(index)) {
+                  physicianActions.delete(index);
+                } else {
+                  physicianActions.add(index);
+                }
+                physicianActions = new Set(physicianActions);
+                console.log('Clicking' + row + ' ' + col);
+                console.log(physicianActions);
+              }}
+            />
+          {/each}
+        {/each}
+        <div>
+          <div />
+        </div>
+        <div>
+          <div>0</div>
+        </div>
+        <div>
+          <div>20</div>
+        </div>
+        <div>
+          <div>100</div>
+        </div>
+        <div>
+          <div>300</div>
+        </div>
+        <div>
+          <div>819</div>
+        </div>
+      </div>
+    </div>
+    <div><bold>IV Fluid (mL/4h)</bold></div>
 
     <SelectFilter
       name="Gender"
@@ -342,19 +428,12 @@
 
   .container {
     display: grid;
-    border: 1px solid #999;
+    border: 1px solid #dfe4eb;
     border-radius: 2px;
     width: 200px;
     height: 200px;
-    grid-gap: 1px;
-    background: #999;
-  }
-
-  .container div {
-    background: #fff;
-  }
-
-  div.active {
-    background: orange;
+    grid-gap: 4px;
+    /* background: #999; */
+    /* background-color: #dfe4eb; */
   }
 </style>
