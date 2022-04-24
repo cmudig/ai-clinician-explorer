@@ -4,35 +4,278 @@
   import SelectFilter from './SelectFilter.svelte';
   import { Comorbidities } from '../utils/strings';
   import TextFilter from './TextFilter.svelte';
+  import { onMount } from 'svelte';
 
-  export let ageBound = [18, 100];
-  export let sofaBound = [0, 20];
-  export let sirsBound = [0, 4];
-  export let elixBound = [0, 15];
-  export let lengthOfStayBound = [0, 160];
-  export let selectedGender = null;
-  export let selectedOutcome = null;
-  export let selectedComorbidities = null;
+  export let externalFilters;
 
-  export let clinicianFluidBound = [0, 4];
-  export let clinicianVasoBound = [0, 4];
-  export let modelFluidBound = [0, 4];
-  export let modelVasoBound = [0, 4];
-  export let actionDifferenceBound = [0, 5];
-  export let selectedStates = null;
-
-  let clinicianActions = new Set();
-
-  export let died_in_hosp = 0;
-  export let isFilterByDeath = false;
-  export let filters = [];
-  export let deathFilter;
-  export let clinicianFilter;
+  let FilterSpec = [
+    {
+      id: 'gender',
+      name: 'Gender',
+      type: 'select',
+      items: [
+        { label: 'Male', value: 0 },
+        { label: 'Female', value: 1 },
+      ],
+      value: null,
+    },
+    {
+      id: 'age',
+      name: 'Age',
+      type: 'range',
+      default: [18, 110],
+      value: [18, 110],
+    },
+    {
+      id: 'elixhauser',
+      name: 'Elixhauser',
+      type: 'range',
+      default: [0, 15],
+      value: [0, 15],
+    },
+    {
+      id: 'comorbidities',
+      comorbidities: true,
+      name: 'Comorbidities',
+      type: 'select',
+      multi: true,
+      items: Object.keys(Comorbidities).map((k) => ({
+        value: k,
+        label: Comorbidities[k],
+      })),
+      value: null,
+      filterFunction: (value) =>
+        !!value
+          ? '(' + value.map((v) => `${v.value} = 1`).join(' or ') + ')'
+          : [],
+    },
+    {
+      id: 'num_timesteps',
+      name: 'ICU Stay Length',
+      type: 'range',
+      step: 4,
+      default: [0, 160],
+      value: [0, 160],
+      filterFunction: (value) => {
+        return [
+          'num_timesteps >= ' + value[0] / 4,
+          'num_timesteps <= ' + value[1] / 4,
+        ];
+      },
+    },
+    {
+      id: 'died_in_hosp',
+      name: 'Discharge Status',
+      type: 'select',
+      items: [
+        { label: 'Alive', value: 0 },
+        { label: 'Death', value: 1 },
+      ],
+      value: null,
+    },
+    {
+      id: 'max_SOFA',
+      name: 'Max SOFA',
+      type: 'range',
+      default: [0, 20],
+      value: [0, 20],
+    },
+    {
+      id: 'max_SIRS',
+      name: 'Max SIRS',
+      type: 'range',
+      default: [0, 4],
+      value: [0, 4],
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'title',
+      name: 'Aggregate Actions',
+    },
+    {
+      id: 'avg_action_difference',
+      name: 'Avg Action Difference',
+      type: 'range',
+      step: 0.1,
+      default: [0, 7],
+      value: [0, 7],
+      tooltip:
+        'The combined difference between the fluid and vasopressor dosage levels prescribed by the clinician and the model, averaged over the patient trajectory.',
+    },
+    {
+      id: 'avg_phys_probability',
+      name: 'Avg Clinician Probability',
+      type: 'range',
+      step: 0.05,
+      default: [0, 1],
+      value: [0, 1],
+      tooltip:
+        'The probability of the action the clinician took compared to all actions taken by clinicians in each state, averaged over the patient trajectory.',
+    },
+    {
+      id: 'avg_model_probability',
+      name: 'Avg Model Probability',
+      type: 'range',
+      step: 0.05,
+      default: [0, 1],
+      value: [0, 1],
+      tooltip:
+        'The probability of the action the model chose compared to all actions taken by clinicians in each state, averaged over the patient trajectory.',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'title',
+      name: 'Timestep-Specific',
+    },
+    {
+      id: 'state',
+      name: 'States',
+      type: 'select',
+      multi: true,
+      items: new Array(750).fill(0).map((_, i) => i),
+      value: null,
+    },
+    {
+      type: 'group',
+      elements: [
+        {
+          name: 'Clinician Fluids',
+          type: 'range',
+          default: [0, 4],
+          value: [0, 4],
+        },
+        {
+          name: 'Clinician Vasopressors',
+          type: 'range',
+          default: [0, 4],
+          value: [0, 4],
+        },
+      ],
+      filterFunction: (values) => {
+        let allowedPhysicianActions = new Array(25)
+          .fill(0)
+          .map((_, ac) => ac)
+          .filter(
+            (ac) =>
+              Math.floor(ac / 5) >= values[0][0] &&
+              Math.floor(ac / 5) <= values[0][1] &&
+              Math.floor(ac % 5) >= values[1][0] &&
+              Math.floor(ac % 5) <= values[1][1],
+          );
+        if (allowedPhysicianActions.length < 25)
+          return [
+            'physician_action in (' + allowedPhysicianActions.join(', ') + ')',
+          ];
+        return [];
+      },
+    },
+    {
+      type: 'group',
+      elements: [
+        {
+          name: 'Model Fluids',
+          type: 'range',
+          default: [0, 4],
+          value: [0, 4],
+        },
+        {
+          name: 'Model Vasopressors',
+          type: 'range',
+          default: [0, 4],
+          value: [0, 4],
+        },
+      ],
+      filterFunction: (values) => {
+        let allowedModelActions = new Array(25)
+          .fill(0)
+          .map((_, ac) => ac)
+          .filter(
+            (ac) =>
+              Math.floor(ac / 5) >= values[0][0] &&
+              Math.floor(ac / 5) <= values[0][1] &&
+              Math.floor(ac % 5) >= values[1][0] &&
+              Math.floor(ac % 5) <= values[1][1],
+          );
+        if (allowedModelActions.length < 25)
+          return ['model_action in (' + allowedModelActions.join(', ') + ')'];
+        return [];
+      },
+    },
+    {
+      id: 'phys_probability',
+      name: 'Clinician Probability',
+      type: 'range',
+      step: 0.05,
+      default: [0, 1],
+      value: [0, 1],
+      tooltip:
+        'The probability of the action the clinician took compared to all actions taken by clinicians in this state.',
+    },
+    {
+      id: 'model_probability',
+      name: 'Model Probability',
+      type: 'range',
+      step: 0.05,
+      default: [0, 1],
+      value: [0, 1],
+      tooltip:
+        'The probability of the action the model chose compared to all actions taken by clinicians in this state.',
+    },
+    {
+      id: 'phys_Q',
+      name: 'Clinician Action Value',
+      type: 'range',
+      step: 5,
+      default: [-100, 100],
+      value: [-100, 100],
+      tooltip: 'The model-predicted value of the action the clinician took.',
+    },
+    {
+      id: 'model_Q',
+      name: 'Model Action Value',
+      type: 'range',
+      step: 5,
+      default: [-100, 100],
+      value: [-100, 100],
+      tooltip: 'The model-predicted value of the action the model chose',
+    },
+    {
+      id: 'physician_entropy',
+      name: 'Clinician Entropy',
+      type: 'range',
+      step: 0.1,
+      default: [0, 5],
+      value: [0, 5],
+      tooltip:
+        'The entropy of the clinician action distribution (lower is more "peaky").',
+    },
+    {
+      id: 'model_entropy',
+      name: 'Model Entropy',
+      type: 'range',
+      step: 0.1,
+      default: [0, 5],
+      value: [0, 5],
+      tooltip:
+        'The entropy of the model value distribution (lower is more "peaky").',
+    },
+  ];
 
   function makeEmptyFilter() {
     return { filters: '', comorbidityFilters: '' };
   }
-  export let filter = makeEmptyFilter();
+  export let filter;
+  onMount(() => {
+    filter = makeEmptyFilter();
+    if (!!externalFilters) applyExternalFilters();
+    setTimeout(() => {
+      if (filterNeedsUpdate) updateFilter();
+    });
+  });
 
   // Store the filter statement that would be generated with the current values.
   // When the user clicks the Apply button this statement will be transferred to
@@ -42,155 +285,102 @@
 
   let filterEmpty = true;
 
+  function makeFiltersFromFilterSpec(f) {
+    if (!!f.filterFunction) {
+      if (f.type == 'group')
+        return f.filterFunction(f.elements.map((subf) => subf.value));
+      return f.filterFunction(f.value);
+    }
+    if (f.type == 'range')
+      return [`${f.id} >= ${f.value[0]}`, `${f.id} <= ${f.value[1]}`];
+    else if (f.type == 'select' && !f.multi)
+      return f.value != null ? [`${f.id} = ` + f.value.value] : [];
+    else if (f.type == 'select' && f.multi)
+      return f.value != null
+        ? [`${f.id} in (` + f.value.map((v) => v.value).join(', ') + ')']
+        : [];
+    else if (f.type == 'group')
+      return f.elements.map(makeFiltersFromFilterSpec).flat();
+    return [];
+  }
+
+  function resetFiltersRecursive(f) {
+    let obj = Object.assign({}, f);
+    obj.value = obj.default || null;
+    if (obj.type == 'group')
+      obj.elements = obj.elements.map(resetFiltersRecursive);
+    return obj;
+  }
+
+  function filtersEmptyRecursive(f) {
+    if (f.type == 'group') return f.elements.every(filtersEmptyRecursive);
+    else if (f.type == 'range')
+      return f.value[0] == f.default[0] && f.value[1] == f.default[1];
+    else if (f.type == 'select' && !f.multi) return f.value == null;
+    else if (f.type == 'select' && f.multi)
+      return !f.value || f.value.length == 0;
+    return true;
+  }
+
   $: {
-    let temp = [];
-    for (let i = 0; i < 25; i++) {
-      if (clinicianActions[i]) {
-        temp.push(toString(i));
-      }
-    }
-    clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
-    deathFilter = isFilterByDeath ? 'died_in_hosp = ' + died_in_hosp : '';
+    tempFilters = FilterSpec.filter(
+      (f) => !f.comorbidities && !f.antibiotics && !f.microbio,
+    )
+      .filter((f) => !filtersEmptyRecursive(f))
+      .map(makeFiltersFromFilterSpec)
+      .flat()
+      .join(';');
 
-    filters = [
-      'max_SOFA >= ' + sofaBound[0],
-      'max_SOFA <= ' + sofaBound[1],
-      'max_SIRS >= ' + sirsBound[0],
-      'max_SIRS <= ' + sirsBound[1],
-      'age >= ' + ageBound[0],
-      'age <= ' + ageBound[1],
-      'elixhauser >= ' + elixBound[0],
-      'elixhauser <= ' + elixBound[1],
-      'num_timesteps >= ' + lengthOfStayBound[0] / 4,
-      'num_timesteps <= ' + lengthOfStayBound[1] / 4,
-      'avg_action_difference >= ' + actionDifferenceBound[0],
-      'avg_action_difference <= ' + actionDifferenceBound[1],
-      // clinician actions
-      // clinicianFilter,
-    ];
-
-    if (isFilterByDeath) {
-      filters.push(deathFilter);
-    }
-    if (!!selectedGender) {
-      filters.push('gender = ' + selectedGender.value);
-    }
-    if (!!selectedOutcome) {
-      filters.push('died_in_hosp = ' + selectedOutcome.value);
-    }
-    if (!!selectedStates && selectedStates.length > 0) {
-      console.log('selected states', selectedStates);
-      filters.push(
-        'state in (' + selectedStates.map((v) => v).join(', ') + ')',
-      );
-    }
-
-    let allowedPhysicianActions = new Array(25)
-      .fill(0)
-      .map((_, ac) => ac)
-      .filter(
-        (ac) =>
-          Math.floor(ac / 5) >= clinicianFluidBound[0] &&
-          Math.floor(ac / 5) <= clinicianFluidBound[1] &&
-          Math.floor(ac % 5) >= clinicianVasoBound[0] &&
-          Math.floor(ac % 5) <= clinicianVasoBound[1],
-      );
-    if (allowedPhysicianActions.length < 25)
-      filters.push(
-        'physician_action in (' + allowedPhysicianActions.join(', ') + ')',
-      );
-
-    let allowedModelActions = new Array(25)
-      .fill(0)
-      .map((_, ac) => ac)
-      .filter(
-        (ac) =>
-          Math.floor(ac / 5) >= modelFluidBound[0] &&
-          Math.floor(ac / 5) <= modelFluidBound[1] &&
-          Math.floor(ac % 5) >= modelVasoBound[0] &&
-          Math.floor(ac % 5) <= modelVasoBound[1],
-      );
-    if (allowedModelActions.length < 25)
-      filters.push('model_action in (' + allowedModelActions.join(', ') + ')');
-
-    // clinicianFormatted = "(";
-    // for (var i = 0; i < clinicianActions.length; i++) {
-    //   clinicianFormatted += clinicianActions[i].toString();
-    // }
-    // clinicianFormatted += ");";
-
-    // physicianFormatted = "(";
-    // for (var i = 0; i < physicianActions.length; i++) {
-    //   physicianFormatted += clinicianActions[i].toString();
-    // }
-    // physicianFormatted += ")";
-
-    tempFilters = filters.join(';');
-    if (!filter.filters) {
+    /*if (!filter.filters) {
       let obj = makeEmptyFilter();
       Object.assign(obj, filter);
       obj.filters = tempFilters;
       filter = obj;
       console.log('reassigning filter', filter);
-    }
+    }*/
 
-    if (!!selectedComorbidities && selectedComorbidities.length > 0) {
-      tempComorbidityFilters = selectedComorbidities
-        .map((v) => `${v.value} = 1`)
-        .join(';');
-    } else {
-      tempComorbidityFilters = '';
-    }
-    console.log(tempFilters);
+    tempComorbidityFilters = FilterSpec.filter((f) => f.comorbidities)
+      .filter((f) => !filtersEmptyRecursive(f))
+      .map(makeFiltersFromFilterSpec)
+      .flat()
+      .join(';');
+    if (!!tempFilters || tempComorbidityFilters)
+      console.log(tempFilters, tempComorbidityFilters);
   }
 
-  $: filterEmpty =
-    ageBound[0] == 18 &&
-    ageBound[1] == 100 &&
-    sofaBound[0] == 0 &&
-    sofaBound[1] == 20 &&
-    sirsBound[0] == 0 &&
-    sirsBound[1] == 4 &&
-    elixBound[0] == 0 &&
-    elixBound[1] == 15 &&
-    lengthOfStayBound[0] == 0 &&
-    lengthOfStayBound[1] == 160 &&
-    clinicianFluidBound[0] == 0 &&
-    clinicianFluidBound[1] == 4 &&
-    clinicianVasoBound[0] == 0 &&
-    clinicianVasoBound[1] == 4 &&
-    modelFluidBound[0] == 0 &&
-    modelFluidBound[1] == 4 &&
-    modelVasoBound[0] == 0 &&
-    modelVasoBound[1] == 4 &&
-    actionDifferenceBound[0] == 0 &&
-    actionDifferenceBound[1] == 5 &&
-    !selectedGender &&
-    !selectedOutcome &&
-    (!selectedComorbidities || selectedComorbidities.length == 0) &&
-    (!selectedStates || selectedStates.length == 0);
+  $: if (!!externalFilters) {
+    applyExternalFilters();
+    setTimeout(() => {
+      if (filterNeedsUpdate) updateFilter();
+    });
+  }
+
+  function applyExternalFilters() {
+    let newSpec = [...FilterSpec];
+    Object.keys(externalFilters).forEach((k) => {
+      let index = FilterSpec.findIndex((f) => f.id == k);
+      if (index >= 0) {
+        let obj = Object.assign({}, FilterSpec[index]);
+        obj.value = externalFilters[k];
+        newSpec[index] = obj;
+      } else {
+        console.warn('No filter found with id ' + k);
+      }
+    });
+    FilterSpec = newSpec;
+  }
+
+  $: filterEmpty = FilterSpec.every(filtersEmptyRecursive);
 
   function resetFilter() {
-    ageBound = [18, 100];
-    sofaBound = [0, 20];
-    sirsBound = [0, 4];
-    elixBound = [0, 15];
-    lengthOfStayBound = [0, 160];
-    clinicianFluidBound = [0, 4];
-    clinicianVasoBound = [0, 4];
-    modelFluidBound = [0, 4];
-    modelVasoBound = [0, 4];
-    actionDifferenceBound = [0, 5];
-    selectedGender = null;
-    selectedOutcome = null;
-    selectedComorbidities = null;
-    selectedStates = null;
+    FilterSpec = FilterSpec.map(resetFiltersRecursive);
     setTimeout(() => {
       if (filterNeedsUpdate) updateFilter();
     });
   }
 
   function updateFilter() {
+    console.log('temp filters:', tempFilters);
     filter = {
       filters: tempFilters,
       comorbidityFilters: tempComorbidityFilters,
@@ -229,81 +419,30 @@
     />
   </div>
   <div class="sidebar-filter-view flex-auto pb3 ph3">
-    <SelectFilter
-      name="Gender"
-      items={[
-        { label: 'Male', value: 0 },
-        { label: 'Female', value: 1 },
-      ]}
-      bind:selected={selectedGender}
-    />
-    <RangeFilter min={18} max={100} name={'Age'} bind:range={ageBound} />
-    <RangeFilter min={0} max={15} name={'Elixhauser'} bind:range={elixBound} />
-    <SelectFilter
-      name="Comorbidities"
-      multi
-      items={Object.keys(Comorbidities).map((k) => ({
-        value: k,
-        label: Comorbidities[k],
-      }))}
-      bind:selected={selectedComorbidities}
-    />
-    <RangeFilter
-      min={0}
-      max={160}
-      step={4}
-      name={'ICU Stay Length'}
-      bind:range={lengthOfStayBound}
-    />
-    <SelectFilter
-      name="Discharge Status"
-      items={[
-        { label: 'Alive', value: 0 },
-        { label: 'Death', value: 1 },
-      ]}
-      bind:selected={selectedOutcome}
-    />
-    <RangeFilter min={0} max={20} name={'Max SOFA'} bind:range={sofaBound} />
-    <RangeFilter min={0} max={4} name={'Max SIRS'} bind:range={sirsBound} />
-    <hr class="mv3" />
-    <SelectFilter
-      name={'States'}
-      bind:selected={selectedStates}
-      multi
-      items={new Array(750).fill(0).map((_, i) => i)}
-    />
-    <RangeFilter
-      min={0}
-      max={5}
-      step={0.1}
-      name={'Avg Action Difference'}
-      bind:range={actionDifferenceBound}
-    />
-    <RangeFilter
-      min={0}
-      max={4}
-      name={'Clinician Fluids'}
-      bind:range={clinicianFluidBound}
-    />
-    <RangeFilter
-      min={0}
-      max={4}
-      name={'Clinician Vasopressors'}
-      bind:range={clinicianVasoBound}
-    />
-    <RangeFilter
-      min={0}
-      max={4}
-      name={'Model Fluids'}
-      bind:range={modelFluidBound}
-    />
-    <RangeFilter
-      min={0}
-      max={4}
-      name={'Model Vasopressors'}
-      bind:range={modelVasoBound}
-    />
-    <!-- <ActionFilter bind:clinicianActions /> -->
+    {#each FilterSpec.map( (f) => (f.type == 'group' ? f.elements : [f]), ).flat() as f}
+      {#if f.type == 'range'}
+        <RangeFilter
+          min={f.default[0]}
+          max={f.default[1]}
+          step={f.step || 1}
+          name={f.name}
+          tooltip={f.tooltip}
+          bind:range={f.value}
+        />
+      {:else if f.type == 'select'}
+        <SelectFilter
+          name={f.name}
+          items={f.items}
+          multi={f.multi}
+          tooltip={f.tooltip}
+          bind:selected={f.value}
+        />
+      {:else if f.type == 'divider'}
+        <hr class="mv3" />
+      {:else if f.type == 'title'}
+        <p class="mt0 mb4 f6 ttu b">{f.name}</p>
+      {/if}
+    {/each}
   </div>
 </div>
 

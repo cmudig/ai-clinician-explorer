@@ -5,18 +5,19 @@
 
   export let range = [0, 100];
   export let name;
+  export let tooltip;
 
   export let min = 0;
   export let max = 100;
   export let step = 1;
 </script>
 
-<div class="flex items-center mb3">
+<div class="flex items-center mb3" title={tooltip}>
   <div class="w-50 pr3 {dark ? 'white' : 'black'}">
-    <h4 class="tr f5 b mt0 mb1">
+    <h4 class="tr f6 b mt0 mb1">
       {name}
     </h4>
-    <p class="tr f6 mv0">
+    <p class="tr f6 mv0 dark-gray">
       {range[0].toLocaleString()} - {range[1].toLocaleString()}
     </p>
   </div>
