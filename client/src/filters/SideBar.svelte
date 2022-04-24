@@ -272,9 +272,6 @@
   onMount(() => {
     filter = makeEmptyFilter();
     if (!!externalFilters) applyExternalFilters();
-    setTimeout(() => {
-      if (filterNeedsUpdate) updateFilter();
-    });
   });
 
   // Store the filter statement that would be generated with the current values.
@@ -350,9 +347,6 @@
 
   $: if (!!externalFilters) {
     applyExternalFilters();
-    setTimeout(() => {
-      if (filterNeedsUpdate) updateFilter();
-    });
   }
 
   function applyExternalFilters() {
@@ -368,6 +362,9 @@
       }
     });
     FilterSpec = newSpec;
+    setTimeout(() => {
+      if (filterNeedsUpdate) updateFilter();
+    });
   }
 
   $: filterEmpty = FilterSpec.every(filtersEmptyRecursive);
