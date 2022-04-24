@@ -15,13 +15,14 @@
 
   export let offset = 0;
 
-  export let filteredStates = null;
+  export let externalFilters = null;
 
   let isLoading = false;
 
   let filter = {};
+  let sidebar;
 
-  $: {
+  $: if (!!sidebar) {
     isLoading = true;
     let url = `./api/patient/?sort=${sort}&ascending=${
       isAscending ? 1 : 0
@@ -62,7 +63,7 @@
 </header>
 
 <main class="pa0 h-100 flex">
-  <SideBar bind:filter bind:selectedStates={filteredStates} />
+  <SideBar bind:this={sidebar} bind:filter bind:externalFilters />
 
   <div class="pa0 h-100 patient-list-container">
     {#if patients.length > 0}
@@ -227,6 +228,10 @@
           ).toLocaleString()} ({resultCount.toLocaleString()}
           total patients)
         </p>
+      </div>
+    {:else}
+      <div class="h-100 w-100 flex flex-column items-center justify-center">
+        <p class="tc f5 gray">No results</p>
       </div>
     {/if}
     {#if isLoading}

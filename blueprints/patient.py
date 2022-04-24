@@ -78,12 +78,12 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
     if timestep_relevant:
         # We need to do a group by here because the bloc may not necessarily be 1
         fields = ", ".join([f"MAX({f}) as {f}" if f != C_ICUSTAYID else f for f in METADATA_FIELDS])
-        query = f"SELECT {fields}, MIN({C_BLOC}) as {C_BLOC}, COUNT(*) OVER() as result_count FROM `{project}.{dataset}.stays` "
+        query = f"SELECT {fields}, MIN({C_BLOC}) as {C_BLOC}{', COUNT(*) OVER() as result_count' if not joins else ''} FROM `{project}.{dataset}.stays` "
         if filters:
             query += f"WHERE {' AND '.join(filters)} "
         query += "GROUP BY icustayid "
     else:
-        query = f"SELECT {', '.join(METADATA_FIELDS)}, COUNT(*) OVER() as result_count FROM `{project}.{dataset}.stays` "
+        query = f"SELECT {', '.join(METADATA_FIELDS)}{', COUNT(*) OVER() as result_count' if not joins else ''} FROM `{project}.{dataset}.stays` "
         if filters:
             query += f"WHERE {' AND '.join(filters)} "
             query += "AND bloc = 1 "
@@ -94,7 +94,7 @@ def search_patients(filters, sort_field, ascending=True, size=10, offset=0, data
     if joins:
         # Put all the join tables and the stays table under a WITH clause
         join_statements = ', '.join(f"join{i} AS ( {stmt} )" for i, stmt in enumerate(joins))
-        query = f"WITH {join_statements}, base AS ( {query} ) SELECT DISTINCT base.* FROM base "
+        query = f"WITH {join_statements}, base AS ( {query} ) SELECT DISTINCT base.*, COUNT(*) OVER() as result_count FROM base "
         for i in range(len(joins)):
             query += f"INNER JOIN join{i} ON base.icustayid = join{i}.icustayid "
         field_prefix = "base."
