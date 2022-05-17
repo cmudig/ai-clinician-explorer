@@ -31,8 +31,8 @@
   export let clinicianFilter;
 
   let grid = [5, 5];
-  $: rows = `repeat(${grid[0]}, 1fr) 20px`;
-  $: cols = `20px repeat(${grid[1]}, 1fr)`;
+  $: rows = `repeat(${grid[0]}, 1fr) 25px`;
+  $: cols = `40px repeat(${grid[1]}, 30px)`;
 
   function makeEmptyFilter() {
     return { filters: '', comorbidityFilters: '' };
@@ -48,11 +48,6 @@
   let filterEmpty = true;
 
   let temp = [];
-  // for (let i = 1; i < 26; i++) {
-  //   if (clinicianActions[i]) {
-  //     temp.push(toString(i));
-  //   }
-  // }
 
   $: {
     clinicianFilter = 'clinician action in(' + temp.join(',') + ')';
@@ -221,18 +216,19 @@
   </div>
   <div class="sidebar-filter-view flex-auto pb3 ph3">
     <!-- <ActionFilter bind:actionFilter={selectedActions} /> -->
+    <!-- selectedActions are in sidebar; actionFilter is in ActionFilter -->
     <!-- Put everything below in ActionFilter.svelte -->
     <h4>Clinician Actions</h4>
-    <div class="flex items-center mb3">
+    <div class="flex items-center mb3; margin-bottom: 10px">
       <div>
         <div>Vasopressor (ug/kg/min)</div>
       </div>
       <div
         class="container"
-        style="grid-template-rows: {rows}; grid-template-columns: {cols};"
+        style="grid-template-rows: {rows}; grid-template-columns: {cols}; margin-right: 50px"
       >
         {#each { length: 5 } as _, row (row)}
-          <div>
+          <div style="display: flex; justify-content: flex-end">
             {vaso[row]}
           </div>
           {#each { length: 5 } as _, col (col)}
@@ -257,38 +253,41 @@
         <div>
           <div />
         </div>
-        <div>
+        <div class="center">
           <div>0</div>
         </div>
-        <div>
+        <div class="center">
           <div>20</div>
         </div>
-        <div>
+        <div class="center">
           <div>100</div>
         </div>
-        <div>
+        <div class="center">
           <div>300</div>
         </div>
-        <div>
+        <div class="center">
           <div>819</div>
         </div>
       </div>
     </div>
-    <div>
+    <div style="display: flex; justify-content: flex-end; margin-right: 55px">
       <div />
-      <bold>IV Fluid (mL/4h)</bold>
+      <bold>IV Fluid (mL/4h) </bold>
     </div>
     <h4>Model Actions</h4>
-    <div class="flex items-center mb3">
-      <div>
+    <div
+      class="flex items-center mb3"
+      style="margin-right: 40px margin-left: auto"
+    >
+      <div style="flex items-center mb3; margin-bottom: 10px">
         <div>Vasopressor (ug/kg/min)</div>
       </div>
       <div
         class="container bg-light-blue-gray"
-        style="grid-template-rows: {rows}; grid-template-columns: {cols};"
+        style="grid-template-rows: {rows}; grid-template-columns: {cols}; margin-left: 20px; margin-right: 50px"
       >
         {#each { length: 5 } as _, row (row)}
-          <div>
+          <div style="display: flex; justify-content: flex-end">
             {vaso[row]}
           </div>
           {#each { length: 5 } as _, col (col)}
@@ -313,25 +312,27 @@
         <div>
           <div />
         </div>
-        <div>
+        <div class="center">
           <div>0</div>
         </div>
-        <div>
+        <div class="center">
           <div>20</div>
         </div>
-        <div>
+        <div class="center">
           <div>100</div>
         </div>
-        <div>
+        <div class="center">
           <div>300</div>
         </div>
-        <div>
+        <div class="center">
           <div>819</div>
         </div>
       </div>
     </div>
-    <div><bold>IV Fluid (mL/4h)</bold></div>
-
+    <div style="display: flex; justify-content: flex-end; margin-right: 55px">
+      <bold>IV Fluid (mL/4h)</bold>
+    </div>
+    <br /><br />
     <SelectFilter
       name="Gender"
       items={[
