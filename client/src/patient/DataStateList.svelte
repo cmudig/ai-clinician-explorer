@@ -10,6 +10,8 @@
   export let currentTrendWindow = 1; // number of timesteps to average over for current trend window
   export let trendThreshold = 0.0; // fraction of last average value to consider as the same
   export let category; // category of features to display - null displays all
+  export let highlightImputedValues = true;
+  export let highlightHeldValues = false;
 
   let timePoint;
   let lastTimePoint;
@@ -408,6 +410,8 @@
                   ? computeTrend(row.feature, $currentBloc)
                   : 0}
                 unit={row.unit}
+                {highlightHeldValues}
+                {highlightImputedValues}
               />
             {/if}
           {/each}

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, send_from_directory, request, redirect
 from blueprints.patient import patient_blueprint
 from blueprints.model import model_blueprint
+from blueprints.study import study_blueprint
 from blueprints.user import User
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_wtf.csrf import CSRFProtect
@@ -15,6 +16,7 @@ csrf = CSRFProtect(app)
 
 app.register_blueprint(patient_blueprint)
 app.register_blueprint(model_blueprint)
+app.register_blueprint(study_blueprint)
 csrf.exempt(model_blueprint)
 app.config['LOGIN_DISABLED'] = not PRODUCTION_MODE
 
@@ -40,6 +42,11 @@ def base():
 @login_required
 def patient():
     return render_template('patient/index.html')
+
+@app.route("/study")
+@login_required
+def study():
+    return render_template('study/index.html')
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

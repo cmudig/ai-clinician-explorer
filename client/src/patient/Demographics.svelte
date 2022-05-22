@@ -5,6 +5,8 @@
   import TextFeature from './TextFeature.svelte';
 
   let { patient } = getContext('patient');
+
+  export let showOutcomes = true;
 </script>
 
 <div class="pv2 ph2 bg-blue-gray white">
@@ -31,18 +33,20 @@
         feature="Is Re-Admission"
         value={$patient.re_admission ? 'Yes' : 'No'}
       />
-      <DataFeature
-        dark
-        feature="Discharge Status"
-        value={$patient.died_in_hosp ? 'Death' : 'Alive'}
-      />
-      <DataFeature
-        dark
-        feature="ICU Length of Stay"
-        value={($patient.num_timesteps * 4 > 24
-          ? `${Math.floor(($patient.num_timesteps * 4) / 24)}d `
-          : '') + `${($patient.num_timesteps * 4) % 24}h`}
-      />
+      {#if showOutcomes}
+        <DataFeature
+          dark
+          feature="Discharge Status"
+          value={$patient.died_in_hosp ? 'Death' : 'Alive'}
+        />
+        <DataFeature
+          dark
+          feature="ICU Length of Stay"
+          value={($patient.num_timesteps * 4 > 24
+            ? `${Math.floor(($patient.num_timesteps * 4) / 24)}d `
+            : '') + `${($patient.num_timesteps * 4) % 24}h`}
+        />
+      {/if}
     </table>
   {/if}
 </div>

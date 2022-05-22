@@ -16,6 +16,8 @@
   export let historicalValues = [];
   export let extremeValue = 0; // 1 = too high, -1 = too low
   export let patientID = null;
+  export let highlightImputedValues = true;
+  export let highlightHeldValues = false;
 
   let historicalData = [];
 
@@ -113,14 +115,14 @@
         <Svg>
           <ShadingX
             highlightFn={(d) => suspectedMissingValue(d, true, false)}
-            color="#FF725C33"
+            color={highlightImputedValues ? '#FF725C33' : 'transparent'}
             on:hover={(e) =>
               (hoveredMissingValueSegment =
                 e.detail != null ? e.detail.t : null)}
           />
           <ShadingX
             highlightFn={(d) => suspectedMissingValue(d, false, true)}
-            color="transparent"
+            color={highlightHeldValues ? '#FF725C33' : 'transparent'}
             on:hover={(e) =>
               (hoveredMissingValueSegment =
                 e.detail != null ? e.detail.t : null)}

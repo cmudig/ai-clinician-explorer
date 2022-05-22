@@ -5,9 +5,10 @@
     { value: 2, name: 'B' },
   ];
 
-  let randomID = 'segmented-control-' + Math.floor(Math.random() * 1e8);
+  export let unselectedTextClass = '';
+  export let selectedTextClass = '';
 
-  $: console.log('selected', selected);
+  let randomID = 'segmented-control-' + Math.floor(Math.random() * 1e8);
 </script>
 
 <ul class="segmented-control">
@@ -24,8 +25,11 @@
         id="{randomID}-{i + 1}"
         bind:group={selected}
       />
-      <label class="segmented-control__label" for="{randomID}-{i + 1}"
-        >{option.name}</label
+      <label
+        class="segmented-control__label {selected == i + 1
+          ? selectedTextClass
+          : unselectedTextClass}"
+        for="{randomID}-{i + 1}">{option.name}</label
       >
     </li>
   {/each}
