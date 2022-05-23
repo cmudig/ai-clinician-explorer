@@ -46,7 +46,7 @@
       <input type="hidden" name="csrf_token" value={csrf} />
       <div class="">
         <input
-          class="pa2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
+          class="pa2 br2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
           type="submit"
           value="Sign In"
         />

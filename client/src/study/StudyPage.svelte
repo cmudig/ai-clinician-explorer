@@ -39,10 +39,7 @@
 
   let participantID = null;
 
-  let loadingStudy = false;
-  let loadingModelPrediction = false;
-  let loadingPatientInfo = false;
-  let submitting = false;
+  let loadingMessage = null;
 
   let treatmentTab = 1;
   let statesTab = StateCategory.VITALS;
@@ -50,11 +47,38 @@
   let studyStimuli;
   let studyIndex = -1;
 
-  let initializedStudyResponses = false;
-  let studyComplete = false;
+  let resumingPrevious = false;
+  let resumeErrorMessage = null;
+
+  const StudyStates = {
+    WELCOME: 0,
+    PRE_SURVEY: 1,
+    TUTORIAL: 2,
+    STIMULI: 3,
+    POST_SURVEY: 4,
+    COMPLETE: 5,
+  };
+
+  let state = StudyStates.WELCOME;
+
+  function advanceState() {
+    if (state != StudyStates.STIMULI) {
+      syncState();
+      state += 1;
+    } else {
+      if (studyIndex + 1 == studyStimuli.length) {
+        state += 1;
+      } else {
+        studyIndex += 1;
+        selectedAction = null;
+      }
+    }
+    if (state == StudyStates.PRE_SURVEY) state = StudyStates.STIMULI;
+    else if (state == StudyStates.POST_SURVEY) state = StudyStates.COMPLETE;
+  }
 
   async function initializeStudy() {
-    loadingStudy = true;
+    loadingMessage = 'Initializing study...';
     try {
       let response = await fetch('./api/study/init', {
         method: 'POST',
@@ -65,49 +89,60 @@
         },
       });
       if (response.status != 200) {
-        loadingStudy = false;
+        loadingMessage = null;
         console.log(
           `error ${response.status} initializing study:`,
           await response.text(),
         );
+        participantID = null;
+        studyStimuli = null;
+        studyIndex = -1;
         return;
       }
+      loadingMessage = null;
       response = await response.json();
       participantID = response.participant_id;
-      initializedStudyResponses = true;
-      await loadStudyStimuli();
+      studyStimuli = response.stimuli;
+      studyIndex = 0;
+      advanceState();
     } catch (e) {
       console.log('error initializing study:', e);
     }
   }
 
-  $: if (initializedStudyResponses && !studyStimuli) {
-    loadStudyStimuli();
-  }
+  async function resumeFromPrevious() {
+    loadingMessage = 'Initializing study...';
 
-  async function loadStudyStimuli() {
-    loadingStudy = true;
     try {
-      let response = await fetch('./api/study/');
+      let response = await fetch('./api/study/init', {
+        method: 'POST',
+        mode: 'same-origin',
+        credentials: 'same-origin',
+        headers: {
+          'X-CSRFToken': csrf,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ participant_id: participantID }),
+      });
       if (response.status != 200) {
-        loadingStudy = false;
-        console.log(
-          `error ${response.status} loading study:`,
-          await response.text(),
-        );
-        studyStimuli = null;
-        studyIndex = -1;
+        loadingMessage = null;
+        resumeErrorMessage = response.text();
+        participantID = '';
         return;
       }
       response = await response.json();
       console.log(response);
+      participantID = response.participant_id;
       studyStimuli = response.stimuli;
       studyIndex = 0;
-      loadingStudy = false;
+
+      state = StudyStates[response.state] || StudyStates.WELCOME;
+      studyIndex = response.study_index != null ? response.study_index : -1;
+      console.log(state, studyIndex);
+      advanceState();
+      console.log(state, studyIndex);
     } catch (e) {
-      console.log('error loading study:', e);
-      studyStimuli = null;
-      studyIndex = -1;
+      console.log('error initializing study:', e);
     }
   }
 
@@ -123,7 +158,8 @@
   $: if (!!patientID) loadPatientInfo(patientID);
 
   async function loadPatientInfo(patientID) {
-    loadingPatientInfo = true;
+    loadingMessage = 'Loading patient info...';
+    $patient = null;
     try {
       let response = await fetch('./api/patient/' + patientID);
       if (response.status != 200) {
@@ -138,7 +174,7 @@
       $patient = response.result;
       if ($currentBloc == 0) $currentBloc = 1;
       console.log('patient:', $patient);
-      loadingPatientInfo = false;
+      loadingMessage = null;
     } catch (e) {
       console.log('error loading patient info:', e);
     }
@@ -201,7 +237,7 @@
     let body = { states, actions };
     console.log('body:', body);
     try {
-      loadingModelPrediction = true;
+      loadingMessage = 'Loading AI Clinician...';
       let response = await fetch(`./api/model/${modelID}/predict`, {
         method: 'POST',
         headers: {
@@ -220,16 +256,17 @@
       response = await response.json();
       console.log('response', response);
       $modelPredictions = response.results;
-      loadingModelPrediction = false;
+      loadingMessage = null;
     } catch (e) {
       console.log('error loading model prediction:', e);
-      loadingModelPrediction = false;
+      loadingMessage = null;
     }
   }
 
   let currentTime;
   let dayIndex;
   $: if (!!$patient && $currentBloc > 0) {
+    console.log($patient, $currentBloc);
     dayIndex = Math.floor((($currentBloc - 1) * 4) / 24) + 1;
     let timestamp = $patient.timesteps[$currentBloc - 1].timestep;
     currentTime = new Date(timestamp * 1000).toLocaleTimeString('en-US', {
@@ -245,8 +282,7 @@
   $: submitEnabled =
     !!studyStimuli && studyIndex >= 0 && selectedAction != null;
 
-  async function submitResponse() {
-    submitting = true;
+  async function syncState() {
     try {
       let response = await fetch('./api/study/update', {
         method: 'POST',
@@ -258,29 +294,57 @@
         },
         body: JSON.stringify({
           participant_id: participantID,
-          stimulus_id: studyStimuli[studyIndex].stimulus_id,
-          chosen_action: selectedAction,
-          confidence: 5,
+          state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
+          study_index: studyIndex,
         }),
       });
       if (response.status != 200) {
-        submitting = false;
+        console.log(
+          `error ${response.status} syncing state:`,
+          await response.text(),
+        );
+        return;
+      }
+    } catch (e) {
+      console.log('error syncing state:', e);
+    }
+  }
+
+  async function submitResponse() {
+    loadingMessage = 'Submitting response...';
+    try {
+      let response = await fetch('./api/study/update', {
+        method: 'POST',
+        mode: 'same-origin',
+        credentials: 'same-origin',
+        headers: {
+          'X-CSRFToken': csrf,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          participant_id: participantID,
+          state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
+          study_index: studyIndex,
+          response: {
+            stimulus_id: studyStimuli[studyIndex].stimulus_id,
+            chosen_action: selectedAction,
+            confidence: 5,
+          },
+        }),
+      });
+      if (response.status != 200) {
+        loadingMessage = null;
         console.log(
           `error ${response.status} submitting response:`,
           await response.text(),
         );
         return;
       }
-      submitting = false;
+      loadingMessage = null;
       response = await response.json();
-      if (studyIndex + 1 == studyStimuli.length) {
-        studyComplete = true;
-      } else {
-        studyIndex += 1;
-        selectedAction = null;
-      }
+      advanceState();
     } catch (e) {
-      submitting = false;
+      loadingMessage = null;
       console.log('error submitting response:', e);
     }
   }
@@ -288,56 +352,101 @@
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked flex justify-between">
-    {#if !initializedStudyResponses || studyComplete}
+    {#if state == StudyStates.WELCOME || state == StudyStates.COMPLETE}
       <span class="white dib mr3">Sepsis Treatment Study</span>
     {:else if !!studyStimuli && studyIndex >= 0}
       <span class="white dib mr3"
         >Patient {studyIndex + 1} of {studyStimuli.length}</span
       >
     {/if}
-    {#if !!participantID}
+    {#if state > StudyStates.WELCOME && !!participantID && participantID.length > 0}
       <span class="white dib mr3">Participant ID: {participantID}</span>
     {/if}
   </nav>
 </header>
 <main class="pa0 h-100">
-  {#if !initializedStudyResponses}
+  {#if state == StudyStates.WELCOME}
     <div class="flex flex-column h-100 items-center justify-center">
       <div class="information f5 lh-copy measure-wide mb3">
         In this study, you will be presented with four vignettes of patients
         with sepsis. In each case, you will be asked to choose an appropriate
         level of IV fluids and vasopressors based on the available patient data.
       </div>
-      <a
-        class="center br2 pa2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
-        href="#"
-        on:click={initializeStudy}
-      >
-        Continue</a
-      >
+      {#if resumingPrevious}
+        <div class="bg-light-blue-gray br2 pa3 measure-wide">
+          <form>
+            <fieldset id="login" class="ba b--transparent ph0 mh0">
+              <p class="mb3 mt0 f5">
+                Type the Participant ID displayed during the previous session to
+                pick up where you left off.
+              </p>
+              {#if !!resumeErrorMessage}
+                <div class="pa2 mv2 br2 bg-washed-red f5">
+                  {resumeErrorMessage}
+                </div>
+              {/if}
+              <div>
+                <label class="db fw6 lh-copy f6" for="participant_id"
+                  >Participant ID</label
+                >
+                <input
+                  class="pa2 ba bg-white w-100"
+                  type="username"
+                  name="participant_id"
+                  id="participant_id"
+                  bind:value={participantID}
+                />
+              </div>
+            </fieldset>
+            <div class="">
+              <input
+                class="pa2 br2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
+                type="submit"
+                value="Continue"
+                disabled={!participantID || participantID.length == 0}
+                on:click|preventDefault={resumeFromPrevious}
+              />
+            </div>
+          </form>
+        </div>
+        <a
+          class="center mt2 pa2 link dib dim bg-animate f6"
+          href="#"
+          on:click={() => (resumingPrevious = false)}
+        >
+          Begin new session...</a
+        >
+      {:else}
+        <a
+          class="center br2 pa2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
+          href="#"
+          on:click={initializeStudy}
+        >
+          Begin</a
+        >
+        <a
+          class="center mt2 pa2 link dib dim bg-animate f6"
+          href="#"
+          on:click={() => (resumingPrevious = true)}
+        >
+          Resume previous session...</a
+        >
+      {/if}
     </div>
-  {:else if studyComplete}
+  {:else if state == StudyStates.COMPLETE}
     <div class="flex flex-column h-100 items-center justify-center">
       <div class="information f5 lh-copy measure-wide mb3">
         You have completed the study and may now close this window.
       </div>
     </div>
-  {:else if loadingModelPrediction || loadingPatientInfo || loadingStudy || submitting}
+  {:else if !!loadingMessage}
     <div class="flex flex-column h-100 items-center justify-center">
       <p class="mb3 f5 tc b dark-gray">
-        {#if submitting}
-          Submitting response...
-        {:else if loadingStudy}
-          Initializing study...
-        {:else if loadingModelPrediction}
-          Loading AI Clinician...
-        {:else}
-          Loading patient info...
-        {/if}
+        {loadingMessage}
       </p>
       <LoadingBar />
     </div>
-  {:else}
+  {:else if state == StudyStates.STIMULI}
     <div class="flex align-stretch h-100">
       <div class="sidebar bg-blue-gray">
         {#if !!$patient}
