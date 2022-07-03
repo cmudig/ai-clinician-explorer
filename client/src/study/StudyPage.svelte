@@ -12,6 +12,9 @@
   import Cultures from '../patient/Cultures.svelte';
   import { StateCategory } from '../utils/strings';
   import ActionButtonSet from './ActionButtonSet.svelte';
+  import Welcome from './Welcome.svelte';
+  import PreSurvey from './PreSurvey.svelte';
+  import PostSurvey from './PostSurvey.svelte';
 
   export let csrf;
 
@@ -47,16 +50,17 @@
   let studyStimuli;
   let studyIndex = -1;
 
-  let resumingPrevious = false;
   let resumeErrorMessage = null;
+
+  let preSurveyResponses;
+  let postSurveyResponses;
 
   const StudyStates = {
     WELCOME: 0,
     PRE_SURVEY: 1,
-    TUTORIAL: 2,
-    STIMULI: 3,
-    POST_SURVEY: 4,
-    COMPLETE: 5,
+    STIMULI: 2,
+    POST_SURVEY: 3,
+    COMPLETE: 4,
   };
 
   let state = StudyStates.WELCOME;
@@ -73,11 +77,10 @@
         selectedAction = null;
       }
     }
-    if (state == StudyStates.PRE_SURVEY) state = StudyStates.STIMULI;
-    else if (state == StudyStates.POST_SURVEY) state = StudyStates.COMPLETE;
   }
 
   async function initializeStudy() {
+    console.log('initializing');
     loadingMessage = 'Initializing study...';
     try {
       let response = await fetch('./api/study/init', {
@@ -110,8 +113,9 @@
     }
   }
 
-  async function resumeFromPrevious() {
+  async function resumeFromPrevious(e) {
     loadingMessage = 'Initializing study...';
+    let pid = e.detail;
 
     try {
       let response = await fetch('./api/study/init', {
@@ -122,7 +126,7 @@
           'X-CSRFToken': csrf,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ participant_id: participantID }),
+        body: JSON.stringify({ participant_id: pid }),
       });
       if (response.status != 200) {
         loadingMessage = null;
@@ -296,6 +300,8 @@
           participant_id: participantID,
           state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
           study_index: studyIndex,
+          pre_survey_responses: preSurveyResponses,
+          post_survey_responses: postSurveyResponses,
         }),
       });
       if (response.status != 200) {
@@ -365,86 +371,31 @@
   </nav>
 </header>
 <main class="pa0 h-100">
-  {#if state == StudyStates.WELCOME}
-    <div class="flex flex-column h-100 items-center justify-center">
-      <div class="information f5 lh-copy measure-wide mb3">
-        In this study, you will be presented with four vignettes of patients
-        with sepsis. In each case, you will be asked to choose an appropriate
-        level of IV fluids and vasopressors based on the available patient data.
-      </div>
-      {#if resumingPrevious}
-        <div class="bg-light-blue-gray br2 pa3 measure-wide">
-          <form>
-            <fieldset id="login" class="ba b--transparent ph0 mh0">
-              <p class="mb3 mt0 f5">
-                Type the Participant ID displayed during the previous session to
-                pick up where you left off.
-              </p>
-              {#if !!resumeErrorMessage}
-                <div class="pa2 mv2 br2 bg-washed-red f5">
-                  {resumeErrorMessage}
-                </div>
-              {/if}
-              <div>
-                <label class="db fw6 lh-copy f6" for="participant_id"
-                  >Participant ID</label
-                >
-                <input
-                  class="pa2 ba bg-white w-100"
-                  type="username"
-                  name="participant_id"
-                  id="participant_id"
-                  bind:value={participantID}
-                />
-              </div>
-            </fieldset>
-            <div class="">
-              <input
-                class="pa2 br2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
-                type="submit"
-                value="Continue"
-                disabled={!participantID || participantID.length == 0}
-                on:click|preventDefault={resumeFromPrevious}
-              />
-            </div>
-          </form>
-        </div>
-        <a
-          class="center mt2 pa2 link dib dim bg-animate f6"
-          href="#"
-          on:click={() => (resumingPrevious = false)}
-        >
-          Begin new session...</a
-        >
-      {:else}
-        <a
-          class="center br2 pa2 link dib white bg-dark-blue hover-bg-navy-dark pointer f6 b bg-animate"
-          href="#"
-          on:click={initializeStudy}
-        >
-          Begin</a
-        >
-        <a
-          class="center mt2 pa2 link dib dim bg-animate f6"
-          href="#"
-          on:click={() => (resumingPrevious = true)}
-        >
-          Resume previous session...</a
-        >
-      {/if}
-    </div>
-  {:else if state == StudyStates.COMPLETE}
-    <div class="flex flex-column h-100 items-center justify-center">
-      <div class="information f5 lh-copy measure-wide mb3">
-        You have completed the study and may now close this window.
-      </div>
-    </div>
-  {:else if !!loadingMessage}
+  {#if !!loadingMessage}
     <div class="flex flex-column h-100 items-center justify-center">
       <p class="mb3 f5 tc b dark-gray">
         {loadingMessage}
       </p>
       <LoadingBar />
+    </div>
+  {:else if state == StudyStates.WELCOME}
+    <Welcome
+      on:initialize={() => initializeStudy()}
+      on:resume={() => resumeFromPrevious()}
+      {resumeErrorMessage}
+    />
+  {:else if state == StudyStates.PRE_SURVEY}
+    <PreSurvey on:continue={advanceState} bind:responses={preSurveyResponses} />
+  {:else if state == StudyStates.POST_SURVEY}
+    <PostSurvey
+      on:continue={advanceState}
+      bind:responses={postSurveyResponses}
+    />
+  {:else if state == StudyStates.COMPLETE}
+    <div class="flex flex-column h-100 items-center justify-center">
+      <div class="information f5 lh-copy measure-wide mb3">
+        You have completed the study and may now close this window.
+      </div>
     </div>
   {:else if state == StudyStates.STIMULI}
     <div class="flex align-stretch h-100">

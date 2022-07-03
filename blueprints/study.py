@@ -83,7 +83,9 @@ def submit_study_data():
     participant_id = input_data["participant_id"]
     state = input_data["state"] # this is the state that has been COMPLETED
     parent_info = {
-        "state": state
+        "state": state,
+        "pre_survey_responses": input_data.get("pre_survey_responses", {}),
+        "post_survey_responses": input_data.get("post_survey_responses", {})
     }
     if state == "STIMULI":
         if "response" not in input_data:
