@@ -9,6 +9,7 @@
   import { getContext } from 'svelte';
   import FeatureImportanceChart from '../charts/FeatureImportanceChart.svelte';
   import Colorbar from '../charts/Colorbar.svelte';
+  import { fluidDose, vasopressorDose } from '../utils/helpers';
 
   let { patient, modelInfo, modelPredictions, currentBloc } =
     getContext('patient');
@@ -68,22 +69,6 @@
     actionBins = $modelInfo.actions.action_medians;
   }
 
-  function fluidDose(action) {
-    if (!!$modelInfo)
-      return $modelInfo.actions.action_medians[0][
-        Math.floor(action / $modelInfo.actions.n_action_bins)
-      ];
-    return 0;
-  }
-
-  function vasopressorDose(action) {
-    if (!!$modelInfo)
-      return $modelInfo.actions.action_medians[1][
-        action % $modelInfo.actions.n_action_bins
-      ];
-    return 0;
-  }
-
   let actualFluidDose;
   let actualVasopressorDose;
   $: if (!!$patient && $currentBloc > 0) {
@@ -107,18 +92,21 @@
       <h5 class="f5 tc b mb2">Predicted Treatment Values</h5>
       {#if !!$modelInfo && modelRecommendationIdx != null}
         <p class="f6 lh-copy above-plot">
-          In the next epoch, AI Clinician recommends {#if vasopressorDose(modelRecommendationIdx) == 0}
+          In the next epoch, AI Clinician recommends {#if vasopressorDose($modelInfo, modelRecommendationIdx) == 0}
             <strong>no vasopressor</strong>{:else}
             a vasopressor dosage of <strong
-              >{vasopressorDose(modelRecommendationIdx).toLocaleString({
+              >{vasopressorDose(
+                $modelInfo,
+                modelRecommendationIdx,
+              ).toLocaleString({
                 maximumSignificantDigits: 3,
               })} ug/kg/min</strong
             >
-          {/if} and {#if fluidDose(modelRecommendationIdx) == 0}
+          {/if} and {#if fluidDose($modelInfo, modelRecommendationIdx) == 0}
             <strong>no IV fluids</strong>
           {:else}
             <strong
-              >{fluidDose(modelRecommendationIdx).toLocaleString({
+              >{fluidDose($modelInfo, modelRecommendationIdx).toLocaleString({
                 maximumSignificantDigits: 3,
               })} mL/4h</strong
             >

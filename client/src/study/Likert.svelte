@@ -6,38 +6,40 @@
   let randomID = 'likert-' + Math.floor(Math.random() * 1e8);
 </script>
 
-<form action="">
-  <label for="text" class="f5 b lh-copy mt4 mb3">
-    {question}
-  </label>
-  <ul
-    class="likert"
-    style="--likert-border-left:{Math.round(
-      100 / elements.length / 2,
-    )}%;--likert-border-width:{Math.round(
-      (100 * (elements.length - 1)) / elements.length,
-    )}%;"
-  >
-    {#each elements as element, i}
-      <li style="width: {Math.round(100 / elements.length)}%;">
-        <input
-          type="radio"
-          name={randomID}
-          value={i + 1}
-          bind:group={response}
-        />
-        <label for={i.toString()}>{@html element}</label>
-      </li>
-    {/each}
-  </ul>
-</form>
+<div class="br2 bg-near-white pa4 mb4">
+  <form action="">
+    <label for="text" class="f5 b lh-copy mb3">
+      {question}
+    </label>
+    <ul
+      class="likert"
+      style="--likert-border-left:{Math.round(
+        100 / elements.length / 2,
+      )}%;--likert-border-width:{Math.round(
+        (100 * (elements.length - 1)) / elements.length,
+      )}%;"
+    >
+      {#each elements as element, i}
+        <li style="width: {Math.round(100 / elements.length)}%;">
+          <input
+            type="radio"
+            name={randomID}
+            value={i + 1}
+            bind:group={response}
+          />
+          <label for={i.toString()}>{@html element}</label>
+        </li>
+      {/each}
+    </ul>
+  </form>
+</div>
 
 <style>
   form .likert {
     list-style: none;
     width: 100%;
     margin: 0;
-    padding: 0 0 35px;
+    padding: 0;
     display: block;
     border-bottom: 2px solid #7b8794;
   }

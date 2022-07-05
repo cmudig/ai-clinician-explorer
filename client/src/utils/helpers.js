@@ -16,3 +16,19 @@ export function getTextWidth(text, font) {
   var metrics = context.measureText(text);
   return metrics.width;
 }
+
+export function fluidDose(modelInfo, action) {
+  if (!!modelInfo)
+    return modelInfo.actions.action_medians[0][
+      Math.floor(action / modelInfo.actions.n_action_bins)
+    ];
+  return 0;
+}
+
+export function vasopressorDose(modelInfo, action) {
+  if (!!modelInfo)
+    return modelInfo.actions.action_medians[1][
+      action % modelInfo.actions.n_action_bins
+    ];
+  return 0;
+}

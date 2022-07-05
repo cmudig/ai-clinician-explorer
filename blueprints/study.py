@@ -84,30 +84,28 @@ def submit_study_data():
     state = input_data["state"] # this is the state that has been COMPLETED
     parent_info = {
         "state": state,
-        "pre_survey_responses": input_data.get("pre_survey_responses", {}),
-        "post_survey_responses": input_data.get("post_survey_responses", {})
+        "study_index": input_data.get("study_index", 0)
     }
-    if state == "STIMULI":
-        if "response" not in input_data:
-            return "response key required for state STIMULI", 400
-        response = input_data["response"]
-        if "stimulus_id" not in response:
-            return "stimulus_id key required in response", 400
-        if "chosen_action" not in response:
-            return "chosen_action key required in response", 400
-        if "confidence" not in response:
-            return "confidence key required in response", 400
-        if "study_index" not in input_data:
-            return "study_index key required in input data", 400
-        if not results_collection.document(participant_id).get().exists:
-            return "Participant ID not initialized", 400
-        document_data = {
-            "chosen_action": response["chosen_action"],
-            "confidence": response["confidence"],
-            "stimulus_id": response["stimulus_id"]
-        }
-        results_collection.document(participant_id).collection('responses').document(response["stimulus_id"]).set(document_data)
-        parent_info["study_index"] = input_data["study_index"]
+    if "pre_survey_responses" in input_data:
+        parent_info["pre_survey_responses"] = input_data["pre_survey_responses"]
+    if "post_survey_responses" in input_data:
+        parent_info["post_survey_responses"] = input_data["post_survey_responses"]
+    if "stimulus_responses" in input_data:
+        responses = input_data["stimulus_responses"]
+        for response in responses:
+            if "stimulus_id" not in response:
+                return "stimulus_id key required in response", 400
+            if "fluidTreatment" not in response:
+                return "fluidTreatment key required in response", 400
+            if "vasopressorTreatment" not in response:
+                return "vasopressorTreatment key required in response", 400
+            if "confidence" not in response:
+                return "confidence key required in response", 400
+            if "caseDifficulty" not in response:
+                return "caseDifficulty key required in response", 400
+            if not results_collection.document(participant_id).get().exists:
+                return "Participant ID not initialized", 400
+            results_collection.document(participant_id).collection('responses').document(response["stimulus_id"]).set(response)
         
     # Update the participant ID document
     results_collection.document(participant_id).update(parent_info)

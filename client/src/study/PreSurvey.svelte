@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import FreeResponseQuestion from './FreeResponseQuestion.svelte';
   import Likert from './Likert.svelte';
   import MultipleChoice from './MultipleChoice.svelte';
 
@@ -8,13 +9,13 @@
   export let responses = {};
 
   function isValidResponse(r) {
-    console.log(r);
     return r.yearsExperience != null && r.technologyProficiency != null;
   }
 </script>
 
 <div class="center measure-wide pv4">
   <div class="f3 mb3">Pre-Study Survey</div>
+  <FreeResponseQuestion question="What is your current role?" />
   <MultipleChoice
     question="Approximately how many years of experience do you have working in the ICU?"
     choices={[
@@ -24,6 +25,16 @@
       { label: '5+ years', value: '3' },
     ]}
     bind:selectedChoice={responses.yearsExperience}
+  />
+  <MultipleChoice
+    question="Approximately how many years of experience do you have treating patients with sepsis?"
+    choices={[
+      { label: '<1 year', value: '0' },
+      { label: '1-2 years', value: '1' },
+      { label: '3-5 years', value: '2' },
+      { label: '5+ years', value: '3' },
+    ]}
+    bind:selectedChoice={responses.yearsICUExperience}
   />
   <Likert
     question="How would you rate your proficiency with technology?"

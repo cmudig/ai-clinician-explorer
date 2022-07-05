@@ -7,7 +7,7 @@
   import LoadingBar from '../utils/LoadingBar.svelte';
   import Columns from '../utils/columns';
   import SegmentedControl from '../utils/SegmentedControl.svelte';
-  import Predictions from '../patient/Predictions.svelte';
+  import Predictions from '../study/Predictions.svelte';
   import Antibiotics from '../patient/Antibiotics.svelte';
   import Cultures from '../patient/Cultures.svelte';
   import { StateCategory } from '../utils/strings';
@@ -15,6 +15,7 @@
   import Welcome from './Welcome.svelte';
   import PreSurvey from './PreSurvey.svelte';
   import PostSurvey from './PostSurvey.svelte';
+  import StimulusQuestions from './StimulusQuestions.svelte';
 
   export let csrf;
 
@@ -54,6 +55,8 @@
 
   let preSurveyResponses;
   let postSurveyResponses;
+  let stimulusResponse;
+  let allStimulusResponses = [];
 
   const StudyStates = {
     WELCOME: 0,
@@ -69,13 +72,8 @@
     if (state != StudyStates.STIMULI) {
       syncState();
       state += 1;
-    } else {
-      if (studyIndex + 1 == studyStimuli.length) {
-        state += 1;
-      } else {
-        studyIndex += 1;
-        selectedAction = null;
-      }
+    } else if (studyIndex == studyStimuli.length) {
+      state += 1;
     }
   }
 
@@ -141,10 +139,11 @@
       studyIndex = 0;
 
       state = StudyStates[response.state] || StudyStates.WELCOME;
-      studyIndex = response.study_index != null ? response.study_index : -1;
+      studyIndex = response.study_index != null ? response.study_index : 0;
       console.log(state, studyIndex);
       advanceState();
       console.log(state, studyIndex);
+      loadingMessage = null;
     } catch (e) {
       console.log('error initializing study:', e);
     }
@@ -279,15 +278,18 @@
     });
   }
 
-  let selectedAction = null;
-  $: console.log('selected', selectedAction);
-
-  let submitEnabled = false;
-  $: submitEnabled =
-    !!studyStimuli && studyIndex >= 0 && selectedAction != null;
-
   async function syncState() {
     try {
+      let studyData = {
+        participant_id: participantID,
+        state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
+        study_index: studyIndex,
+        stimulus_responses: allStimulusResponses,
+      };
+      if (!!preSurveyResponses)
+        studyData.pre_survey_responses = preSurveyResponses;
+      if (!!postSurveyResponses)
+        studyData.post_survey_responses = postSurveyResponses;
       let response = await fetch('./api/study/update', {
         method: 'POST',
         mode: 'same-origin',
@@ -296,29 +298,38 @@
           'X-CSRFToken': csrf,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          participant_id: participantID,
-          state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
-          study_index: studyIndex,
-          pre_survey_responses: preSurveyResponses,
-          post_survey_responses: postSurveyResponses,
-        }),
+        body: JSON.stringify(studyData),
       });
       if (response.status != 200) {
         console.log(
           `error ${response.status} syncing state:`,
           await response.text(),
         );
-        return;
+        return false;
       }
+      return true;
     } catch (e) {
       console.log('error syncing state:', e);
     }
   }
 
-  async function submitResponse() {
+  async function submitStimulusResponse() {
     loadingMessage = 'Submitting response...';
+    console.log(stimulusResponse);
+    stimulusResponse.stimulus_id = studyStimuli[studyIndex].stimulus_id;
+    allStimulusResponses.push(stimulusResponse);
+    stimulusResponse = {};
+    $modelPredictions = null;
+    studyIndex += 1;
     try {
+      await syncState();
+      loadingMessage = null;
+      advanceState();
+    } catch (e) {
+      loadingMessage = null;
+      console.log('error submitting response:', e);
+    }
+    /*try {
       let response = await fetch('./api/study/update', {
         method: 'POST',
         mode: 'same-origin',
@@ -352,18 +363,18 @@
     } catch (e) {
       loadingMessage = null;
       console.log('error submitting response:', e);
-    }
+    }*/
   }
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked flex justify-between">
-    {#if state == StudyStates.WELCOME || state == StudyStates.COMPLETE}
-      <span class="white dib mr3">Sepsis Treatment Study</span>
-    {:else if !!studyStimuli && studyIndex >= 0}
+    {#if state == StudyStates.STIMULI}
       <span class="white dib mr3"
         >Patient {studyIndex + 1} of {studyStimuli.length}</span
       >
+    {:else}
+      <span class="white dib mr3">Sepsis Treatment Study</span>
     {/if}
     {#if state > StudyStates.WELCOME && !!participantID && participantID.length > 0}
       <span class="white dib mr3">Participant ID: {participantID}</span>
@@ -381,7 +392,7 @@
   {:else if state == StudyStates.WELCOME}
     <Welcome
       on:initialize={() => initializeStudy()}
-      on:resume={() => resumeFromPrevious()}
+      on:resume={(e) => resumeFromPrevious(e)}
       {resumeErrorMessage}
     />
   {:else if state == StudyStates.PRE_SURVEY}
@@ -462,23 +473,18 @@
             </div>
           </div>
           <div class="prediction-column flex-auto h-100">
+            <Predictions stimulus={studyStimuli[studyIndex]} />
             <div class="information ph4 lh-copy mv4">
-              Using the information to the left, please make an assessment of
-              this patient and choose a dosage level of IV fluids and
-              vasopressors to administer in the next 4 hours.
+              Using the provided information, please make an assessment of this
+              patient and choose a dosage level of IV fluids and vasopressors to
+              administer in the next 4 hours.
             </div>
-            <ActionButtonSet bind:selectedAction />
-            <div class="flex items-center justify-center">
-              <button
-                class="center br2 pa2 link dib white {submitEnabled
-                  ? 'bg-dark-blue hover-bg-navy-dark pointer bg-animate'
-                  : 'bg-light-gray'} f6 b"
-                href="#"
-                disabled={!submitEnabled}
-                on:click={submitResponse}
-              >
-                Submit</button
-              >
+            <div class="ph4">
+              <StimulusQuestions
+                stimulus={studyStimuli[studyIndex]}
+                bind:responses={stimulusResponse}
+                on:continue={submitStimulusResponse}
+              />
             </div>
           </div>
         </div>
