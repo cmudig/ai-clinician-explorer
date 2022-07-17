@@ -44,7 +44,6 @@ def patient():
     return render_template('patient/index.html')
 
 @app.route("/study")
-@login_required
 def study():
     return render_template('study/index.html')
 
