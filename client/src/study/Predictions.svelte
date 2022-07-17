@@ -66,8 +66,13 @@
     {#if stimulus.show_alternative_actions && !!modelQ && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
         The AI Clinician assigned decision quality scores (from -100 to 100) to
-        25 possible IV fluid and vasopressor treatment levels. These are the
-        highest-rated treatment levels:
+        25 possible IV fluid and vasopressor treatment levels, based on <strong
+          >{stateExplanations.action_counts.reduce(
+            (curr, next) => curr + next,
+            0,
+          )} patients</strong
+        > that were observed in this state. These are the highest-rated treatment
+        levels:
       </div>
       <div class="explanations-chart w-100">
         <ActionValueChart

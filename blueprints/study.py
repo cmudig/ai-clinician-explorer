@@ -7,7 +7,7 @@ import string
 
 study_blueprint = Blueprint('study', __name__, url_prefix='/api/study')
 
-stimuli_doc = db.collection('pilot_study_stimuli').document('staging')
+stimuli_doc = db.collection('pilot_study_stimuli').document('cases_220717')
 num_cohorts = stimuli_doc.get().to_dict()['num_cohorts']
 
 results_collection = db.collection('pilot_study_data')
@@ -23,14 +23,23 @@ def get_study_stimuli():
     * TODO more keys (e.g. choices)
     """
     final_set = []
+    seen_ids = set()
     for cohort in range(num_cohorts):
         collection = stimuli_doc.collection('cohort_{}'.format(cohort))
         candidate_patients = [doc for doc in collection.stream()]
         chosen = candidate_patients[np.random.choice(len(candidate_patients))]
+        if any(c.get("patient_id") not in seen_ids for c in candidate_patients):
+            while chosen.get("patient_id") in seen_ids:
+                chosen = candidate_patients[np.random.choice(len(candidate_patients))]
+        else:
+            print(("WARNING: This participant may be shown repeat study " +
+                   "stimuli because there are no stimuli available for cohort " +
+                   "{} that have not already appeared in a previous cohort.").format(cohort))
         chosen_json = chosen.to_dict()
         chosen_json['cohort'] = cohort
         chosen_json['stimulus_id'] = chosen.id
         final_set.append(chosen_json)
+        seen_ids.add(chosen_json["patient_id"])
     return final_set
     
 def make_participant_id():

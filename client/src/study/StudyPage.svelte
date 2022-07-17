@@ -73,6 +73,7 @@
       syncState();
       state += 1;
     } else if (studyIndex == studyStimuli.length) {
+      console.log('advancing state to', state + 1);
       state += 1;
     }
   }
