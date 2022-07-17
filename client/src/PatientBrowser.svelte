@@ -144,7 +144,9 @@
                 on:click={(e) =>
                   window
                     .open(
-                      `/patient?id=${patient.icustayid}&bloc=${patient.bloc}`,
+                      `/patient?id=${patient.icustayid}${
+                        !!patient.bloc ? '&bloc=' + patient.bloc : ''
+                      }`,
                       '_blank',
                     )
                     .focus()}

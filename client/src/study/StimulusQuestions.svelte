@@ -89,7 +89,7 @@
     />
   {/if}
   <button
-    class="center tc br2 pa2 mt3 link dib white bg-dark-blue f6 b {isValidResponse(
+    class="center tc br2 pa2 mt3 mb4 link dib white bg-dark-blue f6 b {isValidResponse(
       responses,
     )
       ? 'hover-bg-navy-dark pointer bg-animate'

@@ -473,6 +473,11 @@
             </div>
           </div>
           <div class="prediction-column flex-auto h-100">
+            {#if !!studyStimuli[studyIndex].narrative}
+              <div class="information ph4 lh-copy mv4">
+                {@html studyStimuli[studyIndex].narrative}
+              </div>
+            {/if}
             <Predictions stimulus={studyStimuli[studyIndex]} />
             <div class="information ph4 lh-copy mv4">
               Using the provided information, please make an assessment of this
