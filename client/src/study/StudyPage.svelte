@@ -421,7 +421,10 @@
             >
           </div>
         {/if}
-        <Demographics showOutcomes={false} />
+        <Demographics
+          showOutcomes={false}
+          patientName={studyStimuli[studyIndex].patient_name}
+        />
       </div>
       {#if !!$patient}
         <div class="patient-info-container flex-auto flex h-100">
@@ -456,7 +459,6 @@
                   { name: 'Fluids/Pressors', value: 1 },
                   { name: 'Antibiotics', value: 2 },
                   { name: 'Cultures', value: 3 },
-                  { name: 'Notes', value: 4 },
                 ]}
               />
             </div>

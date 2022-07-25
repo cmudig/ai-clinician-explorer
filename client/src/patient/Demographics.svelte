@@ -7,11 +7,15 @@
   let { patient } = getContext('patient');
 
   export let showOutcomes = true;
+
+  export let patientName = null;
 </script>
 
 <div class="pv2 ph2 bg-blue-gray white">
   {#if !!$patient}
-    <h3 class="f3 fw3 pl2">Patient {$patient.icustayid}</h3>
+    <h3 class="f3 fw3 pl2">
+      {#if !!patientName}{patientName}{:else}Patient {$patient.icustayid}{/if}
+    </h3>
     <table class="w-100">
       <DataFeature
         dark

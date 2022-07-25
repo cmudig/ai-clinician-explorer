@@ -15,6 +15,9 @@
 
 <div class="center measure-wide pv4">
   <div class="f3 mb3">Pre-Study Survey</div>
+  <p class="lh-copy w-100">
+    For questions without an answer box, you can respond verbally.
+  </p>
   <FreeResponseQuestion question="What is your current role?" />
   <MultipleChoice
     question="Approximately how many years of experience do you have working in the ICU?"
@@ -22,23 +25,31 @@
       { label: '<1 year', value: '0' },
       { label: '1-2 years', value: '1' },
       { label: '3-5 years', value: '2' },
-      { label: '5+ years', value: '3' },
+      { label: '5-10 years', value: '3' },
+      { label: '10+ years', value: '4' },
     ]}
     bind:selectedChoice={responses.yearsExperience}
   />
   <MultipleChoice
-    question="Approximately how many years of experience do you have treating patients with sepsis?"
+    question="Which of the following best describes your level of proficiency with technological devices and programs?"
     choices={[
-      { label: '<1 year', value: '0' },
-      { label: '1-2 years', value: '1' },
-      { label: '3-5 years', value: '2' },
-      { label: '5+ years', value: '3' },
+      { label: 'I have trouble using any technology', value: '0' },
+      {
+        label:
+          'I am comfortable with a few technologies, but I have trouble with most other technologies',
+        value: '1',
+      },
+      {
+        label:
+          'I am comfortable with most technologies, but I have trouble learning new technologies',
+        value: '2',
+      },
+      {
+        label:
+          'I am comfortable with most technologies, and I can easily learn to use new technologies',
+        value: '3',
+      },
     ]}
-    bind:selectedChoice={responses.yearsICUExperience}
-  />
-  <Likert
-    question="How would you rate your proficiency with technology?"
-    elements={['1 - novice', '2', '3', '4', '5', '6', '7 - Power user']}
     bind:response={responses.technologyProficiency}
   />
   <button

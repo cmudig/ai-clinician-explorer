@@ -112,6 +112,7 @@
             baseline={true}
             snapTicks={true}
             label="Score"
+            ticks={5}
           />
           <AxisY gridlines={false} />
           <Bar
