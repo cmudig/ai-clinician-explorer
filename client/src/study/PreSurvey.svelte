@@ -33,15 +33,15 @@
   <MultipleChoice
     question="Which of the following best describes your level of proficiency with technological devices and programs?"
     choices={[
-      { label: 'I have trouble using any technology', value: '0' },
+      { label: 'I have trouble using or learning any technology', value: '0' },
       {
         label:
-          'I am comfortable with a few technologies, but I have trouble with most other technologies',
+          'I am comfortable with a few technologies, but I have trouble learning to use most other technologies',
         value: '1',
       },
       {
         label:
-          'I am comfortable with most technologies, but I have trouble learning new technologies',
+          'I am comfortable with most technologies, but I have trouble learning to use new technologies',
         value: '2',
       },
       {
