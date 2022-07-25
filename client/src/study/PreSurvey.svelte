@@ -9,7 +9,7 @@
   export let responses = {};
 
   function isValidResponse(r) {
-    return r.yearsExperience != null && r.technologyProficiency != null;
+    return true; // r.yearsExperience != null && r.technologyProficiency != null;
   }
 </script>
 
