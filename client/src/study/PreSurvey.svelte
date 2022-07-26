@@ -9,7 +9,8 @@
   export let responses = {};
 
   function isValidResponse(r) {
-    return true; // r.yearsExperience != null && r.technologyProficiency != null;
+    console.log('response', r);
+    return r.yearsExperience != null && r.technologyProficiency != null;
   }
 </script>
 
@@ -50,7 +51,7 @@
         value: '3',
       },
     ]}
-    bind:response={responses.technologyProficiency}
+    bind:selectedChoice={responses.technologyProficiency}
   />
   <button
     class="center tc br2 pa2 mt3 link dib white bg-dark-blue f6 b {isValidResponse(

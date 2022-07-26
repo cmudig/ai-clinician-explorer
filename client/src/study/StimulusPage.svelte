@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import DataStateList from '../patient/DataStateList.svelte';
   import Demographics from '../patient/Demographics.svelte';
   import Treatments from '../patient/Treatments.svelte';
@@ -11,13 +11,41 @@
   import ActionButtonSet from './ActionButtonSet.svelte';
   import StimulusQuestions from './StimulusQuestions.svelte';
 
+  const dispatch = createEventDispatcher();
+
   let { patient, currentBloc } = getContext('patient');
 
   export let stimulus;
   export let stimulusResponse;
+  export let firstPatient = false;
+  export let lastPatient = false;
 
   let treatmentTab = 1;
   let statesTab = StateCategory.VITALS;
+
+  let showingNarrative = false;
+  let oldPatientID = null;
+  $: if (
+    !!$patient &&
+    $patient.icustayid != oldPatientID &&
+    !!stimulus &&
+    !!stimulus.narrative
+  ) {
+    showingNarrative = true;
+    oldPatientID = $patient.icustayid;
+  }
+
+  let currentTime;
+  let dayIndex;
+  $: if (!!$patient && $currentBloc > 0) {
+    console.log($patient, $currentBloc);
+    dayIndex = Math.floor((($currentBloc - 1) * 4) / 24) + 1;
+    let timestamp = $patient.timesteps[$currentBloc - 1].timestep;
+    currentTime = new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      hour12: true,
+    });
+  }
 </script>
 
 {#if !!stimulus}
@@ -28,11 +56,17 @@
           class="timestep-selector bg-navy-gray flex justify-between items-center w-100 pv3 ph3 white"
         >
           <span class="f6 b pb0 mr3"
-            >Day {dayIndex}, {currentTime} ({$currentBloc * 4} hours in ICU)</span
+            >{currentTime}, day {dayIndex} of ICU stay</span
           >
         </div>
       {/if}
-      <Demographics showOutcomes={false} patientName={stimulus.patient_name} />
+      <Demographics
+        showOutcomes={false}
+        patientName={stimulus.patient_name}
+        showReadmission={false}
+        showVentilation={true}
+        showVasopressors={true}
+      />
     </div>
     {#if !!$patient}
       <div class="patient-info-container flex-auto flex h-100">
@@ -85,27 +119,52 @@
         </div>
         <div class="prediction-column flex-auto h-100">
           {#if !!stimulus.narrative}
-            <div class="information ph4 lh-copy mv4">
+            <div class="information ph4 lh-copy mv4 f6">
               {@html stimulus.narrative}
             </div>
           {/if}
           <Predictions {stimulus} />
           <div class="information ph4 lh-copy mv4">
-            Using the provided information, please make an assessment of this
-            patient and choose a dosage level of IV fluids and vasopressors to
-            administer in the next 4 hours.
+            What do you do next for this patient?
           </div>
           <div class="ph4">
             <StimulusQuestions
               {stimulus}
+              submitText={lastPatient ? 'Submit' : 'See Next Patient'}
               bind:responses={stimulusResponse}
-              on:continue={submitStimulusResponse}
+              on:continue={() => dispatch('submit', stimulusResponse)}
             />
           </div>
         </div>
       </div>
     {/if}
   </div>
+  {#if showingNarrative}
+    <div
+      class="overlay w-100 h-100 fixed top-0 left-0 flex flex-column items-center justify-center"
+    >
+      <div class="bg-white pa4 lh-copy measure br3">
+        {#if firstPatient}
+          <p class="mt0">
+            <em
+              >At the beginning of your ICU shift, you are called to the bedside
+              of a patient being treated for sepsis:</em
+            >
+          </p>
+        {/if}
+        {@html stimulus.narrative}
+        <div class="w-100 flex justify-center">
+          <button
+            class="tc br2 pa2 mv3 link dib white bg-dark-blue f6 b hover-bg-navy-dark pointer bg-animate"
+            href="#"
+            on:click={() => (showingNarrative = false)}
+          >
+            See Patient Details</button
+          >
+        </div>
+      </div>
+    </div>
+  {/if}
 {/if}
 
 <style>
@@ -166,5 +225,9 @@
   .arrow.left {
     transform: rotate(135deg);
     -webkit-transform: rotate(135deg);
+  }
+
+  .overlay {
+    background-color: #eeeeeeee;
   }
 </style>

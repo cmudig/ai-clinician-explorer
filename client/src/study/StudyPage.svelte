@@ -7,8 +7,10 @@
   import PreSurvey from './PreSurvey.svelte';
   import PostSurvey from './PostSurvey.svelte';
   import StimulusPage from './StimulusPage.svelte';
+  import Select from 'svelte-select';
 
   export let csrf;
+  export let devMode = false;
 
   const NON_TIMESTEP_COLUMNS = [
     'timesteps',
@@ -56,6 +58,8 @@
 
   let state = StudyStates.WELCOME;
 
+  $: if (devMode && !participantID) initializeStudy();
+
   function advanceState() {
     if (state != StudyStates.STIMULI) {
       syncState();
@@ -67,7 +71,6 @@
   }
 
   async function initializeStudy() {
-    console.log('initializing');
     loadingMessage = 'Initializing study...';
     try {
       let response = await fetch('./api/study/init', {
@@ -76,7 +79,9 @@
         credentials: 'same-origin',
         headers: {
           'X-CSRFToken': csrf,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ dev: devMode ? 1 : 0 }),
       });
       if (response.status != 200) {
         loadingMessage = null;
@@ -94,7 +99,8 @@
       participantID = response.participant_id;
       studyStimuli = response.stimuli;
       studyIndex = 0;
-      advanceState();
+      if (devMode) state = StudyStates.STIMULI;
+      else advanceState();
     } catch (e) {
       console.log('error initializing study:', e);
     }
@@ -113,7 +119,7 @@
           'X-CSRFToken': csrf,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ participant_id: pid }),
+        body: JSON.stringify({ participant_id: pid, dev: devMode ? 1 : 0 }),
       });
       if (response.status != 200) {
         loadingMessage = null;
@@ -255,18 +261,6 @@
     }
   }
 
-  let currentTime;
-  let dayIndex;
-  $: if (!!$patient && $currentBloc > 0) {
-    console.log($patient, $currentBloc);
-    dayIndex = Math.floor((($currentBloc - 1) * 4) / 24) + 1;
-    let timestamp = $patient.timesteps[$currentBloc - 1].timestep;
-    currentTime = new Date(timestamp * 1000).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      hour12: true,
-    });
-  }
-
   async function syncState() {
     try {
       let studyData = {
@@ -318,41 +312,6 @@
       loadingMessage = null;
       console.log('error submitting response:', e);
     }
-    /*try {
-      let response = await fetch('./api/study/update', {
-        method: 'POST',
-        mode: 'same-origin',
-        credentials: 'same-origin',
-        headers: {
-          'X-CSRFToken': csrf,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          participant_id: participantID,
-          state: Object.keys(StudyStates).find((v) => StudyStates[v] == state),
-          study_index: studyIndex,
-          response: {
-            stimulus_id: studyStimuli[studyIndex].stimulus_id,
-            chosen_action: selectedAction,
-            confidence: 5,
-          },
-        }),
-      });
-      if (response.status != 200) {
-        loadingMessage = null;
-        console.log(
-          `error ${response.status} submitting response:`,
-          await response.text(),
-        );
-        return;
-      }
-      loadingMessage = null;
-      response = await response.json();
-      advanceState();
-    } catch (e) {
-      loadingMessage = null;
-      console.log('error submitting response:', e);
-    }*/
   }
 </script>
 
@@ -360,13 +319,45 @@
   <nav class="f6 fw6 ttu tracked flex justify-between">
     {#if state == StudyStates.STIMULI}
       <span class="white dib mr3"
-        >Patient {studyIndex + 1} of {studyStimuli.length}</span
+        >Patient {studyIndex + 1} of {studyStimuli.length}
+        {#if devMode}(Dev){/if}</span
       >
     {:else}
-      <span class="white dib mr3">Sepsis Treatment Study</span>
+      <span class="white dib mr3"
+        >Sepsis Treatment Study {#if devMode}(Dev){/if}</span
+      >
+    {/if}
+    {#if devMode}
+      <div class="flex justify-center items-center">
+        <button
+          class="btn dib link dim white mr3 bg-transparent pointer pa0"
+          disabled={state == 0}
+          on:click={() => (state -= 1)}>Previous Task</button
+        >
+        {#if !!studyStimuli && state == StudyStates.STIMULI}
+          <select
+            bind:value={studyIndex}
+            style="width: 300px; margin-top: -4px; margin-bottom: -4px;"
+          >
+            {#each studyStimuli as s, i}
+              <option value={i}
+                >Condition #{s.cohort + 1}, {s.patient_name || ''} ({s.patient_id}),
+                timestep {s.timestep}</option
+              >
+            {/each}
+          </select>
+        {/if}
+        <button
+          class="btn dib link dim white ml3 bg-transparent pointer pa0"
+          disabled={state == StudyStates.COMPLETE}
+          on:click={() => (state += 1)}>Next Task</button
+        >
+      </div>
     {/if}
     {#if state > StudyStates.WELCOME && !!participantID && participantID.length > 0}
       <span class="white dib mr3">Participant ID: {participantID}</span>
+    {:else if devMode}
+      <span />
     {/if}
   </nav>
 </header>
@@ -399,8 +390,11 @@
     </div>
   {:else if state == StudyStates.STIMULI}
     <StimulusPage
-      patientName={studyStimuli[studyIndex].patient_name}
+      firstPatient={studyIndex == 0}
+      lastPatient={studyIndex == studyStimuli.length - 1}
+      stimulus={studyStimuli[studyIndex]}
       bind:stimulusResponse
+      on:submit={submitStimulusResponse}
     />
   {/if}
 </main>

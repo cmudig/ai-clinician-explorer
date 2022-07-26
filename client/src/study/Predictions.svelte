@@ -35,7 +35,11 @@
 {#if !!stimulus}
   {#if stimulus.show_ai_clinician}
     <div class="information ph4 lh-copy mv4">
-      The AI Clinician recommends {#if vasopressorDose($modelInfo, modelRecommendationIdx) == 0}
+      {#if !stimulus.show_state_explanation && !stimulus.show_alternative_actions}Your
+        hospital has recently implemented a decision support tool called the AI
+        Clinician, an algorithm trained on historical patient outcomes to
+        optimize mortality. For this patient, the{:else}The{/if} AI Clinician recommends
+      {#if vasopressorDose($modelInfo, modelRecommendationIdx) == 0}
         <strong>no vasopressor</strong>{:else}
         a vasopressor dosage of <strong
           >{Math.round(
@@ -52,8 +56,11 @@
     </div>
     {#if stimulus.show_state_explanation && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
-        Out of 750 possible states, AI Clinician categorized this patient as
-        currently in a state characterized by the following features:
+        <strong>Why is the AI Clinician making this recommendation?</strong> The
+        AI Clinician categorized this patient to one of 750 different states, and
+        the recommended action above optimizes mortality for patients within this
+        state. This patient is predicted to be in a state characterized by the following
+        features:
       </div>
       <div class="explanations-chart w-100">
         <FeatureImportanceChart
@@ -65,14 +72,16 @@
     {/if}
     {#if stimulus.show_alternative_actions && !!modelQ && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
-        The AI Clinician assigned decision quality scores (from -100 to 100) to
-        25 possible IV fluid and vasopressor treatment levels, based on <strong
+        <strong>Why is the AI Clinician making this recommendation?</strong> The
+        AI Clinician assigned decision quality scores (from -100 to 100) to 25
+        possible IV fluid and vasopressor treatment levels, based on
+        <strong
           >{stateExplanations.action_counts.reduce(
             (curr, next) => curr + next,
             0,
           )} patients</strong
         > that were observed in this state. These are the highest-rated treatment
-        levels:
+        levels, and the number of patients in the state that received each treatment:
       </div>
       <div class="explanations-chart w-100">
         <ActionValueChart

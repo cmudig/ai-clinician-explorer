@@ -13,8 +13,9 @@ num_cohorts = stimuli_doc.get().to_dict()['num_cohorts']
 results_collection = db.collection('pilot_study_data')
 
 PARTICIPANT_ID_CHARACTERS = string.ascii_uppercase + string.digits
+DEV_PARTICIPANT_ID = "DEV"
 
-def get_study_stimuli():
+def get_study_stimuli(dev=False):
     """
     Retrieves a set of study stimuli for a participant. The returned value is
     a list of dictionaries. Each dictionary will contain the following keys:
@@ -23,23 +24,34 @@ def get_study_stimuli():
     * TODO more keys (e.g. choices)
     """
     final_set = []
-    seen_ids = set()
-    for cohort in range(num_cohorts):
-        collection = stimuli_doc.collection('cohort_{}'.format(cohort))
-        candidate_patients = [doc for doc in collection.stream()]
-        chosen = candidate_patients[np.random.choice(len(candidate_patients))]
-        if any(c.get("patient_id") not in seen_ids for c in candidate_patients):
-            while chosen.get("patient_id") in seen_ids:
-                chosen = candidate_patients[np.random.choice(len(candidate_patients))]
-        else:
-            print(("WARNING: This participant may be shown repeat study " +
-                   "stimuli because there are no stimuli available for cohort " +
-                   "{} that have not already appeared in a previous cohort.").format(cohort))
-        chosen_json = chosen.to_dict()
-        chosen_json['cohort'] = cohort
-        chosen_json['stimulus_id'] = chosen.id
-        final_set.append(chosen_json)
-        seen_ids.add(chosen_json["patient_id"])
+    if dev:
+        # Return a list of all the possible stimuli
+        for cohort in range(num_cohorts):
+            collection = stimuli_doc.collection('cohort_{}'.format(cohort))
+            candidate_patients = [doc for doc in collection.stream()]
+            for chosen in candidate_patients:
+                chosen_json = chosen.to_dict()
+                chosen_json['cohort'] = cohort
+                chosen_json['stimulus_id'] = chosen.id
+                final_set.append(chosen_json)
+    else:
+        seen_ids = set()
+        for cohort in range(num_cohorts):
+            collection = stimuli_doc.collection('cohort_{}'.format(cohort))
+            candidate_patients = [doc for doc in collection.stream()]
+            chosen = candidate_patients[np.random.choice(len(candidate_patients))]
+            if any(c.get("patient_id") not in seen_ids for c in candidate_patients):
+                while chosen.get("patient_id") in seen_ids:
+                    chosen = candidate_patients[np.random.choice(len(candidate_patients))]
+            else:
+                print(("WARNING: This participant may be shown repeat study " +
+                    "stimuli because there are no stimuli available for cohort " +
+                    "{} that have not already appeared in a previous cohort.").format(cohort))
+            chosen_json = chosen.to_dict()
+            chosen_json['cohort'] = cohort
+            chosen_json['stimulus_id'] = chosen.id
+            final_set.append(chosen_json)
+            seen_ids.add(chosen_json["patient_id"])
     return final_set
     
 def make_participant_id():
@@ -60,16 +72,22 @@ def initialize_study():
             participant_id = input_data["participant_id"]
             if not results_collection.document(participant_id).get().exists:
                 return "The Participant ID was not found.", 400
+        else:
+            participant_id = None
     except:
         participant_id = None
+        input_data = {}
     
     if participant_id is None:
-        participant_id = make_participant_id()
-        while results_collection.document(participant_id).get().exists:
+        dev_mode = input_data.get("dev", 0) == 1
+        if dev_mode: participant_id = DEV_PARTICIPANT_ID
+        else: 
             participant_id = make_participant_id()
+            while results_collection.document(participant_id).get().exists:
+                participant_id = make_participant_id()
         data = {
             "participant_id": participant_id,
-            "stimuli": get_study_stimuli()
+            "stimuli": get_study_stimuli(dev=dev_mode)
         }
         results_collection.document(participant_id).set(data)
     else:
