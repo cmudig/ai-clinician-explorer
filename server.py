@@ -70,7 +70,7 @@ def logout():
 # Path for all the static files (compiled JS/CSS, etc.)
 @app.route("/<path:path>")
 def home(path):
-    if path in ("global.css", "favicon.png"):
+    if path in ("global.css", "favicon.png") or path.startswith("assets/"):
         # These files are only in public
         return send_from_directory("client/public", path)
     return send_from_directory(FRONTEND_BUILD_DIR, path)
