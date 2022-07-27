@@ -41,21 +41,6 @@
   <div class="br2 bg-near-white pa4 mb4">
     <MultipleChoice
       background={false}
-      question="IV fluid treatment:"
-      choices={[
-        {
-          label: lastFluidDose > 0 ? 'Increase fluids' : 'Begin fluids',
-          value: '1',
-        },
-        ...(lastFluidDose > 0
-          ? [{ label: 'End or decrease fluids', value: '-1' }]
-          : []),
-        { label: 'No change', value: '0' },
-      ]}
-      bind:selectedChoice={responses.fluidTreatment}
-    />
-    <MultipleChoice
-      background={false}
       question="Vasopressor treatment:"
       choices={[
         {
@@ -69,6 +54,21 @@
         { label: 'No change', value: '0' },
       ]}
       bind:selectedChoice={responses.vasopressorTreatment}
+    />
+    <MultipleChoice
+      background={false}
+      question="IV fluid treatment:"
+      choices={[
+        {
+          label: lastFluidDose > 0 ? 'Increase fluids' : 'Begin fluids',
+          value: '1',
+        },
+        ...(lastFluidDose > 0
+          ? [{ label: 'End or decrease fluids', value: '-1' }]
+          : []),
+        { label: 'No change', value: '0' },
+      ]}
+      bind:selectedChoice={responses.fluidTreatment}
     />
   </div>
   <Likert
@@ -112,7 +112,7 @@
       bind:response={responses.aiClinicianUsefulness}
     />
     <FreeResponseQuestion
-      question="How did the AI Clinician’s recommendation affect your confidence in your treatment choices on this patient?"
+      question="Did the AI Clinician’s recommendation affect your confidence in your treatment choices on this patient? If so, how?"
     />
   {/if}
   <button
