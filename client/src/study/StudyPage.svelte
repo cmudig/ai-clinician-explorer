@@ -53,9 +53,10 @@
   const StudyStates = {
     WELCOME: 0,
     PRE_SURVEY: 1,
-    STIMULI: 2,
-    POST_SURVEY: 3,
-    COMPLETE: 4,
+    TUTORIAL: 2,
+    STIMULI: 3,
+    POST_SURVEY: 4,
+    COMPLETE: 5,
   };
 
   let state = StudyStates.WELCOME;
@@ -385,6 +386,30 @@
     />
   {:else if state == StudyStates.PRE_SURVEY}
     <PreSurvey on:continue={advanceState} bind:responses={preSurveyResponses} />
+  {:else if state == StudyStates.TUTORIAL}
+    <div class="center measure-wide pv4">
+      <div class="f3 mb3 w-100">Tutorial</div>
+      <div class="lh-copy w-100">
+        Please familiarize yourself with the interface you will be using to make
+        treatment decisions today, then click Continue below.
+      </div>
+    </div>
+    <div class="flex w-100 justify-center">
+      <img
+        class="w-60 mb2"
+        src="/assets/tutorial.png"
+        alt="The study patient information interface."
+      />
+    </div>
+    <div class="center measure-wide pv4">
+      <div class="w-100 flex justify-center">
+        <button
+          class="tc br2 pa2 mv3 link dib white bg-dark-blue f6 b hover-bg-navy-dark pointer bg-animate"
+          href="#"
+          on:click={advanceState}>Continue</button
+        >
+      </div>
+    </div>
   {:else if state == StudyStates.POST_SURVEY}
     <PostSurvey
       on:continue={advanceState}
