@@ -45,10 +45,12 @@
     } else {
       let numMins = (end - blocTime) / 60;
       if (Math.abs(numMins) / 60 >= 24)
-        return 'Ended ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
+        return (
+          'Last dose ' + rtf.format(Math.round(numMins / (60 * 24)), 'day')
+        );
       else if (Math.abs(numMins) >= 60)
-        return 'Ended ' + rtf.format(Math.round(numMins / 60), 'hour');
-      return 'Ended ' + rtf.format(Math.round(numMins), 'minute');
+        return 'Last dose ' + rtf.format(Math.round(numMins / 60), 'hour');
+      return 'Last dose ' + rtf.format(Math.round(numMins), 'minute');
     }
   }
 </script>

@@ -13,12 +13,15 @@
   export let showVasopressors = false;
 
   export let patientName = null;
+  export let devMode = false;
 </script>
 
 <div class="pv2 ph2 bg-blue-gray white">
   {#if !!$patient}
     <h3 class="f3 fw3 pl2">
-      {#if !!patientName}{patientName}{:else}Patient {$patient.icustayid}{/if}
+      {#if devMode}
+        {#if !!patientName}{patientName}{/if} - {$patient.icustayid}
+      {:else if !!patientName}{patientName}{:else}Patient {$patient.icustayid}{/if}
     </h3>
     <table class="w-100">
       <DataFeature

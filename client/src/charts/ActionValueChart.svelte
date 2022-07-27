@@ -15,39 +15,54 @@
   let { modelInfo } = getContext('patient');
 
   export let modelQ;
-  export let actionCounts;
+  export let actionProbabilities;
   export let numKeys = 5;
 
   let colorScale;
   let colorScheme = interpolateGreens;
 
   let featureNames = [];
-  $: if (!!modelQ) {
+  $: if (!!modelQ && !!actionProbabilities) {
+    let bigQ = modelQ.reduce(
+      (curr, next) => (next != null ? Math.max(curr, next) : curr),
+      0,
+    );
+    let bigProb = actionProbabilities.reduce(
+      (curr, next) => (next != null ? Math.max(curr, next) : curr),
+      0,
+    );
     let keys = modelQ
-      .map((q, i) => ({ i, q }))
-      .sort((a, b) => b.q - a.q)
+      .map((q, i) => ({ i, q, p: actionProbabilities[i] }))
+      .filter((item) => item.q != null)
+      .sort((a, b) => {
+        if (b.q == bigQ) return 1;
+        else if (b.p == bigProb) return 1;
+        else if (a.q == bigQ) return -1;
+        else if (a.p == bigProb) return -1;
+        return (b.q || 0) * (b.p || 0) - (a.q || 0) * (a.p || 0);
+      })
       .map((x) => x.i);
-    featureNames = keys.slice(0, numKeys);
+    featureNames = keys.slice(0, numKeys).sort((a, b) => modelQ[b] - modelQ[a]);
   }
 
   let barData;
   $: if (
     featureNames.length > 0 &&
     !!$modelInfo &&
-    !!actionCounts &&
+    !!actionProbabilities &&
     !!modelQ
   ) {
     barData = featureNames.map((feature) => ({
       name: makeActionDescription(feature),
       feature,
-      actionCount: actionCounts[feature],
+      actionProb: actionProbabilities[feature] * 100,
       value: modelQ[feature],
     }));
     colorScale = scaleLinear()
       .domain([
         0,
-        actionCounts.reduce(
-          (curr, next) => (next != null ? Math.max(curr, next) : curr),
+        actionProbabilities.reduce(
+          (curr, next) => (next != null ? Math.max(curr, next * 100) : curr),
           0,
         ),
       ])
@@ -89,7 +104,9 @@
 
   let hoveredFeature = null;
   function makeTooltipText(d) {
-    return `Treatment was observed ${d.actionCount} times for patients in this state`;
+    return `Clinicians took this action ${d.actionProb.toFixed(
+      1,
+    )}% of the time`;
   }
 </script>
 
@@ -116,7 +133,7 @@
           />
           <AxisY gridlines={false} />
           <Bar
-            fillFn={(d) => colorScheme(colorScale(d.actionCount))}
+            fillFn={(d) => colorScheme(colorScale(d.actionProb))}
             on:hover={(e) =>
               (hoveredFeature = e.detail != null ? e.detail.feature : null)}
           />
@@ -133,7 +150,7 @@
         valueDomain={colorScale.domain()}
         ticks={colorScale.ticks(5)}
         margin={{ top: 40, bottom: 30, left: 20 }}
-        title="# patients"
+        title="Percentage"
       />
     </div>
   {/if}

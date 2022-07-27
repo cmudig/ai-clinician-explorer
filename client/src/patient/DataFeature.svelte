@@ -135,7 +135,10 @@
             textAnchor="end"
             dyTick="0.5em"
           />
-          <Line stroke="steelblue" dashFn={suspectedMissingValue} />
+          <Line
+            stroke="steelblue"
+            dashFn={highlightImputedValues ? suspectedMissingValue : null}
+          />
         </Svg>
         <Html pointerEvents={false}>
           <Tooltip formatText={missingValueExplanation} />

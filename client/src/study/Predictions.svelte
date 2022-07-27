@@ -72,21 +72,23 @@
     {/if}
     {#if stimulus.show_alternative_actions && !!modelQ && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
-        <strong>Why is the AI Clinician making this recommendation?</strong> The
-        AI Clinician assigned decision quality scores (from -100 to 100) to 25
-        possible IV fluid and vasopressor treatment levels, based on
-        <strong
-          >{stateExplanations.action_counts.reduce(
-            (curr, next) => curr + next,
-            0,
-          )} patients</strong
-        > that were observed in this state. These are the highest-rated treatment
-        levels, and the number of patients in the state that received each treatment:
+        <p>
+          <strong>Why is the AI Clinician making this recommendation?</strong>
+          The AI Clinician assigned decision quality scores (from -100 to 100)
+          to 25 possible IV fluid and vasopressor treatment levels, based on
+          <strong>{stateExplanations.stay_count} patients</strong> that were observed
+          in this state.
+        </p>
+        <p>
+          Here are the quality scores for some possible treatment plans. Darker
+          colors indicate that a treatment action was taken more frequently for
+          patients in this state.
+        </p>
       </div>
       <div class="explanations-chart w-100">
         <ActionValueChart
           {modelQ}
-          actionCounts={stateExplanations.action_counts}
+          actionProbabilities={stateExplanations.physician_prob}
         />
       </div>
     {/if}

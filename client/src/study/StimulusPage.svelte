@@ -15,6 +15,7 @@
 
   let { patient, currentBloc } = getContext('patient');
 
+  export let devMode = false;
   export let stimulus;
   export let stimulusResponse;
   export let firstPatient = false;
@@ -26,6 +27,7 @@
   let showingNarrative = false;
   let oldPatientID = null;
   $: if (
+    !devMode &&
     !!$patient &&
     $patient.icustayid != oldPatientID &&
     !!stimulus &&
@@ -61,6 +63,7 @@
         </div>
       {/if}
       <Demographics
+        {devMode}
         showOutcomes={false}
         patientName={stimulus.patient_name}
         showReadmission={false}

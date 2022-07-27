@@ -41,6 +41,8 @@
   let studyStimuli;
   let studyIndex = -1;
 
+  let modelPredictionsPatientID = null;
+
   let resumeErrorMessage = null;
 
   let preSurveyResponses;
@@ -178,7 +180,12 @@
     }
   }
 
-  $: if (!!$patient && $modelPredictions == null && !!modelID) {
+  $: if (
+    !!$patient &&
+    ($modelPredictions == null ||
+      modelPredictionsPatientID != $patient.icustayid) &&
+    !!modelID
+  ) {
     loadModelPrediction($patient, $currentBloc);
   }
 
@@ -254,6 +261,7 @@
       response = await response.json();
       console.log('response', response);
       $modelPredictions = response.results;
+      modelPredictionsPatientID = patientInfo.icustayid;
       loadingMessage = null;
     } catch (e) {
       console.log('error loading model prediction:', e);
@@ -332,7 +340,7 @@
         <button
           class="btn dib link dim white mr3 bg-transparent pointer pa0"
           disabled={state == 0}
-          on:click={() => (state -= 1)}>Previous Task</button
+          on:click={() => (state -= 1)}>Previous Section</button
         >
         {#if !!studyStimuli && state == StudyStates.STIMULI}
           <select
@@ -350,7 +358,7 @@
         <button
           class="btn dib link dim white ml3 bg-transparent pointer pa0"
           disabled={state == StudyStates.COMPLETE}
-          on:click={() => (state += 1)}>Next Task</button
+          on:click={() => (state += 1)}>Next Section</button
         >
       </div>
     {/if}
@@ -393,6 +401,7 @@
       firstPatient={studyIndex == 0}
       lastPatient={studyIndex == studyStimuli.length - 1}
       stimulus={studyStimuli[studyIndex]}
+      {devMode}
       bind:stimulusResponse
       on:submit={submitStimulusResponse}
     />

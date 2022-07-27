@@ -196,7 +196,7 @@
         expanded: true,
         rows: [
           {
-            name: 'Ever ventilated?',
+            name: 'Previously ventilated?',
             computed: (tp) => (everVentilated(tp) ? 'Yes' : 'No'),
           },
           {
