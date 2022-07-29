@@ -4,6 +4,7 @@
   import AxisY from '../charts/AxisY.svelte';
   import ShadingX from '../charts/ShadingX.svelte';
   import Tooltip from '../charts/Tooltip.svelte';
+  import AxisX from '../charts/AxisX.svelte';
 
   export let dark = false;
 
@@ -13,27 +14,57 @@
   export let valueColor = null;
   export let trend = 0;
   export let maxDecimals = 3;
+  export let numHoursPerStep = 4; // number of hours between each historical value
   export let historicalValues = [];
   export let extremeValue = 0; // 1 = too high, -1 = too low
   export let patientID = null;
   export let highlightImputedValues = true;
   export let highlightHeldValues = false;
+  export let valueTooltips = false;
 
   let historicalData = [];
 
   let valueString;
   $: {
-    if (value === null || value === undefined) valueString = '--';
-    else if (value instanceof String) valueString = value;
-    else valueString = formatNumber(value);
+    valueString = formatValue(value, maxDecimals);
   }
 
-  function formatNumber(num) {
+  function formatValue(num, dec) {
+    if (num === null || num === undefined) return '--';
+    else if (num instanceof String) return num;
+
     if (Math.abs(Math.round(num) - num) <= 0.00001) return num.toString();
     else
       return num.toLocaleString('en-US', {
-        maximumFractionDigits: maxDecimals,
+        maximumFractionDigits: dec,
       });
+  }
+
+  function formatTimeDelta(deltaDays, short = false) {
+    // calculate how far away dataIndex is from the end of the list of historical values
+    let hours = Math.round(deltaDays * 24);
+    if (short) {
+      if (hours == 0) return 'now';
+      if (historicalData.length > (24 / numHoursPerStep) * 1.5 && hours < 0) {
+        return hours == 0 ? '' : `${hours}h`;
+      }
+      return `${deltaDays.toLocaleString({ maximumFractionDigits: 1 })}d`;
+    }
+    return hours == 0 ? 'Just now' : hours + ' hours ago';
+  }
+
+  function createXTicks(data) {
+    if (data.every((d) => d.value === null || d.value === undefined)) return [];
+    if (data.length <= 24 / numHoursPerStep) {
+      // tick every interval
+      return data.map((d) => d.t);
+    } else if ((data.length * numHoursPerStep) / 24 <= 2) {
+      // every 12 h
+      return data.map((d) => d.t).filter((d) => Math.round(d / 0.5) * 0.5 == d);
+    } else {
+      // every day
+      return data.map((d) => d.t).filter((d) => Math.round(d) == d);
+    }
   }
 
   $: {
@@ -42,7 +73,8 @@
     } else {
       historicalData = historicalValues.map((v, i) => {
         return {
-          t: i,
+          i,
+          t: (i + 1 - historicalValues.length) / (24 / numHoursPerStep), // time in days from end
           value: v.value,
         };
       });
@@ -66,12 +98,12 @@
   $: if (extremeValue != 0) defaultColor = dark ? 'light-red' : 'dark-red';
   else defaultColor = dark ? 'white' : 'black';
 
-  let hoveredMissingValueSegment = null;
+  let hoveredSegment = null;
 
   function suspectedMissingValue(d, knn = true, sah = true) {
     // Look up its provenance
     if (d.value == null) return false;
-    let provenance = historicalValues[d.t].provenance;
+    let provenance = historicalValues[d.i].provenance;
     if (!provenance) return false;
     if (knn && !!provenance.KNN && !!patientID && provenance.KNN != patientID)
       return true;
@@ -79,8 +111,15 @@
     return false;
   }
 
+  function valueTooltipFn(d) {
+    return `${formatTimeDelta(d.t, false)}: <strong>${formatValue(
+      d.value,
+      maxDecimals,
+    )} ${!!unit ? unit : ''}</strong>`;
+  }
+
   function missingValueExplanation(d) {
-    let provenance = historicalValues[d.t].provenance;
+    let provenance = historicalValues[d.i].provenance;
     if (!provenance) return '';
     if (!!provenance.KNN && !!patientID && provenance.KNN != patientID) {
       return 'Values imputed';
@@ -109,39 +148,66 @@
         x="t"
         y="value"
         data={historicalData}
-        padding={{ left: 4 }}
-        custom={{ hoveredGet: (d) => d.t == hoveredMissingValueSegment }}
+        padding={{ left: 4, bottom: 8 }}
+        custom={{
+          hoveredGet: (d) => {
+            if (valueTooltips || highlightImputedValues || highlightHeldValues)
+              return d.i == hoveredSegment;
+            return false;
+          },
+        }}
       >
         <Svg>
           <ShadingX
             highlightFn={(d) => suspectedMissingValue(d, true, false)}
             color={highlightImputedValues ? '#FF725C33' : 'transparent'}
             on:hover={(e) =>
-              (hoveredMissingValueSegment =
-                e.detail != null ? e.detail.t : null)}
+              (hoveredSegment =
+                e.detail != null && highlightImputedValues ? e.detail.i : null)}
           />
           <ShadingX
             highlightFn={(d) => suspectedMissingValue(d, false, true)}
             color={highlightHeldValues ? '#FF725C33' : 'transparent'}
             on:hover={(e) =>
-              (hoveredMissingValueSegment =
-                e.detail != null ? e.detail.t : null)}
+              (hoveredSegment =
+                e.detail != null && highlightHeldValues ? e.detail.i : null)}
+          />
+          <AxisX
+            gridlines={false}
+            tickMarks={false}
+            ticks={createXTicks(historicalData)}
+            formatTick={(t) => formatTimeDelta(t, true)}
+            color="#999"
+            snapTicks={true}
           />
           <AxisY
             gridlines={false}
             tickMarks={false}
             {ticks}
-            formatTick={formatNumber}
+            formatTick={(t) => formatValue(t, maxDecimals)}
             textAnchor="end"
             dyTick="0.5em"
+            color="#999"
           />
           <Line
             stroke="steelblue"
             dashFn={highlightImputedValues ? suspectedMissingValue : null}
           />
+          {#if valueTooltips}
+            <ShadingX
+              highlightFn={(d) => true}
+              color="transparent"
+              on:hover={(e) =>
+                (hoveredSegment = e.detail != null ? e.detail.i : null)}
+            />
+          {/if}
         </Svg>
         <Html pointerEvents={false}>
-          <Tooltip formatText={missingValueExplanation} />
+          <Tooltip
+            formatText={valueTooltips
+              ? valueTooltipFn
+              : missingValueExplanation}
+          />
         </Html>
       </LayerCake>
     {/if}

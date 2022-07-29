@@ -12,6 +12,7 @@
   export let category; // category of features to display - null displays all
   export let highlightImputedValues = true;
   export let highlightHeldValues = false;
+  export let valueTooltips = false;
 
   let timePoint;
   let lastTimePoint;
@@ -310,7 +311,7 @@
             feature: Columns.C_CUMULATED_BALANCE,
             maxDecimals: 0,
             name: 'Fluid Balance',
-            unit: 'ml/4h',
+            unit: 'ml',
           },
         ],
       },
@@ -412,6 +413,7 @@
                 unit={row.unit}
                 {highlightHeldValues}
                 {highlightImputedValues}
+                {valueTooltips}
               />
             {/if}
           {/each}

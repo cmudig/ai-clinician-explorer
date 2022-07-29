@@ -4,7 +4,7 @@
  -->
 <script>
   import { getContext } from 'svelte';
-  const { width, height, xScale, yRange } = getContext('LayerCake');
+  const { width, height, xScale, xDomain, yRange } = getContext('LayerCake');
 
   /** @type {Boolean} [gridlines=true] - Extend lines from the ticks into the chart space */
   export let gridlines = true;
@@ -32,6 +32,8 @@
 
   export let label = '';
 
+  export let color = '#333';
+
   $: isBandwidth = typeof $xScale.bandwidth === 'function';
 
   $: tickVals = Array.isArray(ticks)
@@ -42,12 +44,12 @@
     ? ticks($xScale.ticks())
     : $xScale.ticks(ticks);
 
-  function textAnchor(i) {
+  function textAnchor(x) {
     if (snapTicks === true) {
-      if (i === 0) {
+      if (x == $xDomain[0]) {
         return 'start';
       }
-      if (i === tickVals.length - 1) {
+      if (x == $xDomain[1]) {
         return 'end';
       }
     }
@@ -78,7 +80,8 @@
         y={yTick}
         dx=""
         dy=""
-        text-anchor={textAnchor(i)}>{formatTick(tick)}</text
+        style="fill: {color};"
+        text-anchor={textAnchor(tick)}>{formatTick(tick)}</text
       >
     </g>
   {/each}
@@ -97,6 +100,7 @@
       y={$height}
       dy="36px"
       text-anchor="middle"
+      style="fill: {color};"
       class="axis-label">{label}</text
     >
   {/if}
@@ -112,10 +116,6 @@
   .tick line {
     stroke: #aaa;
     stroke-dasharray: 2;
-  }
-
-  .tick text {
-    fill: #333;
   }
 
   .tick .tick-mark,

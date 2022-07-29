@@ -102,6 +102,7 @@
             <DataStateList
               category={statesTab}
               highlightImputedValues={false}
+              valueTooltips={true}
             />
           </div>
           <div
@@ -121,6 +122,7 @@
               <DataStateList
                 category={StateCategory.FLUIDS_PRESSORS}
                 highlightImputedValues={false}
+                valueTooltips={true}
               />
             {:else if treatmentTab == 2}
               <Antibiotics />

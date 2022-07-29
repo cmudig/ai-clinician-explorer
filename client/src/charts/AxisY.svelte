@@ -34,6 +34,8 @@
   /** @type {String} [textAnchor='start'] The CSS `text-anchor` passed to the label. This is automatically set to "end" if the scale has a bandwidth method, like in ordinal scales. */
   export let textAnchor = 'start';
 
+  export let color = '#333';
+
   export let label;
 
   $: isBandwidth = typeof $yScale.bandwidth === 'function';
@@ -75,14 +77,16 @@
         y={yTick + (isBandwidth ? $yScale.bandwidth() / 2 : 0)}
         dx={isBandwidth ? -9 : dxTick}
         dy={isBandwidth ? 4 : dyTick}
-        style="text-anchor:{isBandwidth ? 'end' : textAnchor};"
+        style="text-anchor:{isBandwidth ? 'end' : textAnchor}; fill: {color};"
         >{formatTick(tick)}</text
       >
     </g>
   {/each}
   {#if !!label}
     <g class="axis-label" transform="translate(-18, {$height}) rotate(-90)">
-      <text x={$height * 0.5} y={0} text-anchor="middle">{label}</text>
+      <text x={$height * 0.5} y={0} text-anchor="middle" style="fill: {color};"
+        >{label}</text
+      >
     </g>
   {/if}
 </g>
@@ -98,10 +102,6 @@
   }
   .tick .gridline {
     stroke-dasharray: 2;
-  }
-
-  .tick text {
-    fill: #333;
   }
 
   .tick.tick-0 line {

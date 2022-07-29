@@ -16,7 +16,7 @@
     if (
       !!stimulus &&
       stimulus.show_ai_clinician &&
-      r.aiClinicianUsefulness == null
+      (r.aiClinicianUsefulness == null || r.aiClinicianConfidenceEffect == null)
     )
       return false;
     return r.confidence != null && r.caseDifficulty != null;
@@ -94,8 +94,13 @@
         ]}
         bind:response={responses.aiClinicianUsefulness}
       />
-      <FreeResponseQuestion
+      <MultipleChoice
         question="Did the AI Clinician’s recommendation affect your confidence in your treatment choices on this patient? If so, how?"
+        choices={[
+          { label: 'Yes', value: 1 },
+          { label: 'No', value: 0 },
+        ]}
+        bind:selectedChoice={responses.aiClinicianConfidenceEffect}
       />
     {/if}
     <button
