@@ -8,6 +8,7 @@
   import PostSurvey from './PostSurvey.svelte';
   import StimulusPage from './StimulusPage.svelte';
   import Select from 'svelte-select';
+  import StimulusQuestions from './StimulusQuestions.svelte';
 
   export let csrf;
   export let devMode = false;
@@ -47,7 +48,7 @@
 
   let preSurveyResponses;
   let postSurveyResponses;
-  let stimulusResponse;
+  let stimulusResponse = {};
   let allStimulusResponses = [];
 
   const StudyStates = {
@@ -55,8 +56,9 @@
     PRE_SURVEY: 1,
     TUTORIAL: 2,
     STIMULI: 3,
-    POST_SURVEY: 4,
-    COMPLETE: 5,
+    POST_STIMULUS: 4,
+    POST_SURVEY: 5,
+    COMPLETE: 6,
   };
 
   let state = StudyStates.WELCOME;
@@ -64,11 +66,14 @@
   $: if (devMode && !participantID) initializeStudy();
 
   function advanceState() {
-    if (state != StudyStates.STIMULI) {
-      syncState();
-      state += 1;
-    } else if (studyIndex == studyStimuli.length) {
-      console.log('advancing state to', state + 1);
+    syncState();
+
+    if (
+      state == StudyStates.POST_STIMULUS &&
+      studyIndex < studyStimuli.length - 1
+    ) {
+      state -= 1;
+    } else {
       state += 1;
     }
   }
@@ -139,7 +144,7 @@
       state = StudyStates[response.state] || StudyStates.WELCOME;
       studyIndex = response.study_index != null ? response.study_index : 0;
       console.log(state, studyIndex);
-      advanceState();
+      if (state != StudyStates.STIMULI) advanceState();
       console.log(state, studyIndex);
       loadingMessage = null;
     } catch (e) {
@@ -313,20 +318,13 @@
     stimulusResponse = {};
     $modelPredictions = null;
     studyIndex += 1;
-    try {
-      await syncState();
-      loadingMessage = null;
-      advanceState();
-    } catch (e) {
-      loadingMessage = null;
-      console.log('error submitting response:', e);
-    }
+    advanceState();
   }
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked flex justify-between">
-    {#if state == StudyStates.STIMULI}
+    {#if state == StudyStates.STIMULI || state == StudyStates.POST_STIMULUS}
       <span class="white dib mr3"
         >Patient {studyIndex + 1} of {studyStimuli.length}
         {#if devMode}(Dev){/if}</span
@@ -424,11 +422,19 @@
   {:else if state == StudyStates.STIMULI}
     <StimulusPage
       firstPatient={studyIndex == 0}
-      lastPatient={studyIndex == studyStimuli.length - 1}
       stimulus={studyStimuli[studyIndex]}
       {devMode}
-      bind:stimulusResponse
-      on:submit={submitStimulusResponse}
+      bind:responses={stimulusResponse}
+      on:continue={advanceState}
+    />
+  {:else if state == StudyStates.POST_STIMULUS}
+    <StimulusQuestions
+      stimulus={studyStimuli[studyIndex]}
+      submitText={studyIndex == studyStimuli.length - 1
+        ? 'Submit'
+        : 'See Next Patient'}
+      bind:responses={stimulusResponse}
+      on:continue={() => submitStimulusResponse()}
     />
   {/if}
 </main>

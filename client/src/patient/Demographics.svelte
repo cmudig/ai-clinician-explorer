@@ -11,6 +11,7 @@
   export let showReadmission = true;
   export let showVentilation = false;
   export let showVasopressors = false;
+  export let showLOS = false;
 
   export let patientName = null;
   export let devMode = false;
@@ -44,6 +45,13 @@
           dark
           feature="Is Re-Admission"
           value={$patient.re_admission ? 'Yes' : 'No'}
+        />
+      {/if}
+      {#if showLOS}
+        <DataFeature
+          dark
+          feature="Time in ICU"
+          value={`${($currentBloc - 1) * 4} hrs`}
         />
       {/if}
       {#if showVentilation}

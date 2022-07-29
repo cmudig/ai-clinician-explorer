@@ -10,6 +10,8 @@
   import { StateCategory } from '../utils/strings';
   import ActionButtonSet from './ActionButtonSet.svelte';
   import StimulusQuestions from './StimulusQuestions.svelte';
+  import MultipleChoice from './MultipleChoice.svelte';
+  import Columns from '../utils/columns';
 
   const dispatch = createEventDispatcher();
 
@@ -17,9 +19,8 @@
 
   export let devMode = false;
   export let stimulus;
-  export let stimulusResponse;
+  export let responses;
   export let firstPatient = false;
-  export let lastPatient = false;
 
   let treatmentTab = 1;
   let statesTab = StateCategory.VITALS;
@@ -48,32 +49,40 @@
       hour12: true,
     });
   }
+
+  let lastFluidDose = 0;
+  let lastVasoDose = 0;
+  $: if (!!$patient && !!$currentBloc) {
+    lastFluidDose =
+      $patient.timesteps[$currentBloc - 1][Columns.C_INPUT_STEP].value;
+    lastVasoDose =
+      $patient.timesteps[$currentBloc - 1][Columns.C_MAX_DOSE_VASO].value;
+  }
+
+  function isValidResponse(r) {
+    return r.fluidTreatment != null && r.vasopressorTreatment != null;
+  }
 </script>
 
-{#if !!stimulus}
+{#if !!stimulus && !!$patient}
   <div class="flex align-stretch h-100">
-    <div class="sidebar bg-blue-gray">
-      {#if !!$patient}
-        <div
-          class="timestep-selector bg-navy-gray flex justify-between items-center w-100 pv3 ph3 white"
-        >
-          <span class="f6 b pb0 mr3"
-            >{currentTime}, day {dayIndex} of ICU stay</span
-          >
+    <div class="patient-data-view flex flex-column h-100">
+      <!-- <div class="study-guide-header pa2 tc f4 bg-light-blue-gray">
+        Assess Patient
+      </div> -->
+      <div class="patient-data-view-content flex flex-auto">
+        <div class="sidebar bg-blue-gray">
+          <Demographics
+            {devMode}
+            showOutcomes={false}
+            patientName={stimulus.patient_name}
+            showReadmission={false}
+            showVentilation={true}
+            showVasopressors={true}
+            showLOS={true}
+          />
         </div>
-      {/if}
-      <Demographics
-        {devMode}
-        showOutcomes={false}
-        patientName={stimulus.patient_name}
-        showReadmission={false}
-        showVentilation={true}
-        showVasopressors={true}
-      />
-    </div>
-    {#if !!$patient}
-      <div class="patient-info-container flex-auto flex h-100">
-        <div class="data-column flex flex-column flex-auto h-100">
+        <div class="data-column flex flex-column h-100">
           <div
             class="context-info-controls pa2 flex items-center bg-near-white"
           >
@@ -120,27 +129,77 @@
             {/if}
           </div>
         </div>
-        <div class="prediction-column flex-auto h-100">
-          {#if !!stimulus.narrative}
-            <div class="information ph4 lh-copy mv4 f6">
-              {@html stimulus.narrative}
-            </div>
-          {/if}
-          <Predictions {stimulus} />
-          <div class="information ph4 lh-copy mv4">
-            What do you do next for this patient?
-          </div>
-          <div class="ph4">
-            <StimulusQuestions
-              {stimulus}
-              submitText={lastPatient ? 'Submit' : 'See Next Patient'}
-              bind:responses={stimulusResponse}
-              on:continue={() => dispatch('submit', stimulusResponse)}
-            />
-          </div>
-        </div>
       </div>
-    {/if}
+    </div>
+
+    <div class="flex-auto flex flex-column h-100">
+      <!-- <div class="study-guide-header pa2 tc f4 bg-light-blue-gray">
+        Make Decision
+      </div> -->
+      <div class="prediction-column flex-auto h-100">
+        {#if !!stimulus.narrative}
+          <div class="information br2 bg-near-white pa3 ma4 lh-copy mv4 f6 ">
+            <strong>Narrative: </strong>{@html stimulus.narrative}
+          </div>
+        {/if}
+        <Predictions {stimulus} />
+        <div class="information ph4 lh-copy mv4">
+          What do you do next for this patient?
+        </div>
+        {#if !!responses}
+          <div class="ph4">
+            <div class="br2 bg-near-white pa4 mb4">
+              <MultipleChoice
+                background={false}
+                question="Vasopressor treatment:"
+                choices={[
+                  {
+                    label:
+                      lastVasoDose > 0
+                        ? 'Increase vasopressors'
+                        : 'Begin vasopressors',
+                    value: '1',
+                  },
+                  ...(lastVasoDose > 0
+                    ? [{ label: 'End or decrease vasopressors', value: '-1' }]
+                    : []),
+                  { label: 'No change', value: '0' },
+                ]}
+                bind:selectedChoice={responses.vasopressorTreatment}
+              />
+              <MultipleChoice
+                background={false}
+                question="IV fluid treatment:"
+                choices={[
+                  {
+                    label:
+                      lastFluidDose > 0 ? 'Increase fluids' : 'Begin fluids',
+                    value: '1',
+                  },
+                  ...(lastFluidDose > 0
+                    ? [{ label: 'End or decrease fluids', value: '-1' }]
+                    : []),
+                  { label: 'No change', value: '0' },
+                ]}
+                bind:selectedChoice={responses.fluidTreatment}
+              />
+            </div>
+            <button
+              class="center tc br2 pa2 mt3 mb4 link dib white bg-dark-blue f6 b {isValidResponse(
+                responses,
+              )
+                ? 'hover-bg-navy-dark pointer bg-animate'
+                : 'o-50'}"
+              disabled={!isValidResponse(responses)}
+              href="#"
+              on:click={() => dispatch('continue')}
+            >
+              Continue</button
+            >
+          </div>
+        {/if}
+      </div>
+    </div>
   </div>
   {#if showingNarrative}
     <div
@@ -186,9 +245,16 @@
     background-color: #2e3847;
   }
 
-  .data-column {
-    flex-basis: 60%;
+  .patient-data-view {
     border-right: 1px solid #777777;
+  }
+
+  .study-guide-header {
+    border-bottom: 1px solid #777777;
+  }
+
+  .data-column {
+    width: 480px;
   }
 
   .data-state {
