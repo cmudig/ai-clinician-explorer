@@ -45,7 +45,7 @@
     let hours = Math.round(deltaDays * 24);
     if (short) {
       if (hours == 0) return 'now';
-      if (historicalData.length > (24 / numHoursPerStep) * 1.5 && hours < 0) {
+      if (historicalData.length <= (24 / numHoursPerStep) * 2 && hours < 0) {
         return hours == 0 ? '' : `${hours}h`;
       }
       return `${deltaDays.toLocaleString({ maximumFractionDigits: 1 })}d`;
