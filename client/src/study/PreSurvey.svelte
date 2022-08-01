@@ -23,6 +23,9 @@
 
 <div class="center measure-wide pv4">
   <div class="f3 mb3">Pre-Study Survey</div>
+  <p class="measure-wide lh-copy">
+    Throughout the study, please feel free to expand on any answer verbally.
+  </p>
   <MultipleChoice
     question="Which job title best describes you?"
     choices={[

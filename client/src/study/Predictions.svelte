@@ -41,11 +41,11 @@
         optimize mortality. For this patient, the{:else}The{/if} AI Clinician recommends
       {#if vasopressorDose($modelInfo, modelRecommendationIdx) == 0}
         <strong>no vasopressor</strong>{:else}
-        a vasopressor dosage of <strong
+        a dosage of <strong
           >{Math.round(
             vasopressorDose($modelInfo, modelRecommendationIdx) * 1000,
           ) / 1000} ug/kg/min</strong
-        >
+        > norepinephrine-equivalent vasopressor
       {/if} and {#if fluidDose($modelInfo, modelRecommendationIdx) == 0}
         <strong>no IV fluids</strong>
       {:else}
@@ -74,8 +74,8 @@
       <div class="information ph4 lh-copy mv4">
         <p>
           <strong>Why is the AI Clinician making this recommendation?</strong>
-          The AI Clinician assigned decision quality scores (from -100 to 100)
-          to 25 possible IV fluid and vasopressor treatment levels, based on
+          The AI Clinician estimated decision quality scores (from -100 to 100) to
+          25 possible IV fluid and vasopressor treatment levels, based on
           <strong>{stateExplanations.stay_count} patients</strong> that were observed
           in this state.
         </p>
