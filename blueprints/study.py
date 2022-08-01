@@ -7,7 +7,7 @@ import string
 
 study_blueprint = Blueprint('study', __name__, url_prefix='/api/study')
 
-stimuli_doc = db.collection('pilot_study_stimuli').document('cases_220727')
+stimuli_doc = db.collection('pilot_study_stimuli').document('cases_220801')
 num_cohorts = stimuli_doc.get().to_dict()['num_cohorts']
 
 results_collection = db.collection('pilot_study_data')
