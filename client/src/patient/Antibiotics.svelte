@@ -41,6 +41,7 @@
         return 'Started ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
       else if (Math.abs(numMins) >= 60)
         return 'Started ' + rtf.format(Math.round(numMins / 60), 'hour');
+      else if (Math.abs(numMins) <= 2) return 'Started just now';
       return 'Started ' + rtf.format(Math.round(numMins), 'minute');
     } else {
       let numMins = (end - blocTime) / 60;

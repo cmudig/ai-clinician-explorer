@@ -7,6 +7,8 @@
   let { patient, modelInfo, modelPredictions, currentBloc } =
     getContext('patient');
 
+  let { modelName } = getContext('strings');
+
   export let stimulus;
 
   let modelRecommendationIdx;
@@ -35,32 +37,39 @@
 {#if !!stimulus}
   {#if stimulus.show_ai_clinician}
     <div class="information ph4 lh-copy mv4">
-      {#if !stimulus.show_state_explanation && !stimulus.show_alternative_actions}Your
-        hospital has recently implemented a decision support tool called the AI
-        Clinician, an algorithm trained on historical patient outcomes to
-        optimize mortality. For this patient, the{:else}The{/if} AI Clinician recommends
+      {#if !stimulus.show_state_explanation && !stimulus.show_alternative_actions}<p
+        >
+          Your hospital has recently implemented a computerized decision support
+          tool for sepsis called {@html $modelName}. {@html $modelName} analyzes
+          patients’ electronic health records and uses an artificial intelligence-based
+          algorithm to recommend fluids and vasopressor doses that optimize mortality
+          based on historical data.
+        </p>{/if}
+
+      For this patient, {@html $modelName} is recommending
       {#if vasopressorDose($modelInfo, modelRecommendationIdx) == 0}
         <strong>no vasopressor</strong>{:else}
-        a dosage of <strong
+        a vasopressor at a dose of <strong
           >{Math.round(
             vasopressorDose($modelInfo, modelRecommendationIdx) * 1000,
           ) / 1000} ug/kg/min</strong
-        > norepinephrine-equivalent vasopressor
+        > norepinephrine-equivalents
       {/if} and {#if fluidDose($modelInfo, modelRecommendationIdx) == 0}
-        <strong>no IV fluids</strong>
+        <strong>no IV fluids</strong>.
       {:else}
+        IV fluids at a dose of
         <strong
-          >{Math.round(fluidDose($modelInfo, modelRecommendationIdx))} mL/4h</strong
+          >{Math.round(fluidDose($modelInfo, modelRecommendationIdx))} mL</strong
         >
-        IV fluids{/if}.
+        over the next 4 hours.{/if}
     </div>
     {#if stimulus.show_state_explanation && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
-        <strong>Why is the AI Clinician making this recommendation?</strong> The
-        AI Clinician categorized this patient to one of 750 different states, and
-        the recommended action above optimizes mortality for patients within this
-        state. This patient is predicted to be in a state characterized by the following
-        features:
+        <strong>Why is {@html $modelName} making this recommendation?</strong>
+        {@html $modelName} categorized this patient to one of 750 different states,
+        and the recommended action above optimizes mortality for patients within
+        this state. This patient is predicted to be in a state characterized by the
+        following features:
       </div>
       <div class="explanations-chart w-100">
         <FeatureImportanceChart
@@ -73,16 +82,18 @@
     {#if stimulus.show_alternative_actions && !!modelQ && !!stateExplanations}
       <div class="information ph4 lh-copy mv4">
         <p>
-          <strong>Why is the AI Clinician making this recommendation?</strong>
-          The AI Clinician estimated decision quality scores (from -100 to 100) to
-          25 possible IV fluid and vasopressor treatment levels, based on
-          <strong>{stateExplanations.stay_count} patients</strong> that were observed
-          in this state.
+          <strong>Why is {@html $modelName} making this recommendation?</strong>
+          {@html $modelName} estimated decision quality scores (from -100 to 100)
+          to 25 possible IV fluid and vasopressor treatment levels, based on
+          <strong>{stateExplanations.stay_count} patients</strong> that were
+          observed in this state. A higher quality score means that patients
+          receiving that treatment experienced better outcomes. {@html $modelName}
+          is programmed to recommend the treatment with the highest quality score.
         </p>
         <p>
-          Here are the quality scores for some possible treatment plans. Darker
-          colors indicate that a treatment action was taken more frequently for
-          patients in this state.
+          Here are the quality scores for some possible treatment plans.
+          Darker-colored bars indicate that a treatment action was taken more
+          frequently for patients in this state, regardless of outcome.
         </p>
       </div>
       <div class="explanations-chart w-100">

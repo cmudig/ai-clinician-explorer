@@ -9,7 +9,7 @@
 <div class="br2 bg-near-white pa4 mb4">
   <form action="">
     <label for="text" class="f5 b lh-copy mb3">
-      {question}
+      {@html question}
     </label>
     <ul
       class="likert"

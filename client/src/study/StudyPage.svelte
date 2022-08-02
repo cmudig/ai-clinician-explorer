@@ -1,6 +1,6 @@
 <script>
   import { onMount, setContext } from 'svelte';
-  import { writable } from 'svelte/store';
+  import { writable, readable } from 'svelte/store';
   import LoadingBar from '../utils/LoadingBar.svelte';
   import Columns from '../utils/columns';
   import Welcome from './Welcome.svelte';
@@ -30,6 +30,13 @@
     modelInfo,
     modelPredictions,
     currentBloc,
+  });
+
+  let modelName = readable(
+    '<span style="color: darkslateblue; font-weight: 600;"">Sepsis-AI</span>',
+  );
+  setContext('strings', {
+    modelName,
   });
 
   export let patientID = '';
@@ -164,14 +171,14 @@
   $: if (!!patientID) loadPatientInfo(patientID);
 
   async function loadPatientInfo(patientID) {
-    loadingMessage = 'Loading patient info...';
+    loadingMessage = 'Loading patient data...';
     $patient = null;
     try {
       let response = await fetch('./api/patient/' + patientID);
       if (response.status != 200) {
         loadingPatientInfo = false;
         console.log(
-          `error ${response.status} loading patient info:`,
+          `error ${response.status} loading patient data:`,
           await response.text(),
         );
         return;
@@ -182,7 +189,7 @@
       console.log('patient:', $patient);
       loadingMessage = null;
     } catch (e) {
-      console.log('error loading patient info:', e);
+      console.log('error loading patient data:', e);
     }
   }
 
@@ -248,7 +255,7 @@
     let body = { states, actions };
     console.log('body:', body);
     try {
-      loadingMessage = 'Loading AI Clinician...';
+      loadingMessage = 'Loading patient data...';
       let response = await fetch(`./api/model/${modelID}/predict`, {
         method: 'POST',
         headers: {
@@ -372,7 +379,7 @@
   {#if !!loadingMessage}
     <div class="flex flex-column h-100 items-center justify-center">
       <p class="mb3 f5 tc b dark-gray">
-        {loadingMessage}
+        {@html loadingMessage}
       </p>
       <LoadingBar />
     </div>

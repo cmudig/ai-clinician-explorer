@@ -1,7 +1,9 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import FreeResponseQuestion from './FreeResponseQuestion.svelte';
   import Likert from './Likert.svelte';
+
+  let { modelName } = getContext('strings');
 
   const dispatch = createEventDispatcher();
 
@@ -31,7 +33,7 @@
     question="How could the visualizations be improved to better communicate the information you need?"
   />
   <Likert
-    question="Overall, how useful to you would you rate the AI Clinician, and why?"
+    question={`Overall, how useful to you would you rate the ${$modelName} tool, and why?`}
     elements={[
       '1 - not at all useful',
       '2',

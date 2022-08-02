@@ -6,6 +6,7 @@
   import MultipleChoice from './MultipleChoice.svelte';
 
   let { patient, currentBloc } = getContext('patient');
+  let { modelName } = getContext('strings');
 
   const dispatch = createEventDispatcher();
 
@@ -82,7 +83,7 @@
     />
     {#if stimulus.show_ai_clinician}
       <Likert
-        question="How useful would you rate the AI Clinician's recommendations for this patient?"
+        question={`How useful would you rate the ${$modelName} recommendation for this patient?`}
         elements={[
           '1 - not at all useful',
           '2',
@@ -95,7 +96,7 @@
         bind:response={responses.aiClinicianUsefulness}
       />
       <MultipleChoice
-        question="Did the AI Clinician’s recommendation affect your confidence in your treatment choices on this patient? If so, how?"
+        question={`Did the ${$modelName} recommendation affect your confidence in your treatment choices on this patient? If so, how?`}
         choices={[
           { label: 'Yes', value: 1 },
           { label: 'No', value: 0 },

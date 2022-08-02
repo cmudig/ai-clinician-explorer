@@ -1,6 +1,6 @@
 <script>
   import { onMount, setContext } from 'svelte';
-  import { writable } from 'svelte/store';
+  import { writable, readable } from 'svelte/store';
   import DataStateList from './DataStateList.svelte';
   import Demographics from './Demographics.svelte';
   import Treatments from './Treatments.svelte';
@@ -29,6 +29,10 @@
     modelInfo,
     modelPredictions,
     currentBloc,
+  });
+
+  setContext('strings', {
+    modelName: readable('AI Clinician'),
   });
 
   export let patientID = '';

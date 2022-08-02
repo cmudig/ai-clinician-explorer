@@ -11,7 +11,7 @@
 
 <div class={background ? 'br2 bg-near-white pa4 mb4' : 'pa0 mb2'}>
   <div class="measure-wide lh-copy">
-    <p class="f5 b mt0 mb2">{question}</p>
+    <p class="f5 b mt0 mb2">{@html question}</p>
     {#each choices as choice}
       <label
         ><input
