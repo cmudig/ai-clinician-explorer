@@ -1,4 +1,6 @@
 <script>
+  import { shuffle } from 'd3';
+
   import { createEventDispatcher } from 'svelte';
   import FreeResponseQuestion from './FreeResponseQuestion.svelte';
   import Likert from './Likert.svelte';
@@ -8,6 +10,53 @@
 
   export let responses = {};
 
+  const techSavvyQuestions = shuffle([
+    {
+      question:
+        'The use of clinical protocols and decision support tools make me a better clinician.',
+      resultID: 'protocolBetterClinician',
+    },
+    {
+      question:
+        'Clinical protocols and decision support tools in health care generally lead to improved patient outcomes.',
+      resultID: 'protocolBetterOutcomes',
+    },
+    {
+      question:
+        'When they are available, I try to adopt clinical protocols and decision support tools in my daily practice. ',
+      resultID: 'protocolAdoption',
+    },
+    {
+      question:
+        'Artificial intelligence is likely to improve health care for the better.',
+      resultID: 'aiImproveHealthCare',
+    },
+    {
+      question:
+        'I’m ready to use artificial intelligence-based tools in my daily practice.',
+      resultID: 'aiAdoption',
+    },
+    {
+      question:
+        'Decision support tools built on artificial intelligence will help health care providers make better clinical decisions.',
+      resultID: 'aiBetterDecisions',
+    },
+    {
+      question:
+        'I like to buy new tech products as soon as they become available.',
+      resultID: 'techBuyProducts',
+    },
+    {
+      question:
+        'It’s easy for me to master new technology, even when it’s complex.',
+      resultID: 'techEasy',
+    },
+    {
+      question: 'I’m often one of the first to try the latest smartphone app.',
+      resultID: 'techAdoption',
+    },
+  ]);
+
   function isValidResponse(r) {
     return (
       r.jobTitle != null &&
@@ -15,8 +64,7 @@
       r.race != null &&
       r.hispanic != null &&
       r.yearsExperience != null &&
-      r.technologyAdoption != null &&
-      r.ehrSkill != null
+      techSavvyQuestions.every((q) => r[q.resultID] != null)
     );
   }
 </script>
@@ -47,22 +95,27 @@
     ]}
     bind:selectedChoice={responses.yearsExperience}
   />
-  <Likert
-    question="How would you rate your level of skill in using the electronic health record (EHR) system in your hospital?"
-    elements={['1 - beginner', '2', '3 - intermediate', '4', '5 - expert']}
-    bind:response={responses.ehrSkill}
-  />
-  <MultipleChoice
-    question="When a new technology (hardware, software, or web application) becomes available, how quickly do you tend to adopt it?"
-    choices={[
-      { label: 'I never adopt it', value: '0' },
-      { label: 'After most of my colleagues', value: '1' },
-      { label: 'When it becomes mainstream', value: '2' },
-      { label: 'Before most of my colleagues', value: '3' },
-      { label: 'I’m one of the first to try it', value: '4' },
-    ]}
-    bind:selectedChoice={responses.technologyAdoption}
-  />
+  <div class="br2 bg-near-white pa4 mb4">
+    <p class="f5 b lh-copy mb3">
+      Please rate your agreement with the following statements.
+    </p>
+    {#each techSavvyQuestions as item}
+      <Likert
+        background={false}
+        boldQuestion={false}
+        question={item.question}
+        elements={[
+          '1 - strongly disagree',
+          '2 - disagree',
+          '3 - neither agree nor disagree',
+          '4 - agree',
+          '5 - strongly agree',
+        ]}
+        bind:response={responses[item.resultID]}
+      />
+    {/each}
+  </div>
+
   <MultipleChoice
     question="What is your gender?"
     choices={[

@@ -2,13 +2,15 @@
   export let question;
   export let elements;
   export let response;
+  export let background = true;
+  export let boldQuestion = true;
 
   let randomID = 'likert-' + Math.floor(Math.random() * 1e8);
 </script>
 
-<div class="br2 bg-near-white pa4 mb4">
+<div class={background ? 'br2 bg-near-white pa4 mb4' : 'pa0 mb4'}>
   <form action="">
-    <label for="text" class="f5 b lh-copy mb3">
+    <label for="text" class="f5 lh-copy mb3" class:b={boldQuestion}>
       {@html question}
     </label>
     <ul
@@ -27,7 +29,7 @@
             value={i + 1}
             bind:group={response}
           />
-          <label for={i.toString()}>{@html element}</label>
+          <label for={i.toString()} class="f6">{@html element}</label>
         </li>
       {/each}
     </ul>
