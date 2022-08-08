@@ -16,6 +16,7 @@
   const dispatch = createEventDispatcher();
 
   let { patient, currentBloc } = getContext('patient');
+  let { modelName } = getContext('strings');
 
   export let devMode = false;
   export let stimulus;
@@ -217,6 +218,23 @@
           </p>
         {/if}
         {@html stimulus.narrative}
+        {#if stimulus.show_ai_clinician}<p>
+            <em>
+              {#if !stimulus.show_state_explanation && !stimulus.show_alternative_actions}
+                Your hospital has recently implemented a computerized decision
+                support tool for sepsis called {@html $modelName}. {@html $modelName}
+                analyzes patients’ electronic health records and uses an artificial
+                intelligence-based algorithm to recommend fluids and vasopressor
+                doses that optimize mortality based on historical data. On the next
+                screen, the right panel shows the {@html $modelName} recommendation.
+              {:else}
+                On the next screen, the right panel shows the {@html $modelName}
+                recommendation augmented with additional information.
+              {/if}
+            </em>
+          </p>
+        {/if}
+
         <div class="w-100 flex justify-center">
           <button
             class="tc br2 pa2 mv3 link dib white bg-dark-blue f6 b hover-bg-navy-dark pointer bg-animate"

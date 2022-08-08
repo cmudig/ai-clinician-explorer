@@ -46,7 +46,7 @@
     bind:response={responses.aiClinicianUsefulness}
   />
   <FreeResponseQuestion
-    question="The remainder of the survey will be conducted verbally with the researcher."
+    question="The remainder of the survey will be conducted verbally with the researcher. Please click Finish at the end of the interview to receive the link for compensation."
   />
 
   <button

@@ -38,6 +38,7 @@
   {#if stimulus.show_ai_clinician}
     <div class="information ph4 lh-copy mv4">
       {#if !stimulus.show_state_explanation && !stimulus.show_alternative_actions}<p
+          class="f6"
         >
           Your hospital has recently implemented a computerized decision support
           tool for sepsis called {@html $modelName}. {@html $modelName} analyzes

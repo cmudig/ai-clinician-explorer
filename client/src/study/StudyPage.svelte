@@ -77,7 +77,7 @@
 
     if (
       state == StudyStates.POST_STIMULUS &&
-      studyIndex < studyStimuli.length - 1
+      studyIndex <= studyStimuli.length - 1
     ) {
       state -= 1;
     } else {
@@ -396,7 +396,8 @@
       <div class="f3 mb3 w-100">Tutorial</div>
       <div class="lh-copy w-100">
         Please familiarize yourself with the interface you will be using to make
-        treatment decisions today, then click Continue below.
+        treatment decisions today, then click Continue below. Note that you may
+        need to maximize your browser window to see the full interface.
       </div>
     </div>
     <div class="flex w-100 justify-center">

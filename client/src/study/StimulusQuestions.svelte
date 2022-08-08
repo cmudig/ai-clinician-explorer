@@ -95,13 +95,18 @@
         ]}
         bind:response={responses.aiClinicianUsefulness}
       />
-      <MultipleChoice
-        question={`Did the ${$modelName} recommendation affect your confidence in your treatment choices on this patient? If so, how?`}
-        choices={[
-          { label: 'Yes', value: 1 },
-          { label: 'No', value: 0 },
+      <Likert
+        question={`How did the ${$modelName} recommendation affect your confidence in your treatment choices on this patient?`}
+        elements={[
+          '1 - made me much less confident',
+          '2',
+          '3',
+          '4 - did not affect my confidence',
+          '5',
+          '6',
+          '7 - made me much more confident',
         ]}
-        bind:selectedChoice={responses.aiClinicianConfidenceEffect}
+        bind:response={responses.aiClinicianConfidenceEffect}
       />
     {/if}
     <button
