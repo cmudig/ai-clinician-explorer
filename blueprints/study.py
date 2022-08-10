@@ -34,6 +34,18 @@ def get_study_stimuli(dev=False):
                 chosen_json['cohort'] = cohort
                 chosen_json['stimulus_id'] = chosen.id
                 final_set.append(chosen_json)
+    elif stimuli_doc.collection('sequence').get():
+        # There is a predefined sequence
+        participant_number = stimuli_doc.get().get("participantCount")
+        stimuli_doc.update({"participantCount": participant_number + 1})
+        stimulus_ids = stimuli_doc.collection('sequence').document(str(participant_number)).get().get('stimuli')
+        print("Participant number {}, sequence: {}".format(participant_number, stimulus_ids))
+        for cohort, stid in enumerate(stimulus_ids):
+            chosen = stimuli_doc.collection('cohort_{}'.format(cohort)).document(stid)
+            chosen_json = chosen.get().to_dict()
+            chosen_json['cohort'] = cohort
+            chosen_json['stimulus_id'] = chosen.id
+            final_set.append(chosen_json)
     else:
         seen_ids = set()
         for cohort in range(num_cohorts):
