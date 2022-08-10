@@ -59,6 +59,6 @@
     href="#"
     on:click={() => dispatch('continue')}
   >
-    Continue</button
+    Finish</button
   >
 </div>
