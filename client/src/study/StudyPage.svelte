@@ -12,6 +12,7 @@
 
   export let csrf;
   export let devMode = false;
+  export let stimulusSet = null;
 
   const NON_TIMESTEP_COLUMNS = [
     'timesteps',
@@ -96,7 +97,10 @@
           'X-CSRFToken': csrf,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ dev: devMode ? 1 : 0 }),
+        body: JSON.stringify({
+          dev: devMode ? 1 : 0,
+          stimulus_set: stimulusSet,
+        }),
       });
       if (response.status != 200) {
         loadingMessage = null;
@@ -134,7 +138,11 @@
           'X-CSRFToken': csrf,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ participant_id: pid, dev: devMode ? 1 : 0 }),
+        body: JSON.stringify({
+          participant_id: pid,
+          dev: devMode ? 1 : 0,
+          stimulus_set: stimulusSet,
+        }),
       });
       if (response.status != 200) {
         loadingMessage = null;

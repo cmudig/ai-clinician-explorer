@@ -7,15 +7,15 @@ import string
 
 study_blueprint = Blueprint('study', __name__, url_prefix='/api/study')
 
-stimuli_doc = db.collection('pilot_study_stimuli').document('cases_220801')
-num_cohorts = stimuli_doc.get().to_dict()['num_cohorts']
+stimuli_collection = db.collection('pilot_study_stimuli')
+DEFAULT_STIMULUS_SET = 'cases_220801'
 
 results_collection = db.collection('pilot_study_data')
 
 PARTICIPANT_ID_CHARACTERS = string.ascii_uppercase + string.digits
 DEV_PARTICIPANT_ID = "DEV"
 
-def get_study_stimuli(dev=False):
+def get_study_stimuli(dev=False, stimulus_set=None):
     """
     Retrieves a set of study stimuli for a participant. The returned value is
     a list of dictionaries. Each dictionary will contain the following keys:
@@ -24,24 +24,27 @@ def get_study_stimuli(dev=False):
     * TODO more keys (e.g. choices)
     """
     final_set = []
+    chosen_stimuli_doc = stimuli_collection.document(stimulus_set or DEFAULT_STIMULUS_SET)
+    num_cohorts = chosen_stimuli_doc.get().to_dict()['num_cohorts']
+
     if dev:
         # Return a list of all the possible stimuli
         for cohort in range(num_cohorts):
-            collection = stimuli_doc.collection('cohort_{}'.format(cohort))
+            collection = chosen_stimuli_doc.collection('cohort_{}'.format(cohort))
             candidate_patients = [doc for doc in collection.stream()]
             for chosen in candidate_patients:
                 chosen_json = chosen.to_dict()
                 chosen_json['cohort'] = cohort
                 chosen_json['stimulus_id'] = chosen.id
                 final_set.append(chosen_json)
-    elif stimuli_doc.collection('sequence').get():
+    elif chosen_stimuli_doc.collection('sequence').get():
         # There is a predefined sequence
-        participant_number = stimuli_doc.get().get("participantCount")
-        stimuli_doc.update({"participantCount": participant_number + 1})
-        stimulus_ids = stimuli_doc.collection('sequence').document(str(participant_number)).get().get('stimuli')
+        participant_number = chosen_stimuli_doc.get().get("participantCount")
+        chosen_stimuli_doc.update({"participantCount": participant_number + 1})
+        stimulus_ids = chosen_stimuli_doc.collection('sequence').document(str(participant_number)).get().get('stimuli')
         print("Participant number {}, sequence: {}".format(participant_number, stimulus_ids))
         for cohort, stid in enumerate(stimulus_ids):
-            chosen = stimuli_doc.collection('cohort_{}'.format(cohort)).document(stid)
+            chosen = chosen_stimuli_doc.collection('cohort_{}'.format(cohort)).document(stid)
             chosen_json = chosen.get().to_dict()
             chosen_json['cohort'] = cohort
             chosen_json['stimulus_id'] = chosen.id
@@ -49,7 +52,7 @@ def get_study_stimuli(dev=False):
     else:
         seen_ids = set()
         for cohort in range(num_cohorts):
-            collection = stimuli_doc.collection('cohort_{}'.format(cohort))
+            collection = chosen_stimuli_doc.collection('cohort_{}'.format(cohort))
             candidate_patients = [doc for doc in collection.stream()]
             chosen = candidate_patients[np.random.choice(len(candidate_patients))]
             if any(c.get("patient_id") not in seen_ids for c in candidate_patients):
@@ -91,6 +94,7 @@ def initialize_study():
         input_data = {}
     
     if participant_id is None:
+        stimulus_set = input_data.get("stimulus_set", None)
         dev_mode = input_data.get("dev", 0) == 1
         if dev_mode: participant_id = DEV_PARTICIPANT_ID
         else: 
@@ -99,7 +103,7 @@ def initialize_study():
                 participant_id = make_participant_id()
         data = {
             "participant_id": participant_id,
-            "stimuli": get_study_stimuli(dev=dev_mode)
+            "stimuli": get_study_stimuli(dev=dev_mode, stimulus_set=stimulus_set)
         }
         results_collection.document(participant_id).set(data)
     else:

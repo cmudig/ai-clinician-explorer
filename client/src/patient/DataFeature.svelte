@@ -50,7 +50,7 @@
       }
       return `${deltaDays.toLocaleString({ maximumFractionDigits: 1 })}d`;
     }
-    return hours == 0 ? 'Just now' : hours + ' hours ago';
+    return hours == 0 ? 'Just now' : -hours + ' hours ago';
   }
 
   function createXTicks(data) {
