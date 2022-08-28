@@ -16,3 +16,33 @@ export function getTextWidth(text, font) {
   var metrics = context.measureText(text);
   return metrics.width;
 }
+
+export function fluidDose(modelInfo, action) {
+  if (!!modelInfo) {
+    let val =
+      modelInfo.actions.action_medians[0][
+        Math.floor(action / modelInfo.actions.n_action_bins)
+      ];
+    if (val < 0.0001) return 0.0;
+    let rounder = 2.5 * Math.pow(10, Math.floor(Math.log10(val)));
+    let roundedValue = Math.round(val / rounder) * rounder;
+    if (roundedValue > 0) return roundedValue;
+    return Math.ceil(val / rounder) * rounder;
+  }
+  return 0;
+}
+
+export function vasopressorDose(modelInfo, action) {
+  if (!!modelInfo) {
+    let val =
+      modelInfo.actions.action_medians[1][
+        action % modelInfo.actions.n_action_bins
+      ];
+    if (val < 0.0001) return 0.0;
+    let rounder = 2.5 * Math.pow(10, Math.floor(Math.log10(val)));
+    let roundedValue = Math.round(val / rounder) * rounder;
+    if (roundedValue > 0) return roundedValue;
+    return Math.ceil(val / rounder) * rounder;
+  }
+  return 0;
+}

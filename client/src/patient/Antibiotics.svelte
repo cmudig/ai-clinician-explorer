@@ -41,14 +41,17 @@
         return 'Started ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
       else if (Math.abs(numMins) >= 60)
         return 'Started ' + rtf.format(Math.round(numMins / 60), 'hour');
+      else if (Math.abs(numMins) <= 2) return 'Started just now';
       return 'Started ' + rtf.format(Math.round(numMins), 'minute');
     } else {
       let numMins = (end - blocTime) / 60;
       if (Math.abs(numMins) / 60 >= 24)
-        return 'Ended ' + rtf.format(Math.round(numMins / (60 * 24)), 'day');
+        return (
+          'Last dose ' + rtf.format(Math.round(numMins / (60 * 24)), 'day')
+        );
       else if (Math.abs(numMins) >= 60)
-        return 'Ended ' + rtf.format(Math.round(numMins / 60), 'hour');
-      return 'Ended ' + rtf.format(Math.round(numMins), 'minute');
+        return 'Last dose ' + rtf.format(Math.round(numMins / 60), 'hour');
+      return 'Last dose ' + rtf.format(Math.round(numMins), 'minute');
     }
   }
 </script>

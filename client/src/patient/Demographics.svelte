@@ -1,20 +1,34 @@
 <script>
   import { getContext } from 'svelte';
+  import Columns from '../utils/columns';
   import { Comorbidities } from '../utils/strings';
   import DataFeature from './DataFeature.svelte';
   import TextFeature from './TextFeature.svelte';
 
-  let { patient } = getContext('patient');
+  let { patient, currentBloc } = getContext('patient');
+
+  export let showOutcomes = true;
+  export let showReadmission = true;
+  export let showVentilation = false;
+  export let showVasopressors = false;
+  export let showLOS = false;
+
+  export let patientName = null;
+  export let devMode = false;
 </script>
 
 <div class="pv2 ph2 bg-blue-gray white">
   {#if !!$patient}
-    <h3 class="f3 fw3 pl2">Patient {$patient.icustayid}</h3>
+    <h3 class="f3 fw3 pl2">
+      {#if devMode}
+        {#if !!patientName}{patientName}{/if} - {$patient.icustayid}
+      {:else if !!patientName}{patientName}{:else}Patient {$patient.icustayid}{/if}
+    </h3>
     <table class="w-100">
       <DataFeature
         dark
         feature="Age/Gender"
-        value="{$patient.age} y/o {$patient.gender ? 'female' : 'male'}"
+        value="{$patient.age}-year-old {$patient.gender ? 'female' : 'male'}"
       />
       <TextFeature dark label="Comorbidities">
         {#if $patient.comorbidities.length == 0}
@@ -26,23 +40,53 @@
         {/if}
         <!--{$patient.comorbidities.map((c) => Comorbidities[c]).join(', ')}-->
       </TextFeature>
-      <DataFeature
-        dark
-        feature="Is Re-Admission"
-        value={$patient.re_admission ? 'Yes' : 'No'}
-      />
-      <DataFeature
-        dark
-        feature="Discharge Status"
-        value={$patient.died_in_hosp ? 'Death' : 'Alive'}
-      />
-      <DataFeature
-        dark
-        feature="ICU Length of Stay"
-        value={($patient.num_timesteps * 4 > 24
-          ? `${Math.floor(($patient.num_timesteps * 4) / 24)}d `
-          : '') + `${($patient.num_timesteps * 4) % 24}h`}
-      />
+      {#if showReadmission}
+        <DataFeature
+          dark
+          feature="Is Re-Admission"
+          value={$patient.re_admission ? 'Yes' : 'No'}
+        />
+      {/if}
+      {#if showLOS}
+        <DataFeature
+          dark
+          feature="Time in ICU"
+          value={`${($currentBloc - 1) * 4} hrs`}
+        />
+      {/if}
+      {#if showVentilation}
+        <DataFeature
+          dark
+          feature="Currently Ventilated"
+          value={$patient.timesteps[$currentBloc - 1][Columns.C_MECHVENT].value
+            ? 'Yes'
+            : 'No'}
+        />
+      {/if}
+      {#if showVasopressors}
+        <DataFeature
+          dark
+          feature="Receiving Vasopressors"
+          value={$patient.timesteps[$currentBloc - 1][Columns.C_MAX_DOSE_VASO]
+            .value > 0
+            ? 'Yes'
+            : 'No'}
+        />
+      {/if}
+      {#if showOutcomes}
+        <DataFeature
+          dark
+          feature="Discharge Status"
+          value={$patient.died_in_hosp ? 'Death' : 'Alive'}
+        />
+        <DataFeature
+          dark
+          feature="ICU Length of Stay"
+          value={($patient.num_timesteps * 4 > 24
+            ? `${Math.floor(($patient.num_timesteps * 4) / 24)}d `
+            : '') + `${($patient.num_timesteps * 4) % 24}h`}
+        />
+      {/if}
     </table>
   {/if}
 </div>

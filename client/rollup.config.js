@@ -22,6 +22,10 @@ const buildthese = [
     path: '/login',
     title: 'Login',
   },
+  {
+    path: '/study',
+    title: 'Study',
+  },
 ];
 
 function makeHTML({ publicPath, title }) {

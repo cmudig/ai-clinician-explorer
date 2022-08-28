@@ -10,6 +10,9 @@
   export let currentTrendWindow = 1; // number of timesteps to average over for current trend window
   export let trendThreshold = 0.0; // fraction of last average value to consider as the same
   export let category; // category of features to display - null displays all
+  export let highlightImputedValues = true;
+  export let highlightHeldValues = false;
+  export let valueTooltips = false;
 
   let timePoint;
   let lastTimePoint;
@@ -194,7 +197,7 @@
         expanded: true,
         rows: [
           {
-            name: 'Ever ventilated?',
+            name: 'Previously ventilated?',
             computed: (tp) => (everVentilated(tp) ? 'Yes' : 'No'),
           },
           {
@@ -308,7 +311,7 @@
             feature: Columns.C_CUMULATED_BALANCE,
             maxDecimals: 0,
             name: 'Fluid Balance',
-            unit: 'ml/4h',
+            unit: 'ml',
           },
         ],
       },
@@ -408,6 +411,9 @@
                   ? computeTrend(row.feature, $currentBloc)
                   : 0}
                 unit={row.unit}
+                {highlightHeldValues}
+                {highlightImputedValues}
+                {valueTooltips}
               />
             {/if}
           {/each}

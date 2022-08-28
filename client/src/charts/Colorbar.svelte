@@ -11,6 +11,7 @@
   export let numStops = 100;
 
   export let numTicks = 7;
+  export let ticks = null;
 
   export let markerValue = null;
   export let markerText = null;
@@ -57,11 +58,12 @@
       .scaleLinear()
       .domain(valueDomain)
       .range([actualHeight - actualMargin.top - actualMargin.bottom, 0]);
-    legendAxis = d3
-      .axisRight()
-      .scale(legendScale)
-      .tickValues(linspace(valueDomain[0], valueDomain[1], numTicks))
-      .tickFormat(d3.format('.3g'));
+    legendAxis = d3.axisRight().scale(legendScale);
+    if (!!ticks) legendAxis = legendAxis.tickValues(ticks);
+    else
+      legendAxis = legendAxis
+        .tickValues(linspace(valueDomain[0], valueDomain[1], numTicks))
+        .tickFormat(d3.format('.3g'));
   }
 
   $: if (!!legendAxisContainer && !!legendAxis) {
