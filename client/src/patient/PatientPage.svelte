@@ -265,14 +265,6 @@
     flex: 0 0 auto;
   }
 
-  .bg-blue-gray {
-    background-color: #404a5a;
-  }
-
-  .bg-navy-gray {
-    background-color: #2e3847;
-  }
-
   main {
     padding-top: 48px;
   }

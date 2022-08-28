@@ -4,7 +4,38 @@
   import SelectFilter from './SelectFilter.svelte';
   import { Comorbidities } from '../utils/strings';
   import TextFilter from './TextFilter.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, setContext } from 'svelte';
+  import { writable } from 'svelte/store';
+
+  let modelInfo = writable(null);
+
+  setContext('patient', {
+    modelInfo,
+  });
+
+  export let modelID;
+
+  $: if (!!modelID) {
+    loadModelInfo(modelID);
+  }
+
+  async function loadModelInfo(id) {
+    try {
+      let response = await fetch(`./api/model/${modelID}`);
+      if (response.status != 200) {
+        console.log(
+          `error ${response.status} loading model info:`,
+          await response.text(),
+        );
+        return;
+      }
+      response = await response.json();
+      $modelInfo = response.model;
+      console.log('model info:', $modelInfo);
+    } catch (e) {
+      console.log('error loading model info:', e);
+    }
+  }
 
   export let externalFilters;
 
@@ -140,70 +171,18 @@
       value: null,
     },
     {
-      type: 'group',
-      elements: [
-        {
-          name: 'Clinician Fluids',
-          type: 'range',
-          default: [0, 4],
-          value: [0, 4],
-        },
-        {
-          name: 'Clinician Vasopressors',
-          type: 'range',
-          default: [0, 4],
-          value: [0, 4],
-        },
-      ],
-      filterFunction: (values) => {
-        let allowedPhysicianActions = new Array(25)
-          .fill(0)
-          .map((_, ac) => ac)
-          .filter(
-            (ac) =>
-              Math.floor(ac / 5) >= values[0][0] &&
-              Math.floor(ac / 5) <= values[0][1] &&
-              Math.floor(ac % 5) >= values[1][0] &&
-              Math.floor(ac % 5) <= values[1][1],
-          );
-        if (allowedPhysicianActions.length < 25)
-          return [
-            'physician_action in (' + allowedPhysicianActions.join(', ') + ')',
-          ];
-        return [];
-      },
+      type: 'action',
+      name: 'Clinician Actions',
+      id: 'physician_action',
+      default: [],
+      value: [],
     },
     {
-      type: 'group',
-      elements: [
-        {
-          name: 'Model Fluids',
-          type: 'range',
-          default: [0, 4],
-          value: [0, 4],
-        },
-        {
-          name: 'Model Vasopressors',
-          type: 'range',
-          default: [0, 4],
-          value: [0, 4],
-        },
-      ],
-      filterFunction: (values) => {
-        let allowedModelActions = new Array(25)
-          .fill(0)
-          .map((_, ac) => ac)
-          .filter(
-            (ac) =>
-              Math.floor(ac / 5) >= values[0][0] &&
-              Math.floor(ac / 5) <= values[0][1] &&
-              Math.floor(ac % 5) >= values[1][0] &&
-              Math.floor(ac % 5) <= values[1][1],
-          );
-        if (allowedModelActions.length < 25)
-          return ['model_action in (' + allowedModelActions.join(', ') + ')'];
-        return [];
-      },
+      type: 'action',
+      name: 'Model Actions',
+      id: 'model_action',
+      default: [],
+      value: [],
     },
     {
       id: 'phys_probability',
@@ -290,6 +269,8 @@
     }
     if (f.type == 'range')
       return [`${f.id} >= ${f.value[0]}`, `${f.id} <= ${f.value[1]}`];
+    else if (f.type == 'action' && f.value.length > 0)
+      return [`${f.id} in (${f.value.join(', ')})`];
     else if (f.type == 'select' && !f.multi)
       return f.value != null ? [`${f.id} = ` + f.value.value] : [];
     else if (f.type == 'select' && f.multi)
@@ -316,6 +297,7 @@
     else if (f.type == 'select' && !f.multi) return f.value == null;
     else if (f.type == 'select' && f.multi)
       return !f.value || f.value.length == 0;
+    else if (f.type == 'action') return f.value.length == 0;
     return true;
   }
 
@@ -371,6 +353,7 @@
 
   function resetFilter() {
     FilterSpec = FilterSpec.map(resetFiltersRecursive);
+
     setTimeout(() => {
       if (filterNeedsUpdate) updateFilter();
     });
@@ -390,6 +373,11 @@
     filterNeedsUpdate =
       filter.filters != tempFilters ||
       filter.comorbidityFilters != tempComorbidityFilters;
+  }
+
+  let actionBins = null;
+  $: if (!!$modelInfo) {
+    actionBins = $modelInfo.actions.action_medians;
   }
 </script>
 
@@ -434,6 +422,13 @@
           tooltip={f.tooltip}
           bind:selected={f.value}
         />
+      {:else if f.type == 'action'}
+        <ActionFilter
+          name={f.name}
+          bind:selectedActions={f.value}
+          fluidBins={!!actionBins ? actionBins[0] : null}
+          vasopressorBins={!!actionBins ? actionBins[1] : null}
+        />
       {:else if f.type == 'divider'}
         <hr class="mv3" />
       {:else if f.type == 'title'}
@@ -443,64 +438,6 @@
   </div>
 </div>
 
-<!-- Age histogram -->
-
-<!-- <div class="chart-container">
-        <LayerCake
-          padding={{ top: 0, right: 0, bottom: 20, left: 20 }}
-          x={'Age'}
-          y={'Frequency'}
-          xScale={scaleBand().paddingInner([0.02]).round(true)}
-          xDomain={['0-20', '20-40', '40-60', '60-80', '80-100', '100-120']}
-          yDomain={[0, null]}
-          data={patientData}
-        >
-          <Svg>
-            <Column/>
-            <AxisX
-              gridlines={false}
-            />
-            <AxisY
-              gridlines={false}
-            />
-          </Svg>
-        </LayerCake>
-      </div> -->
-
-<!-- Question: How to make this clickable? -->
-<!-- If we want to implement multiselect on the histogram directly -->
-
-<!-- Select age ranges
-    <span class="f6 b pb0 mr3"
-        >Age Ranges</span
-    >
-    <!-- <Select items={ageOptions} isMulti={true}></Select> -->
-
-<!-- Select comorbidities -->
-<!-- <span class="f6 b pb0 mr3"
-        >Comorbidities</span
-    > -->
-<!-- <Select items={comorbidities} isMulti={true}></Select> -->
-
-<!-- Select predicted treatment value -->
-
-<!-- Select clinician action -->
-
-<!-- Previous work below: -->
-
-<!-- <Select items={comorbidities}> </Select> -->
-
-<!-- <span class="f6 b pb0 mr3"
-            >Clinician Action(s)</span
-    > -->
-
-<!-- Implement multi-select on the 5x5 grid -->
-
-<!-- <span class="f6 b pb0 mr3"
-            >Model Action(s)</span
-    >  -->
-
-<!-- Implement multi-select on the 5x5 grid -->
 <style>
   .sidebar {
     width: 400px;
@@ -510,11 +447,6 @@
 
   .sidebar-filter-view {
     overflow-y: scroll;
-  }
-
-  .chart-container {
-    width: 100%;
-    height: 100%;
   }
 
   .disabled-button {

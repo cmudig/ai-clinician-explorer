@@ -17,6 +17,8 @@
 
   export let externalFilters = null;
 
+  export let modelID = 'mimiciv_220328_best';
+
   let isLoading = false;
 
   let filter = {};
@@ -53,7 +55,7 @@
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
   <nav class="f6 fw6 ttu tracked flex justify-between">
-    <a class="link dim white dib mr3" href="#" title="Patient List"
+    <a class="link dim white dib mr3" href="/#" title="Patient List"
       >AI Clinician Explorer</a
     >
     <a class="link dim white dib ml3" href="/logout" title="Sign Out"
@@ -63,7 +65,7 @@
 </header>
 
 <main class="pa0 h-100 flex">
-  <SideBar bind:this={sidebar} bind:filter bind:externalFilters />
+  <SideBar bind:this={sidebar} bind:filter bind:externalFilters {modelID} />
 
   <div class="pa0 h-100 patient-list-container">
     {#if patients.length > 0}

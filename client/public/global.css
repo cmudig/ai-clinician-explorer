@@ -62,6 +62,22 @@ button:focus {
   background-color: #dfe4eb;
 }
 
+.bg-medium-blue-gray {
+  background-color: #8e9fb8;
+}
+
+.bg-blue-gray {
+  background-color: #404a5a;
+}
+
+.bg-navy-gray {
+  background-color: #2e3847;
+}
+
+.hover-bg-blue-gray:hover {
+  background-color: #617ba2;
+}
+
 .hover-bg-navy-dark:hover {
   background-color: #013274;
 }

@@ -88,7 +88,6 @@
   }
 
   function makeActionDescription(actionIdx) {
-    console.log(actionIdx, vasopressorDose($modelInfo, actionIdx));
     let vaso =
       vasopressorDose($modelInfo, actionIdx) == 0
         ? 'no vasopressor'
