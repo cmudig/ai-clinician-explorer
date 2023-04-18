@@ -5,13 +5,17 @@
   import SideBar from './filters/SideBar.svelte';
   import { interpolateReds, interpolateBlues } from 'd3-scale-chromatic';
   import TableCellBar from './utils/TableCellBar.svelte';
+  import AboutView from './utils/AboutView.svelte';
 
   let patients = [];
   let resultCount = 0;
 
+  let showingAboutView = false;
+
   export let sort = 'icustayid';
   export let size = 20;
   export let isAscending = true;
+  export let showLogoutButton = true;
 
   export let offset = 0;
 
@@ -58,9 +62,19 @@
     <a class="link dim white dib mr3" href="/#" title="Patient List"
       >AI Clinician Explorer</a
     >
-    <a class="link dim white dib ml3" href="/logout" title="Sign Out"
-      >Sign Out</a
-    >
+    <span>
+      <a
+        class="link dim white dib ml3"
+        href="#"
+        title="Show About information"
+        on:click={() => (showingAboutView = true)}>About</a
+      >
+      {#if showLogoutButton}
+        <a class="link dim white dib ml3" href="/logout" title="Sign Out"
+          >Sign Out</a
+        >
+      {/if}
+    </span>
   </nav>
 </header>
 
@@ -249,6 +263,9 @@
     {/if}
   </div>
 </main>
+{#if showingAboutView}
+  <AboutView on:exit={() => (showingAboutView = false)} />
+{/if}
 
 <style>
   main {

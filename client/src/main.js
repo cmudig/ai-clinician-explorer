@@ -12,6 +12,7 @@ const app = new PatientBrowser({
     externalFilters: {
       state: statesList,
     },
+    showLogoutButton: false,
   },
 });
 

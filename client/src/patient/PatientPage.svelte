@@ -11,6 +11,7 @@
   import Antibiotics from './Antibiotics.svelte';
   import Cultures from './Cultures.svelte';
   import { StateCategory } from '../utils/strings';
+  import AboutView from '../utils/AboutView.svelte';
 
   const NON_TIMESTEP_COLUMNS = [
     'timesteps',
@@ -163,6 +164,9 @@
       hour12: true,
     });
   }
+
+  export let showLogoutButton = true;
+  let showingAboutView = false;
 </script>
 
 <header class="bg-navy-90 fixed w-100 ph3 pv2 pv3-ns ph3-m ph4-l">
@@ -170,9 +174,19 @@
     <a class="link dim white dib mr3" href="/" title="Patient List"
       ><i class="arrow left" />&nbsp; Back to List</a
     >
-    <a class="link dim white dib ml3" href="/logout" title="Sign Out"
-      >Sign Out</a
-    >
+    <span>
+      <a
+        class="link dim white dib ml3"
+        href="#"
+        title="Show About information"
+        on:click={() => (showingAboutView = true)}>About</a
+      >
+      {#if showLogoutButton}
+        <a class="link dim white dib ml3" href="/logout" title="Sign Out"
+          >Sign Out</a
+        >
+      {/if}
+    </span>
   </nav>
 </header>
 <main class="pa0 h-100">
@@ -256,6 +270,9 @@
     </div>
   {/if}
 </main>
+{#if showingAboutView}
+  <AboutView on:exit={() => (showingAboutView = false)} />
+{/if}
 
 <style>
   .sidebar {

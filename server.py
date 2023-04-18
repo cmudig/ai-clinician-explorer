@@ -1,4 +1,6 @@
 from flask import Flask, render_template, send_from_directory, request, redirect
+import sys
+sys.path.insert(0, 'src/ai-clinician')
 from blueprints.patient import patient_blueprint
 from blueprints.model import model_blueprint
 from blueprints.study import study_blueprint
@@ -9,7 +11,7 @@ import os
 
 # If in production mode, enable authentication
 PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE") == "1"
-FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(__file__), "client", "public" if not PRODUCTION_MODE else "dist")
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(__file__), "client", "public")
 
 app = Flask(__name__, template_folder=FRONTEND_BUILD_DIR)
 csrf = CSRFProtect(app)
@@ -18,7 +20,7 @@ app.register_blueprint(patient_blueprint)
 app.register_blueprint(model_blueprint)
 app.register_blueprint(study_blueprint)
 csrf.exempt(model_blueprint)
-app.config['LOGIN_DISABLED'] = not PRODUCTION_MODE
+app.config['LOGIN_DISABLED'] = (os.environ.get("LOGIN_DISABLED") == "1" or not PRODUCTION_MODE)
 
 # Read secret key from secret.txt if available, otherwise fallback (dev only)
 if os.path.exists("secret.txt"):

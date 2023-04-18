@@ -10,6 +10,7 @@ const app = new PatientPage({
   props: {
     patientID: id,
     currentBloc: writable(bloc),
+    showLogoutButton: false,
   },
 });
 

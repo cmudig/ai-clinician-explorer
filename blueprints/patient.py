@@ -19,7 +19,7 @@ mimic_data = db.collection('MIMICIV_provenance')
 # Also initialize BigQuery client - we use this for fast search, filtering, and sorting
 project = "ai-clinician"
 bq_client = bigquery.Client(credentials=credentials, project=project)
-default_dataset = "mimiciv_220328_best"
+default_dataset = "mimiciv_220328_best_sample"
 
 METADATA_FIELDS = [
     C_ICUSTAYID,
