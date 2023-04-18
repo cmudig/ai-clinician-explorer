@@ -1,10 +1,8 @@
 # AI Clinician Explorer
 
-The AI Clinician Explorer is a prototype visualization tool and study interface that enables clinicians and health data experts to browse patient trajectories and analyze AI-generated treatment recommendations.
+The AI Clinician Explorer ([live demo](https://ai-clinician.ue.r.appspot.com)) is a prototype visualization tool and study interface that enables clinicians and health data experts to browse patient trajectories and analyze AI-generated treatment recommendations.
 
 ![Screenshot of the AI Clinician Explorer showing a patient's demographics, vitals, labs, past treatments, and model predictions.](/assets/example-screenshot.png)
-
-For privacy reasons, a live demo is currently not available. To learn more about the project, please see the following paper:
 
 > Sivaraman, V., Bukowski, L., Levin, J., Kahn, J.M., Perer, A. Ignore, trust, or negotiate: Understanding clinician acceptance of AI-based treatment recommendations in health care. _ACM CHI 2023._
 
